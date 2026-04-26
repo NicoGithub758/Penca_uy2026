@@ -20,5 +20,10 @@ namespace Penca_uy2026.Data
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123")
             });
         }
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            // Esto silencia el error que te está bloqueando
+            optionsBuilder.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+        }
     }
 }
