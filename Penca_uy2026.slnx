@@ -1,3 +1,6 @@
 <Solution>
+  <Project Path="Penca_uy2026.Business/Penca_uy2026.Business.csproj" Id="a32664a2-8185-4a98-bcd8-6568d18826ca" />
+  <Project Path="Penca_uy2026.Data/Penca_uy2026.Data.csproj" Id="ecf4289b-ed9d-45ce-a9f5-bd6d7bae9faa" />
+  <Project Path="Penca_uy2026.Models/Penca_uy2026.Models.csproj" Id="df1b1cc4-b927-44ba-9454-1d15500fe18c" />
   <Project Path="Penca_uy2026/Penca_uy2026.csproj" />
 </Solution>

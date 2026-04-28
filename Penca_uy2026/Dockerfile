@@ -12,7 +12,13 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+
+# Se incluyen todos los proyectos de la solución.
 COPY ["Penca_uy2026/Penca_uy2026.csproj", "Penca_uy2026/"]
+COPY ["Penca_uy2026.Models/Penca_uy2026.Models.csproj", "Penca_uy2026.Models/"]
+COPY ["Penca_uy2026.Data/Penca_uy2026.Data.csproj", "Penca_uy2026.Data/"]
+COPY ["Penca_uy2026.Business/Penca_uy2026.Business.csproj", "Penca_uy2026.Business/"]
+
 RUN dotnet restore "./Penca_uy2026/Penca_uy2026.csproj"
 COPY . .
 WORKDIR "/src/Penca_uy2026"

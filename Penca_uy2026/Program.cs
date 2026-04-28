@@ -1,4 +1,11 @@
+using Microsoft.EntityFrameworkCore;
+using Penca_uy2026.Data;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Manda los datos de conexión a la capa de datos.
+builder.Services.AddDbContext<PencaDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
