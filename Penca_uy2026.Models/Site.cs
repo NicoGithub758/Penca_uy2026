@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Penca_uy2026.Models
 {
@@ -11,6 +12,14 @@ namespace Penca_uy2026.Models
         [MaxLength(100)]
         public string Name { get; set; } = string.Empty;
 
-        // Se agregarán más atributos y las relaciones..
+        // --- Relaciones ---
+
+        public ICollection<PencaInstance> PencaInstances { get; set; } = new List<PencaInstance>();
+
+        public ICollection<SiteUser> SiteUsers { get; set; } = new List<SiteUser>();
+
+        public ICollection<Invitation> Invitations { get; set; } = new List<Invitation>();
+
+        public ICollection<AccessRequest> AccessRequests { get; set; } = new List<AccessRequest>();
     }
 }

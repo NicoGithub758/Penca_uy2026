@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Penca_uy2026.Data;
 
@@ -11,9 +12,11 @@ using Penca_uy2026.Data;
 namespace Penca_uy2026.Data.Migrations
 {
     [DbContext(typeof(PencaDbContext))]
-    partial class PencaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260429023056_AddPencasEvTeams")]
+    partial class AddPencasEvTeams
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,61 +24,6 @@ namespace Penca_uy2026.Data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("Penca_uy2026.Models.AccessRequest", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("SiteId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SiteId");
-
-                    b.ToTable("AccessRequests");
-                });
-
-            modelBuilder.Entity("Penca_uy2026.Models.ChatMessage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("ParticipationId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("SentAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ParticipationId");
-
-                    b.ToTable("ChatMessages");
-                });
 
             modelBuilder.Entity("Penca_uy2026.Models.Event", b =>
                 {
@@ -118,60 +66,6 @@ namespace Penca_uy2026.Data.Migrations
                     b.ToTable("Events");
                 });
 
-            modelBuilder.Entity("Penca_uy2026.Models.Invitation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("SiteId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SiteId");
-
-                    b.ToTable("Invitations");
-                });
-
-            modelBuilder.Entity("Penca_uy2026.Models.Notification", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsRead")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("SiteUserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SiteUserId");
-
-                    b.ToTable("Notifications");
-                });
-
             modelBuilder.Entity("Penca_uy2026.Models.Participation", b =>
                 {
                     b.Property<int>("Id")
@@ -189,9 +83,6 @@ namespace Penca_uy2026.Data.Migrations
                     b.Property<int>("SiteUserId")
                         .HasColumnType("int");
 
-                    b.Property<int>("TotalPoints")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("PencaInstanceId");
@@ -199,34 +90,6 @@ namespace Penca_uy2026.Data.Migrations
                     b.HasIndex("SiteUserId");
 
                     b.ToTable("Participations");
-                });
-
-            modelBuilder.Entity("Penca_uy2026.Models.Payment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("ExternalTransactionId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ParticipationId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("PaymentDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ParticipationId");
-
-                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("Penca_uy2026.Models.Penca", b =>
@@ -255,9 +118,6 @@ namespace Penca_uy2026.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal>("ComissionPercentage")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<int>("PencaId")
                         .HasColumnType("int");
 
@@ -271,28 +131,6 @@ namespace Penca_uy2026.Data.Migrations
                     b.HasIndex("SiteId");
 
                     b.ToTable("PencaInstances");
-                });
-
-            modelBuilder.Entity("Penca_uy2026.Models.PlatformAdmin", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PlatformAdmins");
                 });
 
             modelBuilder.Entity("Penca_uy2026.Models.Prediction", b =>
@@ -390,28 +228,6 @@ namespace Penca_uy2026.Data.Migrations
                     b.ToTable("Teams");
                 });
 
-            modelBuilder.Entity("Penca_uy2026.Models.AccessRequest", b =>
-                {
-                    b.HasOne("Penca_uy2026.Models.Site", "Site")
-                        .WithMany("AccessRequests")
-                        .HasForeignKey("SiteId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Site");
-                });
-
-            modelBuilder.Entity("Penca_uy2026.Models.ChatMessage", b =>
-                {
-                    b.HasOne("Penca_uy2026.Models.Participation", "Participation")
-                        .WithMany("ChatMessages")
-                        .HasForeignKey("ParticipationId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Participation");
-                });
-
             modelBuilder.Entity("Penca_uy2026.Models.Event", b =>
                 {
                     b.HasOne("Penca_uy2026.Models.Team", "AwayTeam")
@@ -439,28 +255,6 @@ namespace Penca_uy2026.Data.Migrations
                     b.Navigation("Penca");
                 });
 
-            modelBuilder.Entity("Penca_uy2026.Models.Invitation", b =>
-                {
-                    b.HasOne("Penca_uy2026.Models.Site", "Site")
-                        .WithMany("Invitations")
-                        .HasForeignKey("SiteId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Site");
-                });
-
-            modelBuilder.Entity("Penca_uy2026.Models.Notification", b =>
-                {
-                    b.HasOne("Penca_uy2026.Models.SiteUser", "SiteUser")
-                        .WithMany("Notifications")
-                        .HasForeignKey("SiteUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("SiteUser");
-                });
-
             modelBuilder.Entity("Penca_uy2026.Models.Participation", b =>
                 {
                     b.HasOne("Penca_uy2026.Models.PencaInstance", "PencaInstance")
@@ -478,17 +272,6 @@ namespace Penca_uy2026.Data.Migrations
                     b.Navigation("PencaInstance");
 
                     b.Navigation("SiteUser");
-                });
-
-            modelBuilder.Entity("Penca_uy2026.Models.Payment", b =>
-                {
-                    b.HasOne("Penca_uy2026.Models.Participation", "Participation")
-                        .WithMany("Payments")
-                        .HasForeignKey("ParticipationId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Participation");
                 });
 
             modelBuilder.Entity("Penca_uy2026.Models.PencaInstance", b =>
@@ -547,10 +330,6 @@ namespace Penca_uy2026.Data.Migrations
 
             modelBuilder.Entity("Penca_uy2026.Models.Participation", b =>
                 {
-                    b.Navigation("ChatMessages");
-
-                    b.Navigation("Payments");
-
                     b.Navigation("Predictions");
                 });
 
@@ -568,10 +347,6 @@ namespace Penca_uy2026.Data.Migrations
 
             modelBuilder.Entity("Penca_uy2026.Models.Site", b =>
                 {
-                    b.Navigation("AccessRequests");
-
-                    b.Navigation("Invitations");
-
                     b.Navigation("PencaInstances");
 
                     b.Navigation("SiteUsers");
@@ -579,8 +354,6 @@ namespace Penca_uy2026.Data.Migrations
 
             modelBuilder.Entity("Penca_uy2026.Models.SiteUser", b =>
                 {
-                    b.Navigation("Notifications");
-
                     b.Navigation("Participations");
                 });
 
