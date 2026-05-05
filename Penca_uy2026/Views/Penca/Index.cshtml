@@ -1,0 +1,54 @@
+﻿@model IEnumerable<Penca_uy2026.Models.Penca>
+
+@{
+    ViewData["Title"] = "Gestión de Pencas";
+}
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-6">Mis Pencas</h1>
+        <a asp-action="Create" class="btn btn-success shadow-sm">
+            <i class="bi bi-plus-lg"></i> + Nueva Penca
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info shadow-sm" role="alert">
+            Todavía no has creado ninguna penca. ¡Comienza creando la primera!
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">@item.Nombre</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled">
+                                <li><strong>Deporte:</strong> @(item.Deporte?.Nombre ?? "No definido")</li>
+                                <li><strong>Equipos:</strong> @item.CantidadEquipos</li>
+                                <li>
+                                    <strong>Modo:</strong>
+                                    <span class="badge bg-secondary">@item.Modo</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="card-footer bg-light d-grid gap-2">
+                            <a asp-action="ConfigurarEquipos" asp-route-id="@item.Id" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-people"></i> Configurar Equipos
+                            </a>
+                            <a asp-action="Calendario" asp-route-id="@item.Id" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-calendar-event"></i> Agendar Partidos
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

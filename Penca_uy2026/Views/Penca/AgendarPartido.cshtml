@@ -1,0 +1,62 @@
+﻿@model Penca_uy2026.Models.ViewModels.PartidoViewModel
+
+@{
+    ViewData["Title"] = "Agendar Partido";
+}
+
+<div class="container mt-5">
+    <div class="card shadow mx-auto" style="max-width: 600px; border-radius: 15px;">
+        <div class="card-header bg-primary text-white text-center py-3" style="border-radius: 15px 15px 0 0;">
+            <h3 class="mb-0">Agendar Nuevo Encuentro</h3>
+            <small>Penca: @Model.PencaNombre</small>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="AgendarPartido" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <input type="hidden" asp-for="PencaId" />
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Equipo Local</label>
+                        <select name="Local" class="form-select" required>
+                            <option value="">Seleccione...</option>
+                            @foreach (var equipo in Model.Equipos)
+                            {
+                                <option value="@equipo.Value">@equipo.Text</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Equipo Visitante</label>
+                        <select name="Visitante" class="form-select" required>
+                            <option value="">Seleccione...</option>
+                            @foreach (var equipo in Model.Equipos)
+                            {
+                                <option value="@equipo.Value">@equipo.Text</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Fecha y Hora</label>
+                    <input asp-for="Fecha" type="datetime-local" class="form-control" required />
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Fase / Jornada</label>
+                    <input asp-for="Fase" class="form-control" placeholder="Ej: Fase de Grupos, Semifinal, Fecha 1..." required />
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="bi bi-calendar-plus"></i> Confirmar Partido
+                    </button>
+                    <a asp-action="Calendario" asp-route-id="@Model.PencaId" class="btn btn-outline-secondary">
+                        Volver al Calendario
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

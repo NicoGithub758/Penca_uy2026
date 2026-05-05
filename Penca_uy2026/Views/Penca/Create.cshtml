@@ -1,0 +1,32 @@
+﻿@model Penca_uy2026.Models.ViewModels.PencaViewModel
+
+<div class="container mt-5">
+    <div class="card shadow-sm mx-auto" style="max-width: 500px;">
+        <div class="card-body">
+            <h2 class="text-center mb-4">Nueva Penca</h2>
+            <form asp-action="Create" method="post">
+                <div class="mb-3">
+                    <label class="form-label">Nombre de la Penca</label>
+                    <input asp-for="Nombre" class="form-control" placeholder="Ej: Mundial 2026" required />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Deporte</label>
+                    <select asp-for="DeporteId" asp-items="Model.Deportes" class="form-select"></select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Cantidad de Equipos</label>
+                    <input asp-for="CantidadEquipos" type="number" class="form-control" min="2" required />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Modo de Juego</label>
+                    <select asp-for="Modo" asp-items="Html.GetEnumSelectList<Penca_uy2026.Models.ModoPenca>()" class="form-select"></select>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Crear Penca y Continuar</button>
+            </form>
+        </div>
+    </div>
+</div>

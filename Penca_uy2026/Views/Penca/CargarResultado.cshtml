@@ -1,0 +1,31 @@
+﻿@model Penca_uy2026.Models.Partido
+
+<div class="container mt-5">
+    <div class="card shadow-sm mx-auto" style="max-width: 500px;">
+        <div class="card-body text-center">
+            <h4>Cargar Resultado</h4>
+            <p class="text-muted">@Model.Fase</p>
+            
+            <form asp-action="CargarResultado" method="post">
+                <input type="hidden" name="id" value="@Model.Id" />
+                
+                <div class="d-flex align-items-center justify-content-between my-4">
+                    <div class="text-center" style="flex: 1;">
+                        <label class="fw-bold d-block">@Model.Local</label>
+                        <input type="number" name="golesLocal" class="form-control text-center fs-4" value="@(Model.GolesLocal ?? 0)" min="0" />
+                    </div>
+                    
+                    <div class="px-3 fs-3 fw-bold">-</div>
+                    
+                    <div class="text-center" style="flex: 1;">
+                        <label class="fw-bold d-block">@Model.Visitante</label>
+                        <input type="number" name="golesVisitante" class="form-control text-center fs-4" value="@(Model.GolesVisitante ?? 0)" min="0" />
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 mb-2">Guardar Resultado</button>
+                <a asp-action="Calendario" asp-route-id="@Model.PencaId" class="btn btn-link">Volver</a>
+            </form>
+        </div>
+    </div>
+</div>

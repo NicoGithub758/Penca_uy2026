@@ -1,0 +1,94 @@
+﻿@model Penca_uy2026.Models.Penca
+
+@{
+    ViewData["Title"] = "Calendario - " + Model.Nombre;
+}
+
+<div class="container mt-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Index">Mis Pencas</a></li>
+            <li class="breadcrumb-item active">@Model.Nombre</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">Calendario: @Model.Nombre</h2>
+            <small class="text-muted">Modo: @Model.Modo | Equipos: @Model.CantidadEquipos</small>
+        </div>
+        <a asp-action="AgendarPartido" asp-route-id="@Model.Id" class="btn btn-primary shadow-sm">
+            <i class="bi bi-calendar-plus"></i> + Agendar Partido
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="ps-3">Fecha y Hora</th>
+                        <th>Fase</th>
+                        <th class="text-center">Encuentro</th>
+                        <th class="text-center">Resultado</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-end pe-3">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Partidos.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-calendar-x d-block fs-2 mb-2"></i>
+                                No hay partidos agendados todavía.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var partido in Model.Partidos.OrderBy(p => p.Fecha))
+                        {
+                            <tr>
+                                <td class="ps-3">
+                                    <span class="d-block fw-bold">@partido.Fecha.ToString("dd/MM/yyyy")</span>
+                                    <small class="text-muted">@partido.Fecha.ToString("HH:mm") hs</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info text-dark">@partido.Fase</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="fw-bold">@partido.Local</span>
+                                    <span class="mx-2 text-muted">vs</span>
+                                    <span class="fw-bold">@partido.Visitante</span>
+                                </td>
+                                <td class="text-center">
+                                    @if (partido.Jugado)
+                                    {
+                                        <span class="fs-5 fw-bold text-primary">@partido.GolesLocal - @partido.GolesVisitante</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-- : --</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge @(partido.Jugado ? "bg-success" : "bg-warning")">
+                                        <i class="bi @(partido.Jugado ? "bi-check-circle" : "bi-clock")"></i>
+                                        @(partido.Jugado ? "Finalizado" : "Pendiente")
+                                    </span>
+                                </td>
+                                <td class="text-end pe-3">
+                                    <a asp-action="CargarResultado" asp-route-id="@partido.Id"
+                                           class="btn btn-sm @(partido.Jugado ? "btn-outline-secondary" : "btn-success")">
+                                        <i class="bi bi-pencil-square"></i> @(partido.Jugado ? "Editar" : "Cargar")
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
