@@ -20,5 +20,10 @@
         // Relación con Equipos y Partidos
         public ICollection<Equipo> Equipos { get; set; } = new List<Equipo>();
         public ICollection<Partido> Partidos { get; set; } = new List<Partido>();
+
+        /// <summary>
+        /// Colección de instanciaciones de esta penca en diferentes sitios de la plataforma.
+        /// </summary>
+        public ICollection<PencaInstancia> Instancias { get; set; } = new List<PencaInstancia>();
     }
 }

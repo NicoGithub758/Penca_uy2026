@@ -13,6 +13,18 @@ namespace Penca_uy2026.Data
         public DbSet<Equipo> Equipos { get; set; }
         public DbSet<Partido> Partidos { get; set; }
 
+        // --- Nuevos Modelos Integrados ---
+        public DbSet<Sitio> Sitios { get; set; }
+        public DbSet<PencaInstancia> PencaInstancias { get; set; }
+        public DbSet<UsuarioSitio> UsuariosSitio { get; set; }
+        public DbSet<Participacion> Participaciones { get; set; }
+        public DbSet<Prediccion> Predicciones { get; set; }
+        public DbSet<Pago> Pagos { get; set; }
+        public DbSet<MensajeChat> MensajesChat { get; set; }
+        public DbSet<Notificacion> Notificaciones { get; set; }
+        public DbSet<Invitacion> Invitaciones { get; set; }
+        public DbSet<SolicitudIngreso> SolicitudesIngreso { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             // Mantenemos el ignore para que no falle por el hash dinámico de BCrypt
@@ -22,6 +34,13 @@ namespace Penca_uy2026.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Se itera por todas las relaciones de nuestro modelo cambiando el comportamiento de borrado
+            foreach (var relationship in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
+            {
+                // Restrict: Evita que el borrado de una entidad padre elimine automáticamente a los hijos
+                relationship.DeleteBehavior = DeleteBehavior.Restrict;
+            }
 
             // Seed del Admin inicial
             modelBuilder.Entity<PlataformaAdmin>().HasData(new PlataformaAdmin
