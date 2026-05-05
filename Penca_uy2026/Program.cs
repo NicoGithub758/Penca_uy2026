@@ -10,8 +10,10 @@ var builder = WebApplication.CreateBuilder(args);
 // 1. Soporte para Vistas y Controladores
 builder.Services.AddControllersWithViews();
 
+//builder.Services.AddDbContext<MyDbContext>(options =>
+  //  options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddDbContext<MyDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DATABASE_URL")));
 
 // 2. Configuración de Autenticación JWT + Cookies
 builder.Services.AddAuthentication(options =>
