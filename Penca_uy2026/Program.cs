@@ -47,7 +47,10 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddHttpClient();
+
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<MobileAuthService>();
 
 var app = builder.Build();
 

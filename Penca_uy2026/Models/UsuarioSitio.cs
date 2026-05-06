@@ -20,6 +20,23 @@ namespace Penca_uy2026.Models
         [EmailAddress(ErrorMessage = "Formato de correo inválido")]
         public string Email { get; set; } = string.Empty;
 
+        // Login con Google/Auth0
+        [MaxLength(200)]
+        public string? Auth0Id { get; set; }
+
+        // Login interno
+        [MaxLength(500)]
+        public string? PasswordHash { get; set; }
+
+        // Notificaciones push
+        [MaxLength(500)]
+        public string? FcmToken { get; set; }
+
+        public bool Activo { get; set; } = true;
+        public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
+
+        public RolUsuarioSitio Rol { get; set; } = RolUsuarioSitio.Jugador;
+
         // --- RELACIONES ---
 
         [Required]
@@ -37,5 +54,11 @@ namespace Penca_uy2026.Models
         /// Notificaciones recibidas por el usuario dentro del sitio.
         /// </summary>
         public ICollection<Notificacion> Notificaciones { get; set; } = new List<Notificacion>();
+    }
+
+    public enum RolUsuarioSitio
+    {
+        Jugador = 0,
+        AdminSitio = 1
     }
 }
