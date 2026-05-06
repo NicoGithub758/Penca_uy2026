@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Penca_uy2026.Models;
 using Penca_uy2026.Interfaces;
-using Penca_uy2026.Services;
 using System.Linq.Expressions;
 
 namespace Penca_uy2026.Data

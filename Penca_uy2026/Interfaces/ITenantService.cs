@@ -1,6 +1,8 @@
 ﻿namespace Penca_uy2026.Interfaces
 {
-    public class ITenantService
+    public interface ITenantService
     {
+        int? GetTenantId();
+        Task SetTenantFromHostAsync();
     }
 }
