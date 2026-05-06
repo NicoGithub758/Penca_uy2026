@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Penca_uy2026.Data;
 using Penca_uy2026.Services;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,8 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<MyDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+//builder.Services.AddDbContext<MyDbContext>(options =>
+  //  options.UseNpgsql(builder.Configuration.GetConnectionString("DATABASE_URL")));
 
 // 2. Configuración de Autenticación JWT + Cookies
 builder.Services.AddAuthentication(options =>
@@ -76,5 +79,11 @@ app.MapControllerRoute(
     pattern: "{controller=AdminAuth}/{action=Login}/{id?}"); // Cambiado a AdminAuth/Login como inicio
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<MyDbContext>();
+    db.Database.Migrate();
+}
 
 app.Run();
