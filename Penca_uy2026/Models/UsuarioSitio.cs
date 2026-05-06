@@ -1,13 +1,10 @@
+using Penca_uy2026.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Penca_uy2026.Models
 {
-    /// <summary>
-    /// Representa un usuario final registrado en un sitio específico.
-    /// Un mismo usuario físico podría estar registrado en múltiples sitios con diferentes perfiles.
-    /// </summary>
-    public class UsuarioSitio
+    public class UsuarioSitio : IMultiTenant
     {
         [Key]
         public int Id { get; set; }
@@ -20,6 +17,13 @@ namespace Penca_uy2026.Models
         [EmailAddress(ErrorMessage = "Formato de correo inválido")]
         public string Email { get; set; } = string.Empty;
 
+        // NUEVO: Para poder loguearse al sitio
+        [Required]
+        public string PasswordHash { get; set; } = string.Empty;
+
+        // NUEVO: Para saber si este usuario es el que manda en el Sitio
+        public bool EsAdminSitio { get; set; } = false;
+
         // --- RELACIONES ---
 
         [Required]
@@ -28,14 +32,7 @@ namespace Penca_uy2026.Models
         [ForeignKey("SitioId")]
         public Sitio Sitio { get; set; } = null!;
 
-        /// <summary>
-        /// Historial de pencas en las que el usuario ha participado o está participando.
-        /// </summary>
         public ICollection<Participacion> Participaciones { get; set; } = new List<Participacion>();
-
-        /// <summary>
-        /// Notificaciones recibidas por el usuario dentro del sitio.
-        /// </summary>
         public ICollection<Notificacion> Notificaciones { get; set; } = new List<Notificacion>();
     }
 }

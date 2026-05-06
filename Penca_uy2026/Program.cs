@@ -7,6 +7,17 @@ using Penca_uy2026.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+// 1. Acceso al contexto HTTP (para leer la URL del navegador)
+builder.Services.AddHttpContextAccessor();
+
+// 2. Registro de tu servicio de Tenant
+builder.Services.AddScoped<ITenantService, TenantService>();
+
+// 3. Configuración del DbContext
+builder.Services.AddDbContext<MyDbContext>((serviceProvider, options) =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
 
 // 1. Soporte para Vistas y Controladores
 builder.Services.AddControllersWithViews();

@@ -1,3 +1,4 @@
+using Penca_uy2026.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -8,7 +9,7 @@ namespace Penca_uy2026.Models
     /// <summary>
     /// Representa la solicitud de un usuario externo para unirse a un sitio con autorización.
     /// </summary>
-    public class SolicitudIngreso
+    public class SolicitudIngreso : IMultiTenant
     {
         [Key]
         public int Id { get; set; }
@@ -26,6 +27,7 @@ namespace Penca_uy2026.Models
         
         [Required]
         public int SitioId { get; set; }
+
         
         [ForeignKey("SitioId")]
         public Sitio Sitio { get; set; } = null!;

@@ -1,19 +1,29 @@
 using Microsoft.EntityFrameworkCore;
 using Penca_uy2026.Models;
+using Penca_uy2026.Interfaces;
+using Penca_uy2026.Services;
+using System.Linq.Expressions;
 
 namespace Penca_uy2026.Data
 {
     public class MyDbContext : DbContext
     {
-        public MyDbContext(DbContextOptions<MyDbContext> options) : base(options) { }
+        private readonly int? _currentSitioId;
 
+        public MyDbContext(DbContextOptions<MyDbContext> options, ITenantService tenantService)
+            : base(options)
+        {
+            _currentSitioId = tenantService.GetTenantId();
+        }
+
+        // --- Tablas Globales ---
         public DbSet<PlataformaAdmin> PlataformaAdmins { get; set; }
         public DbSet<Deporte> Deportes { get; set; }
         public DbSet<Penca> Pencas { get; set; }
         public DbSet<Equipo> Equipos { get; set; }
         public DbSet<Partido> Partidos { get; set; }
 
-        // --- Nuevos Modelos Integrados ---
+        // --- Tablas Multi-tenant (Aisladas por Sitio) ---
         public DbSet<Sitio> Sitios { get; set; }
         public DbSet<PencaInstancia> PencaInstancias { get; set; }
         public DbSet<UsuarioSitio> UsuariosSitio { get; set; }
@@ -27,7 +37,6 @@ namespace Penca_uy2026.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            // Mantenemos el ignore para que no falle por el hash dinámico de BCrypt
             optionsBuilder.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
         }
 
@@ -35,14 +44,28 @@ namespace Penca_uy2026.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Se itera por todas las relaciones de nuestro modelo cambiando el comportamiento de borrado
+            // 1. Evitar borrado en cascada
             foreach (var relationship in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
             {
-                // Restrict: Evita que el borrado de una entidad padre elimine automáticamente a los hijos
                 relationship.DeleteBehavior = DeleteBehavior.Restrict;
             }
 
-            // Seed del Admin inicial
+            // 2. FILTRO GLOBAL MULTI-TENANT
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                if (typeof(IMultiTenant).IsAssignableFrom(entityType.ClrType))
+                {
+                    var parameter = Expression.Parameter(entityType.ClrType, "e");
+                    var body = Expression.Equal(
+                        Expression.Property(parameter, "SitioId"),
+                        Expression.Constant(_currentSitioId, typeof(int?)));
+
+                    var filter = Expression.Lambda(body, parameter);
+                    modelBuilder.Entity(entityType.ClrType).HasQueryFilter(filter);
+                }
+            }
+
+            // 3. SEED: Admin inicial
             modelBuilder.Entity<PlataformaAdmin>().HasData(new PlataformaAdmin
             {
                 Id = 1,
@@ -50,7 +73,7 @@ namespace Penca_uy2026.Data
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123")
             });
 
-            // Seed de Deportes iniciales (puedes agregar más)
+            // 4. SEED: Deportes
             modelBuilder.Entity<Deporte>().HasData(
                 new Deporte { Id = 1, Nombre = "Fútbol" },
                 new Deporte { Id = 2, Nombre = "Básquetbol" },
