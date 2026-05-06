@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Penca_uy2026.Data;
 using Penca_uy2026.Models;
-using Penca_uy2026.ViewModels;
+using Penca_uy2026.Models.ViewModels;
 
 [Authorize(Roles = "PlataformaAdmin")]
 public class SitiosController : Controller
