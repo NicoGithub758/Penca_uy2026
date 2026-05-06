@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Penca_uy2026.Models;
 using Penca_uy2026.Interfaces;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace Penca_uy2026.Data
 {
@@ -21,9 +22,9 @@ namespace Penca_uy2026.Data
         public DbSet<Penca> Pencas { get; set; }
         public DbSet<Equipo> Equipos { get; set; }
         public DbSet<Partido> Partidos { get; set; }
+        public DbSet<Sitio> Sitios { get; set; } // Sitio suele ser global para poder buscarlo
 
         // --- Tablas Multi-tenant (Aisladas por Sitio) ---
-        public DbSet<Sitio> Sitios { get; set; }
         public DbSet<PencaInstancia> PencaInstancias { get; set; }
         public DbSet<UsuarioSitio> UsuariosSitio { get; set; }
         public DbSet<Participacion> Participaciones { get; set; }
@@ -43,24 +44,24 @@ namespace Penca_uy2026.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // 1. Evitar borrado en cascada
+            // 1. Evitar borrado en cascada para evitar ciclos
             foreach (var relationship in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
             {
                 relationship.DeleteBehavior = DeleteBehavior.Restrict;
             }
 
-            // 2. FILTRO GLOBAL MULTI-TENANT
+            // 2. FILTRO GLOBAL MULTI-TENANT DINÁMICO
+            // Este bloque soluciona el error "Equal is not defined for int and int?"
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
                 if (typeof(IMultiTenant).IsAssignableFrom(entityType.ClrType))
                 {
-                    var parameter = Expression.Parameter(entityType.ClrType, "e");
-                    var body = Expression.Equal(
-                        Expression.Property(parameter, "SitioId"),
-                        Expression.Constant(_currentSitioId, typeof(int?)));
+                    // Llamamos al método auxiliar definido abajo
+                    var method = typeof(MyDbContext)
+                        .GetMethod(nameof(ApplyTenantFilter), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                        ?.MakeGenericMethod(entityType.ClrType);
 
-                    var filter = Expression.Lambda(body, parameter);
-                    modelBuilder.Entity(entityType.ClrType).HasQueryFilter(filter);
+                    method?.Invoke(this, new object[] { modelBuilder });
                 }
             }
 
@@ -80,5 +81,21 @@ namespace Penca_uy2026.Data
                 new Deporte { Id = 4, Nombre = "Vóleibol" }
             );
         }
+
+        // Método auxiliar para aplicar el filtro de forma segura
+        private void ApplyMutableFilter<T>(ModelBuilder modelBuilder) where T : class, IMultiTenant
+        {
+            modelBuilder.Entity<T>().HasQueryFilter(e =>
+                _currentSitioId == null || e.SitioId == _currentSitioId);
+        }
+
+
+        private void ApplyTenantFilter<T>(ModelBuilder modelBuilder) where T : class, IMultiTenant
+        {
+            modelBuilder.Entity<T>().HasQueryFilter(e =>
+                _currentSitioId == null || e.SitioId == _currentSitioId);
+        }
     }
+
+
 }
