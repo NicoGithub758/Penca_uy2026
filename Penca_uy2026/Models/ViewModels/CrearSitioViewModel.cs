@@ -1,4 +1,4 @@
-﻿namespace Penca_uy2026.Models
+﻿namespace Penca_uy2026.Models.ViewModels
 {
     public class CrearSitioViewModel
     {
