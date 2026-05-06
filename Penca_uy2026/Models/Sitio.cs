@@ -15,6 +15,22 @@ namespace Penca_uy2026.Models
         [MaxLength(100)]
         public string Nombre { get; set; } = string.Empty;
 
+        [MaxLength(300)]
+        public string? Descripcion { get; set; }
+
+        [MaxLength(500)]
+        public string? LogoUrl { get; set; }
+
+        [MaxLength(7)]
+        public string? ColorPrincipal { get; set; }
+
+        /// <summary>
+        /// Tipo de registro permitido en el sitio.
+        /// </summary>
+        public TipoRegistro TipoRegistro { get; set; } = TipoRegistro.Abierta;
+
+        public bool Activo { get; set; } = true;
+
         // --- RELACIONES ---
 
         /// <summary>
@@ -36,5 +52,13 @@ namespace Penca_uy2026.Models
         /// Solicitudes de acceso pendientes de aprobación por el administrador del sitio.
         /// </summary>
         public ICollection<SolicitudIngreso> SolicitudesIngreso { get; set; } = new List<SolicitudIngreso>();
+    }
+
+    public enum TipoRegistro
+    {
+        Abierta = 0,
+        AbiertaConAutorizacion = 1,
+        SoloConInvitacion = 2,
+        Cerrada = 3
     }
 }
