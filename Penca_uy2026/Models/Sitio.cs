@@ -24,5 +24,6 @@ namespace Penca_uy2026.Models
         public ICollection<UsuarioSitio> Usuarios { get; set; } = new List<UsuarioSitio>();
         public ICollection<Invitacion> Invitaciones { get; set; } = new List<Invitacion>();
         public ICollection<SolicitudIngreso> SolicitudesIngreso { get; set; } = new List<SolicitudIngreso>();
+        public bool Activo { get; set; } = true;
     }
 }
