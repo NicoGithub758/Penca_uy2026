@@ -29,7 +29,7 @@ public class SitiosController : Controller
             var nuevoSitio = new Sitio
             {
                 Nombre = model.NombreSitio,
-                Url = model.UrlSitio.ToLower()
+                Url = model.UrlVercel.ToLower()
             };
 
             _context.Sitios.Add(nuevoSitio);
