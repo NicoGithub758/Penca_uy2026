@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Penca_uy2026.Models;
+using Penca_uy2026.Models.ViewModels;
 using Penca_uy2026.Services;
 
 namespace Penca_uy2026.Controllers
@@ -56,6 +57,13 @@ namespace Penca_uy2026.Controllers
         {
             Response.Cookies.Delete("AuthToken");
             return RedirectToAction("Login");
+        }
+
+        [HttpGet("CrearSitio")]
+        public IActionResult CrearSitio()
+        {
+            // Retornamos la vista con un modelo vacío para que no explote
+            return View(new CrearSitioViewModel());
         }
     }
 }
