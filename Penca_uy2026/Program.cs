@@ -54,6 +54,23 @@ builder.Services.AddHttpClient();
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<MobileAuthService>();
+builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<UsuarioAuthService>();
+
+// Buscar en la config las URLs permitidas, si no encontró nada se asume ambiente de desarrollo.
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string>()?.Split(',') ?? new[] { "http://localhost:5173" };
+// Autorizar a la aplicación de React para evitar error de CORS.
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp",
+        policy =>
+        {
+            policy.WithOrigins(allowedOrigins)
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+        });
+});
 
 var app = builder.Build();
 
@@ -68,6 +85,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseCors("AllowReactApp"); // No mover de lugar, el orden es importante.
 
 // El orden aquí es vital: Autenticación antes que Autorización
 app.UseAuthentication();

@@ -1,0 +1,82 @@
+using Microsoft.AspNetCore.Mvc;
+using Penca_uy2026.DTOs;
+using Penca_uy2026.Services;
+
+namespace Penca_uy2026.Controllers
+{
+    /// <summary>
+    /// Controlador encargado de gestionar los procesos de autenticación para los usuarios web.
+    /// Actúa como punto de entrada (Gateway) delegando la lógica de negocio al servicio UsuarioAuthService.
+    /// </summary>
+    [ApiController]
+    [Route("api/auth")]
+    public class WebAuthController : ControllerBase
+    {
+        private readonly UsuarioAuthService _usuarioAuthService;
+
+        public WebAuthController(UsuarioAuthService usuarioAuthService)
+        {
+            _usuarioAuthService = usuarioAuthService;
+        }
+
+        /// <summary>
+        /// Endpoint para el inicio de sesión tradicional mediante credenciales internas.
+        /// POST /api/auth/login
+        /// </summary>
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        {
+            // Se delega la validación y generación del resultado al servicio de autenticación.
+            var result = await _usuarioAuthService.LoginTradicionalAsync(request.Email, request.Password);
+
+            if (result == null)
+            {
+                return Unauthorized(new { mensaje = "El correo electrónico o la contraseña son incorrectos, o el usuario está inactivo." });
+            }
+
+            // Se retorna el token JWT y el perfil del usuario al cliente React.
+            return Ok(new
+            {
+                jwt = result.Jwt,
+                usuario = new
+                {
+                    id = result.UsuarioSitioId,
+                    nombre = result.Nombre,
+                    email = result.Email,
+                    sitioId = result.SitioId,
+                    // Se asume el rol del usuario para la web, el cual será extraído del JWT por el cliente si es necesario.
+                    rol = 0 
+                }
+            });
+        }
+
+        /// <summary>
+        /// Endpoint para el inicio de sesión social mediante Google (vía Auth0).
+        /// POST /api/auth/google
+        /// </summary>
+        [HttpPost("google")]
+        public async Task<IActionResult> LoginGoogle([FromBody] SocialLoginRequest request)
+        {
+            // Se delega el flujo de autenticación social al servicio correspondiente.
+            var result = await _usuarioAuthService.LoginGoogleAsync(request.Auth0Token, request.SitioId);
+
+            if (result == null)
+            {
+                return Unauthorized(new { mensaje = "No se pudo validar la identidad con Google o el sitio seleccionado no es válido." });
+            }
+
+            return Ok(new
+            {
+                jwt = result.Jwt,
+                usuario = new
+                {
+                    id = result.UsuarioSitioId,
+                    nombre = result.Nombre,
+                    email = result.Email,
+                    sitioId = result.SitioId,
+                    rol = 0
+                }
+            });
+        }
+    }
+}
