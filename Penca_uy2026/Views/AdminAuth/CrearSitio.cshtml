@@ -10,7 +10,6 @@
         </div>
     }
 
-    @* IMPORTANTE: asp-action debe coincidir con el [HttpPost] *@
     <form asp-controller="AdminAuth" asp-action="CrearSitio" method="post">
         @Html.AntiForgeryToken()
 
@@ -25,10 +24,16 @@
         </div>
 
         <hr class="my-6" />
+        <h3 class="text-lg font-semibold mb-4">Datos del Administrador</h3>
+
+        <div class="mb-4">
+            <label class="block font-bold">Nombre del Administrador</label>
+            <input asp-for="NombreAdmin" class="w-full border p-2 rounded" placeholder="Juan Pérez" />
+        </div>
 
         <div class="mb-4">
             <label class="block font-bold">Email del Administrador</label>
-            <input asp-for="EmailAdmin" type="email" class="w-full border p-2 rounded" />
+            <input asp-for="EmailAdmin" type="email" class="w-full border p-2 rounded" placeholder="admin@ejemplo.com" />
         </div>
 
         <div class="mb-6">
@@ -36,7 +41,7 @@
             <input asp-for="PasswordAdmin" type="password" class="w-full border p-2 rounded" />
         </div>
 
-        <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 rounded hover:bg-green-700">
+        <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 rounded hover:bg-green-700 transition duration-300">
             Guardar Sitio y Admin
         </button>
     </form>

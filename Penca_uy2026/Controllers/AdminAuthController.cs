@@ -18,9 +18,33 @@ namespace Penca_uy2026.Controllers
             _context = context;
         }
 
-        // GET: /AdminAuth/Login
+        // Este muestra la página (GET)
         [HttpGet("Login")]
         public IActionResult Login() => View(new LoginViewModel());
+
+        // Este recibe los datos al apretar el botón (POST)
+        [HttpPost("Login")] // <--- ESTO ES LO QUE TE FALTA O ESTÁ MAL
+        public IActionResult Login(LoginRequest request)
+        {
+            var token = _authService.LoginPlataforma(request);
+
+            if (token == null)
+            {
+                ViewBag.Error = "Email o contraseña incorrectos.";
+                return View(new LoginViewModel { Email = request.Email });
+            }
+
+            Response.Cookies.Append("AuthToken", token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddHours(8)
+            });
+
+            // Cambiamos el redireccionamiento para que sea exacto
+            return RedirectToAction("Index", "Penca");
+        }
 
         // GET: /AdminAuth/CrearSitio (Muestra el formulario)
         [HttpGet("CrearSitio")]
