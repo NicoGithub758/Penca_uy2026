@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Penca_uy2026.Models;
 using Penca_uy2026.Models.ViewModels;
 using Penca_uy2026.Services;
+using Penca_uy2026.Data;
 
 namespace Penca_uy2026.Controllers
 {
@@ -9,61 +10,70 @@ namespace Penca_uy2026.Controllers
     public class AdminAuthController : Controller
     {
         private readonly AuthService _authService;
+        private readonly MyDbContext _context;
 
-        public AdminAuthController(AuthService authService)
+        public AdminAuthController(AuthService authService, MyDbContext context)
         {
             _authService = authService;
+            _context = context;
         }
 
         // GET: /AdminAuth/Login
         [HttpGet("Login")]
-        public IActionResult Login()
-        {
-            if (Request.Cookies.ContainsKey("AuthToken"))
-            {
-                return RedirectToAction("Index", "Penca", null);
-            }
+        public IActionResult Login() => View(new LoginViewModel());
 
-            // Enviamos un modelo vacío pero instanciado para evitar NullReference
-            return View(new LoginViewModel());
-        }
-
-        // POST: /AdminAuth/Login
-        [HttpPost("Login")]
-        public IActionResult Login(LoginRequest request)
-        {
-            var token = _authService.LoginPlataforma(request);
-
-            if (token == null)
-            {
-                ViewBag.Error = "Email o contraseña incorrectos.";
-                // Retornamos el modelo con el Email para que el usuario no tenga que reescribirlo
-                return View(new LoginViewModel { Email = request.Email });
-            }
-
-            Response.Cookies.Append("AuthToken", token, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddHours(8)
-            });
-
-            return RedirectToAction("Index", "Penca", null);
-        }
-
-        [HttpGet("Logout")]
-        public IActionResult Logout()
-        {
-            Response.Cookies.Delete("AuthToken");
-            return RedirectToAction("Login");
-        }
-
+        // GET: /AdminAuth/CrearSitio (Muestra el formulario)
         [HttpGet("CrearSitio")]
         public IActionResult CrearSitio()
         {
-            // Retornamos la vista con un modelo vacío para que no explote
             return View(new CrearSitioViewModel());
+        }
+
+        // POST: /AdminAuth/CrearSitio (Recibe los datos del formulario)
+        [HttpPost("CrearSitio")]
+        [ValidateAntiForgeryToken] // Seguridad obligatoria
+        public async Task<IActionResult> CrearSitio(CrearSitioViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // 1. Creamos el Sitio
+                var nuevoSitio = new Sitio
+                {
+                    Nombre = model.NombreSitio,
+                    Url = model.UrlVercel.ToLower().Trim(),
+                    Activo = true
+                };
+
+                _context.Sitios.Add(nuevoSitio);
+                await _context.SaveChangesAsync();
+
+                // 2. Creamos el Administrador del Sitio
+                var adminSitio = new UsuarioSitio
+                {
+                    Nombre = model.NombreAdmin,
+                    Email = model.EmailAdmin,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.PasswordAdmin),
+                    EsAdminSitio = true,
+                    SitioId = nuevoSitio.Id
+                };
+
+                _context.UsuariosSitio.Add(adminSitio);
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
+                TempData["Success"] = "¡Sitio creado con éxito!";
+                return RedirectToAction("Login");
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                ModelState.AddModelError("", "Error al guardar: " + ex.Message);
+                return View(model);
+            }
         }
     }
 }
