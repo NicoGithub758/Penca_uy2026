@@ -104,8 +104,8 @@ namespace Penca_uy2026.Controllers
 
                 await transaction.CommitAsync();
 
-                TempData["Success"] = "¡Sitio creado con éxito!";
-                return RedirectToAction("Login");
+                TempData["Success"] = $"El sitio '{model.NombreSitio}' ha sido creado correctamente.";
+                return RedirectToAction("Index", "Penca");
             }
             catch (Exception ex)
             {
