@@ -57,6 +57,7 @@ namespace Penca_uy2026.Controllers
         [HttpPost("google")]
         public async Task<IActionResult> LoginGoogle([FromBody] SocialLoginRequest request)
         {
+            Console.WriteLine("DEBUG: Petición recibida en WebAuthController -> LoginGoogle");
             // Se delega el flujo de autenticación social al servicio correspondiente.
             var result = await _usuarioAuthService.LoginGoogleAsync(request.Auth0Token, request.SitioId);
 

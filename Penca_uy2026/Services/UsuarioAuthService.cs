@@ -68,11 +68,25 @@ namespace Penca_uy2026.Services
         {
             // 1. Se valida el token externo contra el endpoint de información de usuario de Auth0.
             var auth0User = await ValidarTokenAuth0Async(auth0Token);
-            if (auth0User == null) return null;
+            if (auth0User == null)
+            {
+                Console.WriteLine("DEBUG: Falló la validación del token contra Auth0 /userinfo.");
+                return null;
+            }
 
             // 2. Se confirma que el sitio destino esté disponible para operación.
             var sitio = await _context.Sitios.FindAsync(sitioId);
-            if (sitio == null || !sitio.Activo) return null;
+            if (sitio == null)
+            {
+                Console.WriteLine($"DEBUG: No se encontró el sitio con ID {sitioId} en la base de datos.");
+                return null;
+            }
+            
+            if (!sitio.Activo)
+            {
+                Console.WriteLine($"DEBUG: El sitio {sitioId} existe pero no está activo.");
+                return null;
+            }
 
             // 3. Se busca al usuario local o se procede a su creación (Sincronización).
             var usuario = await _context.UsuariosSitio
