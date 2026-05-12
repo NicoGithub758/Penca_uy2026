@@ -1,48 +1,77 @@
 ﻿@model Penca_uy2026.Models.ViewModels.CrearSitioViewModel
 
-<div class="max-w-md mx-auto mt-10 bg-white p-8 rounded-lg shadow-md">
-    <h2 class="text-2xl font-bold mb-6 text-center">Registrar Nuevo Sitio</h2>
+@{
+    ViewData["Title"] = "Nuevo Sitio";
+}
 
-    @if (!ViewData.ModelState.IsValid)
-    {
-        <div class="bg-red-100 text-red-700 p-3 rounded mb-4">
-            <div asp-validation-summary="All"></div>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0" style="border-radius: 15px;">
+                <div class="card-header bg-dark text-white text-center py-3" style="border-radius: 15px 15px 0 0;">
+                    <h2 class="h4 mb-0"><i class="bi bi-plus-circle me-2"></i>Registrar Nuevo Sitio</h2>
+                </div>
+                
+                <div class="card-body p-4">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger shadow-sm">
+                            <div asp-validation-summary="All" class="small"></div>
+                        </div>
+                    }
+
+                    <form asp-controller="AdminAuth" asp-action="CrearSitio" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <h5 class="text-primary border-bottom pb-2 mb-3">Configuración del Sitio</h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nombre del Sitio</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-tag"></i></span>
+                                <input asp-for="NombreSitio" class="form-control" placeholder="Ej: Mi Penca Pro" required />
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">URL de Vercel</label>
+                            <div class="input-group">
+                                <span class="input-group-text">https://</span>
+                                <input asp-for="UrlVercel" class="form-control" placeholder="mipenca.vercel.app" required />
+                            </div>
+                            <div class="form-text text-muted">Introduce la URL sin el protocolo http/https.</div>
+                        </div>
+
+                        <h5 class="text-primary border-bottom pb-2 mb-3 mt-4">Cuenta de Administrador</h5>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nombre Completo</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                <input asp-for="NombreAdmin" class="form-control" placeholder="Juan Pérez" required />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Email</label>
+                                <input asp-for="EmailAdmin" type="email" class="form-control" placeholder="admin@ejemplo.com" required />
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label fw-bold">Contraseña</label>
+                                <input asp-for="PasswordAdmin" type="password" class="form-control" required />
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-2">
+                            <button type="submit" class="btn btn-success btn-lg shadow-sm">
+                                <i class="bi bi-cloud-check me-2"></i>Guardar Sitio y Administrador
+                            </button>
+                            <a asp-action="Index" asp-controller="Penca" class="btn btn-link text-muted mt-2">Cancelar y Volver</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-    }
-
-    <form asp-controller="AdminAuth" asp-action="CrearSitio" method="post">
-        @Html.AntiForgeryToken()
-
-        <div class="mb-4">
-            <label class="block font-bold">Nombre del Sitio</label>
-            <input asp-for="NombreSitio" class="w-full border p-2 rounded" placeholder="Mi Penca Pro" />
-        </div>
-
-        <div class="mb-4">
-            <label class="block font-bold">URL de Vercel (sin http)</label>
-            <input asp-for="UrlVercel" class="w-full border p-2 rounded" placeholder="mipenca.vercel.app" />
-        </div>
-
-        <hr class="my-6" />
-        <h3 class="text-lg font-semibold mb-4">Datos del Administrador</h3>
-
-        <div class="mb-4">
-            <label class="block font-bold">Nombre del Administrador</label>
-            <input asp-for="NombreAdmin" class="w-full border p-2 rounded" placeholder="Juan Pérez" />
-        </div>
-
-        <div class="mb-4">
-            <label class="block font-bold">Email del Administrador</label>
-            <input asp-for="EmailAdmin" type="email" class="w-full border p-2 rounded" placeholder="admin@ejemplo.com" />
-        </div>
-
-        <div class="mb-6">
-            <label class="block font-bold">Password del Administrador</label>
-            <input asp-for="PasswordAdmin" type="password" class="w-full border p-2 rounded" />
-        </div>
-
-        <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 rounded hover:bg-green-700 transition duration-300">
-            Guardar Sitio y Admin
-        </button>
-    </form>
+    </div>
 </div>
