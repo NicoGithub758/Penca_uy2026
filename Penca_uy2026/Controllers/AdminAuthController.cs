@@ -17,23 +17,32 @@ namespace Penca_uy2026.Controllers
             _authService = authService;
             _context = context;
         }
-
-        // Este muestra la página (GET)
+        // GET: /AdminAuth/Login
         [HttpGet("Login")]
-        public IActionResult Login() => View(new LoginViewModel());
+        public IActionResult Login()
+        {
+            // Si ya tiene el token, lo mandamos al panel
+            if (Request.Cookies.ContainsKey("AuthToken"))
+            {
+                return RedirectToAction("Index", "Penca");
+            }
+            return View(new LoginViewModel());
+        }
 
-        // Este recibe los datos al apretar el botón (POST)
-        [HttpPost("Login")] // <--- ESTO ES LO QUE TE FALTA O ESTÁ MAL
+        // POST: /AdminAuth/Login
+        [HttpPost("Login")]
+        [ValidateAntiForgeryToken] // Fundamental para evitar el error 405 en producción
         public IActionResult Login(LoginRequest request)
         {
             var token = _authService.LoginPlataforma(request);
 
             if (token == null)
             {
-                ViewBag.Error = "Email o contraseña incorrectos.";
+                ViewBag.Error = "Credenciales incorrectas para el Panel de Administración.";
                 return View(new LoginViewModel { Email = request.Email });
             }
 
+            // Guardamos el token en una cookie segura
             Response.Cookies.Append("AuthToken", token, new CookieOptions
             {
                 HttpOnly = true,
@@ -42,10 +51,16 @@ namespace Penca_uy2026.Controllers
                 Expires = DateTime.UtcNow.AddHours(8)
             });
 
-            // Cambiamos el redireccionamiento para que sea exacto
+            // Redirigir al Index del controlador Penca
             return RedirectToAction("Index", "Penca");
         }
 
+        [HttpGet("Logout")]
+        public IActionResult Logout()
+        {
+            Response.Cookies.Delete("AuthToken");
+            return RedirectToAction("Login");
+        }
         // GET: /AdminAuth/CrearSitio (Muestra el formulario)
         [HttpGet("CrearSitio")]
         public IActionResult CrearSitio()
