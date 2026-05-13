@@ -100,7 +100,7 @@ namespace Penca_uy2026.Controllers
                     Nombre = model.NombreAdmin,
                     Email = model.EmailAdmin,
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.PasswordAdmin),
-                    EsAdminSitio = true,
+                    Rol = RolUsuarioSitio.AdminSitio,
                     SitioId = nuevoSitio.Id
                 };
 

@@ -21,8 +21,8 @@ namespace Penca_uy2026.Models
         [Required]
         public string PasswordHash { get; set; } = string.Empty;
 
-        // NUEVO: Para saber si este usuario es el que manda en el Sitio
-        public bool EsAdminSitio { get; set; } = false;
+        [Required]
+        public RolUsuarioSitio Rol { get; set; } = RolUsuarioSitio.Jugador;
 
         // --- RELACIONES ---
 
@@ -34,5 +34,11 @@ namespace Penca_uy2026.Models
 
         public ICollection<Participacion> Participaciones { get; set; } = new List<Participacion>();
         public ICollection<Notificacion> Notificaciones { get; set; } = new List<Notificacion>();
+    }
+
+    public enum RolUsuarioSitio
+    {
+        Jugador = 0,
+        AdminSitio = 1
     }
 }
