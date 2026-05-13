@@ -127,10 +127,30 @@ namespace Penca_uy2026.Controllers
         {
             if (string.IsNullOrEmpty(nombre)) return "sitio-sin-nombre";
 
-            // Convertir a minúsculas, quitar espacios y caracteres especiales
-            string str = nombre.ToLower().Trim();
+            // 1. Convertir a minúsculas y normalizar (descompone caracteres como 'ñ' en 'n' + '~')
+            string str = nombre.ToLower().Trim().Normalize(System.Text.NormalizationForm.FormD);
+
+            // 2. Filtrar caracteres: dejamos la letra base y quitamos el acento/tilde
+            var sb = new System.Text.StringBuilder();
+            foreach (char c in str)
+            {
+                // Usamos UnicodeCategory (corregido)
+                var category = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c);
+
+                // NonSpacingMark son los acentos, tildes y diéresis que queremos ignorar
+                if (category != System.Globalization.UnicodeCategory.NonSpacingMark)
+                {
+                    sb.Append(c);
+                }
+            }
+
+            // 3. Limpieza final
+            str = sb.ToString();
+            // Quita cualquier cosa que no sea a-z o 0-9
             str = System.Text.RegularExpressions.Regex.Replace(str, @"[^a-z0-9\s-]", "");
+            // Colapsa espacios múltiples en uno solo
             str = System.Text.RegularExpressions.Regex.Replace(str, @"\s+", " ").Trim();
+            // Cambia espacios por guiones
             str = str.Replace(" ", "-");
 
             return str;
