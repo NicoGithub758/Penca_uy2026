@@ -55,6 +55,8 @@ namespace Penca_uy2026.Controllers
             return RedirectToAction("Index", "Penca");
         }
 
+
+
         [HttpGet("Logout")]
         public IActionResult Logout()
         {
