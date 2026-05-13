@@ -39,7 +39,7 @@ public class SuperAdminController : ControllerBase
                 Email = dto.EmailAdmin,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.PasswordAdmin),
                 SitioId = nuevoSitio.Id,
-                EsAdminSitio = true
+                Rol = RolUsuarioSitio.AdminSitio
             };
 
             _context.UsuariosSitio.Add(adminSitio);
