@@ -13,17 +13,31 @@ namespace Penca_uy2026.Models
         [MaxLength(100)]
         public string Nombre { get; set; } = string.Empty;
 
-        // NUEVO: Para identificar el sitio por URL (ej: "empresa.tupenca.uy" o "localhost:5001")
         [Required]
         [MaxLength(255)]
         public string Url { get; set; } = string.Empty;
 
+        [Required]
+        [MaxLength(150)]
+        public string Slug { get; set; } = string.Empty;
+        [Required]
+        public TipoRegistro TipoRegistro { get; set; }
+
+        public bool Activo { get; set; } = true;
+
         // --- RELACIONES ---
-        // (Tus colecciones actuales se mantienen igual)
         public ICollection<PencaInstancia> PencaInstancias { get; set; } = new List<PencaInstancia>();
         public ICollection<UsuarioSitio> Usuarios { get; set; } = new List<UsuarioSitio>();
         public ICollection<Invitacion> Invitaciones { get; set; } = new List<Invitacion>();
         public ICollection<SolicitudIngreso> SolicitudesIngreso { get; set; } = new List<SolicitudIngreso>();
-        public bool Activo { get; set; } = true;
+        
+    }
+
+    public enum TipoRegistro
+    {
+        Abierta = 0,
+        AbiertaConAutorizacion = 1,
+        SoloConInvitacion = 2,
+        Cerrada = 3
     }
 }

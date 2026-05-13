@@ -68,9 +68,9 @@ namespace Penca_uy2026.Controllers
             return View(new CrearSitioViewModel());
         }
 
-        // POST: /AdminAuth/CrearSitio (Recibe los datos del formulario)
+        // POST: /AdminAuth/CrearSitio
         [HttpPost("CrearSitio")]
-        [ValidateAntiForgeryToken] // Seguridad obligatoria
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CrearSitio(CrearSitioViewModel model)
         {
             if (!ModelState.IsValid) return View(model);
@@ -78,18 +78,23 @@ namespace Penca_uy2026.Controllers
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // 1. Creamos el Sitio
+                // 1. Generamos el Slug a partir del nombre
+                string slugGenerado = GenerarSlug(model.NombreSitio);
+
+                // 2. Creamos el Sitio con los nuevos campos
                 var nuevoSitio = new Sitio
                 {
                     Nombre = model.NombreSitio,
                     Url = model.UrlVercel.ToLower().Trim(),
+                    Slug = slugGenerado, // <-- Campo nuevo
+                    TipoRegistro = model.TipoRegistro, // <-- Tu nuevo Enum
                     Activo = true
                 };
 
                 _context.Sitios.Add(nuevoSitio);
                 await _context.SaveChangesAsync();
 
-                // 2. Creamos el Administrador del Sitio
+                // 3. Creamos el Administrador del Sitio
                 var adminSitio = new UsuarioSitio
                 {
                     Nombre = model.NombreAdmin,
@@ -104,7 +109,7 @@ namespace Penca_uy2026.Controllers
 
                 await transaction.CommitAsync();
 
-                TempData["Success"] = $"El sitio '{model.NombreSitio}' ha sido creado correctamente.";
+                TempData["Success"] = $"El sitio '{model.NombreSitio}' con slug '{slugGenerado}' ha sido creado.";
                 return RedirectToAction("Index", "Penca");
             }
             catch (Exception ex)
@@ -113,6 +118,20 @@ namespace Penca_uy2026.Controllers
                 ModelState.AddModelError("", "Error al guardar: " + ex.Message);
                 return View(model);
             }
+        }
+
+        // Función auxiliar para normalizar el Slug
+        private string GenerarSlug(string nombre)
+        {
+            if (string.IsNullOrEmpty(nombre)) return "sitio-sin-nombre";
+
+            // Convertir a minúsculas, quitar espacios y caracteres especiales
+            string str = nombre.ToLower().Trim();
+            str = System.Text.RegularExpressions.Regex.Replace(str, @"[^a-z0-9\s-]", "");
+            str = System.Text.RegularExpressions.Regex.Replace(str, @"\s+", " ").Trim();
+            str = str.Replace(" ", "-");
+
+            return str;
         }
     }
 }
