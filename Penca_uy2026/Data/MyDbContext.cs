@@ -1,20 +1,30 @@
 using Microsoft.EntityFrameworkCore;
 using Penca_uy2026.Models;
+using Penca_uy2026.Interfaces;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace Penca_uy2026.Data
 {
     public class MyDbContext : DbContext
     {
-        public MyDbContext(DbContextOptions<MyDbContext> options) : base(options) { }
+        private readonly int? _currentSitioId;
 
+        public MyDbContext(DbContextOptions<MyDbContext> options, ITenantService tenantService)
+            : base(options)
+        {
+            _currentSitioId = tenantService.GetTenantId();
+        }
+
+        // --- Tablas Globales ---
         public DbSet<PlataformaAdmin> PlataformaAdmins { get; set; }
         public DbSet<Deporte> Deportes { get; set; }
         public DbSet<Penca> Pencas { get; set; }
         public DbSet<Equipo> Equipos { get; set; }
         public DbSet<Partido> Partidos { get; set; }
+        public DbSet<Sitio> Sitios { get; set; } // Sitio suele ser global para poder buscarlo
 
-        // --- Nuevos Modelos Integrados ---
-        public DbSet<Sitio> Sitios { get; set; }
+        // --- Tablas Multi-tenant (Aisladas por Sitio) ---
         public DbSet<PencaInstancia> PencaInstancias { get; set; }
         public DbSet<UsuarioSitio> UsuariosSitio { get; set; }
         public DbSet<Participacion> Participaciones { get; set; }
@@ -27,7 +37,6 @@ namespace Penca_uy2026.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            // Mantenemos el ignore para que no falle por el hash dinámico de BCrypt
             optionsBuilder.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
         }
 
@@ -35,14 +44,28 @@ namespace Penca_uy2026.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Se itera por todas las relaciones de nuestro modelo cambiando el comportamiento de borrado
+            // 1. Evitar borrado en cascada para evitar ciclos
             foreach (var relationship in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
             {
-                // Restrict: Evita que el borrado de una entidad padre elimine automáticamente a los hijos
                 relationship.DeleteBehavior = DeleteBehavior.Restrict;
             }
 
-            // Seed del Admin inicial
+            // 2. FILTRO GLOBAL MULTI-TENANT DINÁMICO
+            // Este bloque soluciona el error "Equal is not defined for int and int?"
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                if (typeof(IMultiTenant).IsAssignableFrom(entityType.ClrType))
+                {
+                    // Llamamos al método auxiliar definido abajo
+                    var method = typeof(MyDbContext)
+                        .GetMethod(nameof(ApplyTenantFilter), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                        ?.MakeGenericMethod(entityType.ClrType);
+
+                    method?.Invoke(this, new object[] { modelBuilder });
+                }
+            }
+
+            // 3. SEED: Admin inicial
             modelBuilder.Entity<PlataformaAdmin>().HasData(new PlataformaAdmin
             {
                 Id = 1,
@@ -50,7 +73,7 @@ namespace Penca_uy2026.Data
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123")
             });
 
-            // Seed de Deportes iniciales (puedes agregar más)
+            // 4. SEED: Deportes
             modelBuilder.Entity<Deporte>().HasData(
                 new Deporte { Id = 1, Nombre = "Fútbol" },
                 new Deporte { Id = 2, Nombre = "Básquetbol" },
@@ -58,5 +81,21 @@ namespace Penca_uy2026.Data
                 new Deporte { Id = 4, Nombre = "Vóleibol" }
             );
         }
+
+        // Método auxiliar para aplicar el filtro de forma segura
+        private void ApplyMutableFilter<T>(ModelBuilder modelBuilder) where T : class, IMultiTenant
+        {
+            modelBuilder.Entity<T>().HasQueryFilter(e =>
+                _currentSitioId == null || e.SitioId == _currentSitioId);
+        }
+
+
+        private void ApplyTenantFilter<T>(ModelBuilder modelBuilder) where T : class, IMultiTenant
+        {
+            modelBuilder.Entity<T>().HasQueryFilter(e =>
+                _currentSitioId == null || e.SitioId == _currentSitioId);
+        }
     }
+
+
 }

@@ -1,3 +1,4 @@
+using Penca_uy2026.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -6,7 +7,7 @@ namespace Penca_uy2026.Models
     /// <summary>
     /// Representa el pronóstico de un usuario para un partido específico.
     /// </summary>
-    public class Prediccion
+    public class Prediccion : IMultiTenant
     {
         [Key]
         public int Id { get; set; }
@@ -26,7 +27,9 @@ namespace Penca_uy2026.Models
 
         [Required]
         public int ParticipacionId { get; set; }
-        
+
+        public int SitioId { get; set; }
+
         [ForeignKey("ParticipacionId")]
         public Participacion Participacion { get; set; } = null!;
 

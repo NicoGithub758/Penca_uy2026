@@ -23,12 +23,14 @@
                         </div>
                     }
 
+                    @* El asp-action debe ser "Login" para que coincida con el [HttpPost("Login")] *@
                     <form asp-controller="AdminAuth" asp-action="Login" method="post">
+                        @Html.AntiForgeryToken() @* Esto genera el token que el controlador validará *@
+
                         <div class="mb-3">
                             <label class="form-label fw-bold">Correo Electrónico</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                                @* Usamos el operador ?. para evitar el NullReferenceException *@
                                 <input type="email" name="Email" class="form-control"
                                        placeholder="admin@tupenca.uy" required
                                        value="@(Model?.Email ?? "")">

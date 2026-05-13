@@ -1,3 +1,4 @@
+using Penca_uy2026.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -6,7 +7,7 @@ namespace Penca_uy2026.Models
     /// <summary>
     /// Notificaciones generadas por el sistema para los usuarios de un sitio.
     /// </summary>
-    public class Notificacion
+    public class Notificacion : IMultiTenant
     {
         [Key]
         public int Id { get; set; }
@@ -25,7 +26,9 @@ namespace Penca_uy2026.Models
 
         [Required]
         public int UsuarioSitioId { get; set; }
-        
+
+        public int SitioId { get; set; }
+
         [ForeignKey("UsuarioSitioId")]
         public UsuarioSitio UsuarioSitio { get; set; } = null!;
     }
