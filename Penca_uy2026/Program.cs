@@ -4,19 +4,33 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Penca_uy2026.Data;
 using Penca_uy2026.Services;
-using Microsoft.EntityFrameworkCore;
+using Penca_uy2026.Interfaces;
+using Penca_uy2026.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Soporte para Vistas y Controladores
+// -----------------------------------------------------------
+// 1. REGISTRO DE SERVICIOS (Dependency Injection)
+// -----------------------------------------------------------
+
+// Acceso al contexto HTTP (necesario para que el TenantService lea la URL)
+builder.Services.AddHttpContextAccessor();
+
+// Soporte para Controladores con Vistas (Razor) y API
 builder.Services.AddControllersWithViews();
 
+// Configuración del DbContext (SQL Server)
 builder.Services.AddDbContext<MyDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-//builder.Services.AddDbContext<MyDbContext>(options =>
-  //  options.UseNpgsql(builder.Configuration.GetConnectionString("DATABASE_URL")));
 
-// 2. Configuración de Autenticación JWT + Cookies
+// Registro de Servicios de Lógica de Negocio
+builder.Services.AddScoped<ITenantService, TenantService>();
+builder.Services.AddScoped<AuthService>();
+
+// -----------------------------------------------------------
+// 2. CONFIGURACIÓN DE SEGURIDAD (JWT + COOKIES)
+// -----------------------------------------------------------
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -34,12 +48,11 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
     };
 
-    // CLAVE: Leer el token de la Cookie para las vistas Razor
+    // Permite que las vistas Razor usen el Token guardado en la Cookie
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
         {
-            // Buscamos la cookie que seteamos en el AdminAuthController
             var accessToken = context.Request.Cookies["AuthToken"];
             if (!string.IsNullOrEmpty(accessToken))
             {
@@ -74,7 +87,9 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// 3. Middlewares y Enrutamiento
+// -----------------------------------------------------------
+// 3. PIPELINE DE MIDDLEWARES (El orden es vital)
+// -----------------------------------------------------------
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -88,21 +103,38 @@ app.UseRouting();
 
 app.UseCors("AllowReactApp"); // No mover de lugar, el orden es importante.
 
+// MIDDLEWARE MULTI-TENANT: Debe ir después de Routing pero antes de Auth
+// Este identifica qué sitio (URL) está accediendo para filtrar la DB
+app.UseMiddleware<TenantMiddleware>();
+
 // El orden aquí es vital: Autenticación antes que Autorización
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 4. Mapeo de Rutas
+// -----------------------------------------------------------
+// 4. RUTAS Y MIGRACIONES
+// -----------------------------------------------------------
+
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=AdminAuth}/{action=Login}/{id?}"); // Cambiado a AdminAuth/Login como inicio
+    pattern: "{controller=AdminAuth}/{action=Login}/{id?}");
 
 app.MapControllers();
 
+// Ejecución automática de migraciones al iniciar (Railway/Producción)
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<MyDbContext>();
-    db.Database.Migrate();
+    var services = scope.ServiceProvider;
+    try
+    {
+        var db = services.GetRequiredService<MyDbContext>();
+        db.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Ocurrió un error al migrar la base de datos.");
+    }
 }
 
 app.Run();

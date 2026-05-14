@@ -1,3 +1,4 @@
+using Penca_uy2026.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -7,7 +8,7 @@ namespace Penca_uy2026.Models
     /// Representa la inscripción de un usuario en una instancia de penca.
     /// Almacena el estado de pago, puntos acumulados y las predicciones realizadas.
     /// </summary>
-    public class Participacion
+    public class Participacion : IMultiTenant
     {
         [Key]
         public int Id { get; set; }
@@ -33,7 +34,9 @@ namespace Penca_uy2026.Models
 
         [Required]
         public int PencaInstanciaId { get; set; }
-        
+
+        public int SitioId { get; set; }
+
         [ForeignKey("PencaInstanciaId")]
         public PencaInstancia PencaInstancia { get; set; } = null!;
 

@@ -1,3 +1,4 @@
+using Penca_uy2026.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -6,7 +7,7 @@ namespace Penca_uy2026.Models
     /// <summary>
     /// Representa un token de invitación enviado por correo para acceder a un sitio privado.
     /// </summary>
-    public class Invitacion
+    public class Invitacion : IMultiTenant
     {
         [Key]
         public int Id { get; set; }

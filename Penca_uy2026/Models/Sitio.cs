@@ -1,4 +1,6 @@
+// ... tus usings actuales
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Penca_uy2026.Models
 {
@@ -15,12 +17,16 @@ namespace Penca_uy2026.Models
         [MaxLength(100)]
         public string Nombre { get; set; } = string.Empty;
 
+        [MaxLength(300)]
+        public string? Descripcion { get; set; }
+
+        [Required]
+        [MaxLength(255)]
+        public string Url { get; set; } = string.Empty;
+
         [Required]
         [MaxLength(150)]
         public string Slug { get; set; } = string.Empty;
-
-        [MaxLength(300)]
-        public string? Descripcion { get; set; }
 
         [MaxLength(500)]
         public string? LogoUrl { get; set; }
@@ -31,31 +37,17 @@ namespace Penca_uy2026.Models
         /// <summary>
         /// Tipo de registro permitido en el sitio.
         /// </summary>
+        [Required]
         public TipoRegistro TipoRegistro { get; set; } = TipoRegistro.Abierta;
 
         public bool Activo { get; set; } = true;
 
         // --- RELACIONES ---
-
-        /// <summary>
-        /// Colección de pencas que han sido instanciadas en este sitio.
-        /// </summary>
         public ICollection<PencaInstancia> PencaInstancias { get; set; } = new List<PencaInstancia>();
-
-        /// <summary>
-        /// Colección de usuarios registrados específicamente en este sitio.
-        /// </summary>
         public ICollection<UsuarioSitio> Usuarios { get; set; } = new List<UsuarioSitio>();
-
-        /// <summary>
-        /// Invitaciones enviadas para unirse a este sitio.
-        /// </summary>
         public ICollection<Invitacion> Invitaciones { get; set; } = new List<Invitacion>();
-
-        /// <summary>
-        /// Solicitudes de acceso pendientes de aprobación por el administrador del sitio.
-        /// </summary>
         public ICollection<SolicitudIngreso> SolicitudesIngreso { get; set; } = new List<SolicitudIngreso>();
+        
     }
 
     public enum TipoRegistro
