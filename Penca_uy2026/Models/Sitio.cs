@@ -4,6 +4,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Penca_uy2026.Models
 {
+    /// <summary>
+    /// Representa un sitio o instancia de la plataforma tupenca.uy.
+    /// Cada sitio puede tener sus propias pencas (instancias), usuarios y configuración.
+    /// </summary>
     public class Sitio
     {
         [Key]
@@ -13,6 +17,9 @@ namespace Penca_uy2026.Models
         [MaxLength(100)]
         public string Nombre { get; set; } = string.Empty;
 
+        [MaxLength(300)]
+        public string? Descripcion { get; set; }
+
         [Required]
         [MaxLength(255)]
         public string Url { get; set; } = string.Empty;
@@ -20,8 +27,18 @@ namespace Penca_uy2026.Models
         [Required]
         [MaxLength(150)]
         public string Slug { get; set; } = string.Empty;
+
+        [MaxLength(500)]
+        public string? LogoUrl { get; set; }
+
+        [MaxLength(7)]
+        public string? ColorPrincipal { get; set; }
+
+        /// <summary>
+        /// Tipo de registro permitido en el sitio.
+        /// </summary>
         [Required]
-        public TipoRegistro TipoRegistro { get; set; }
+        public TipoRegistro TipoRegistro { get; set; } = TipoRegistro.Abierta;
 
         public bool Activo { get; set; } = true;
 

@@ -63,12 +63,34 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddHttpClient();
+
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<MobileAuthService>();
+builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<UsuarioAuthService>();
+builder.Services.AddScoped<SitioService>();
+
+// Buscar en la config las URLs permitidas, si no encontró nada se asume ambiente de desarrollo.
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string>()?.Split(',') ?? new[] { "http://localhost:5173" };
+// Autorizar a la aplicación de React para evitar error de CORS.
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp",
+        policy =>
+        {
+            policy.WithOrigins(allowedOrigins)
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+        });
+});
+
 var app = builder.Build();
 
 // -----------------------------------------------------------
 // 3. PIPELINE DE MIDDLEWARES (El orden es vital)
 // -----------------------------------------------------------
-
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -80,10 +102,13 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseCors("AllowReactApp"); // No mover de lugar, el orden es importante.
+
 // MIDDLEWARE MULTI-TENANT: Debe ir después de Routing pero antes de Auth
 // Este identifica qué sitio (URL) está accediendo para filtrar la DB
 app.UseMiddleware<TenantMiddleware>();
 
+// El orden aquí es vital: Autenticación antes que Autorización
 app.UseAuthentication();
 app.UseAuthorization();
 

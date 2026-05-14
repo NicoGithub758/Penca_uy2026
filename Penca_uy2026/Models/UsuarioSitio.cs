@@ -17,12 +17,19 @@ namespace Penca_uy2026.Models
         [EmailAddress(ErrorMessage = "Formato de correo inválido")]
         public string Email { get; set; } = string.Empty;
 
-        // NUEVO: Para poder loguearse al sitio
-        [Required]
-        public string PasswordHash { get; set; } = string.Empty;
+        // Tiene que poder ser nullable para los casos de usuarios que sólo se loguean mediante proveedor externo.
+        public string? PasswordHash { get; set; }
 
         [Required]
         public RolUsuarioSitio Rol { get; set; } = RolUsuarioSitio.Jugador;
+
+        public bool Activo { get; set; } = true;
+
+        public string? Auth0Id { get; set; }
+
+        public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
+
+        public string? FcmToken { get; set; }
 
         // --- RELACIONES ---
 
