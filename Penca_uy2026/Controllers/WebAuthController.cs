@@ -27,11 +27,11 @@ namespace Penca_uy2026.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             // Se delega la validación y generación del resultado al servicio de autenticación.
-            var result = await _usuarioAuthService.LoginTradicionalAsync(request.Email, request.Password);
+            var result = await _usuarioAuthService.LoginTradicionalAsync(request.Email, request.Password, request.Slug);
 
             if (result == null)
             {
-                return Unauthorized(new { mensaje = "El correo electrónico o la contraseña son incorrectos, o el usuario está inactivo." });
+                return Unauthorized(new { mensaje = "El correo electrónico o la contraseña son incorrectos, o el usuario está inactivo en este sitio." });
             }
 
             // Se retorna el token JWT y el perfil del usuario al cliente React.
@@ -51,6 +51,34 @@ namespace Penca_uy2026.Controllers
         }
 
         /// <summary>
+        /// Endpoint para el registro de nuevos usuarios.
+        /// POST /api/auth/register
+        /// </summary>
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        {
+            var result = await _usuarioAuthService.RegistrarUsuarioAsync(request);
+
+            if (result == null)
+            {
+                return BadRequest(new { mensaje = "El usuario ya está registrado en este sitio o los datos son inválidos." });
+            }
+
+            return Ok(new
+            {
+                jwt = result.Jwt,
+                usuario = new
+                {
+                    id = result.UsuarioSitioId,
+                    nombre = result.Nombre,
+                    email = result.Email,
+                    sitioId = result.SitioId,
+                    rol = 0
+                }
+            });
+        }
+
+        /// <summary>
         /// Endpoint para el inicio de sesión social mediante Google (vía Auth0).
         /// POST /api/auth/google
         /// </summary>
@@ -59,7 +87,7 @@ namespace Penca_uy2026.Controllers
         {
             Console.WriteLine("DEBUG: Petición recibida en WebAuthController -> LoginGoogle");
             // Se delega el flujo de autenticación social al servicio correspondiente.
-            var result = await _usuarioAuthService.LoginGoogleAsync(request.Auth0Token, request.SitioId);
+            var result = await _usuarioAuthService.LoginGoogleAsync(request.Auth0Token, request.SitioId, request.Slug);
 
             if (result == null)
             {

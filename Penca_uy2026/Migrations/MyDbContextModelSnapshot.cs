@@ -36,7 +36,7 @@ namespace Penca_uy2026.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Deportes");
+                    b.ToTable("Deportes", (string)null);
 
                     b.HasData(
                         new
@@ -80,7 +80,7 @@ namespace Penca_uy2026.Migrations
 
                     b.HasIndex("PencaId");
 
-                    b.ToTable("Equipos");
+                    b.ToTable("Equipos", (string)null);
                 });
 
             modelBuilder.Entity("Penca_uy2026.Models.Invitacion", b =>
@@ -106,7 +106,7 @@ namespace Penca_uy2026.Migrations
 
                     b.HasIndex("SitioId");
 
-                    b.ToTable("Invitaciones");
+                    b.ToTable("Invitaciones", (string)null);
                 });
 
             modelBuilder.Entity("Penca_uy2026.Models.MensajeChat", b =>
@@ -132,7 +132,7 @@ namespace Penca_uy2026.Migrations
 
                     b.HasIndex("ParticipacionId");
 
-                    b.ToTable("MensajesChat");
+                    b.ToTable("MensajesChat", (string)null);
                 });
 
             modelBuilder.Entity("Penca_uy2026.Models.Notificacion", b =>
@@ -160,7 +160,7 @@ namespace Penca_uy2026.Migrations
 
                     b.HasIndex("UsuarioSitioId");
 
-                    b.ToTable("Notificaciones");
+                    b.ToTable("Notificaciones", (string)null);
                 });
 
             modelBuilder.Entity("Penca_uy2026.Models.Pago", b =>
@@ -188,7 +188,7 @@ namespace Penca_uy2026.Migrations
 
                     b.HasIndex("ParticipacionId");
 
-                    b.ToTable("Pagos");
+                    b.ToTable("Pagos", (string)null);
                 });
 
             modelBuilder.Entity("Penca_uy2026.Models.Participacion", b =>
@@ -217,7 +217,7 @@ namespace Penca_uy2026.Migrations
 
                     b.HasIndex("UsuarioSitioId");
 
-                    b.ToTable("Participaciones");
+                    b.ToTable("Participaciones", (string)null);
                 });
 
             modelBuilder.Entity("Penca_uy2026.Models.Partido", b =>
@@ -259,7 +259,7 @@ namespace Penca_uy2026.Migrations
 
                     b.HasIndex("PencaId");
 
-                    b.ToTable("Partidos");
+                    b.ToTable("Partidos", (string)null);
                 });
 
             modelBuilder.Entity("Penca_uy2026.Models.Penca", b =>
@@ -290,7 +290,7 @@ namespace Penca_uy2026.Migrations
 
                     b.HasIndex("DeporteId");
 
-                    b.ToTable("Pencas");
+                    b.ToTable("Pencas", (string)null);
                 });
 
             modelBuilder.Entity("Penca_uy2026.Models.PencaInstancia", b =>
@@ -316,7 +316,7 @@ namespace Penca_uy2026.Migrations
 
                     b.HasIndex("SitioId");
 
-                    b.ToTable("PencaInstancias");
+                    b.ToTable("PencaInstancias", (string)null);
                 });
 
             modelBuilder.Entity("Penca_uy2026.Models.PlataformaAdmin", b =>
@@ -337,7 +337,7 @@ namespace Penca_uy2026.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PlataformaAdmins");
+                    b.ToTable("PlataformaAdmins", (string)null);
 
                     b.HasData(
                         new
@@ -377,7 +377,7 @@ namespace Penca_uy2026.Migrations
 
                     b.HasIndex("PartidoId");
 
-                    b.ToTable("Predicciones");
+                    b.ToTable("Predicciones", (string)null);
                 });
 
             modelBuilder.Entity("Penca_uy2026.Models.Sitio", b =>
@@ -413,7 +413,7 @@ namespace Penca_uy2026.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Sitios");
+                    b.ToTable("Sitios", (string)null);
                 });
 
             modelBuilder.Entity("Penca_uy2026.Models.SolicitudIngreso", b =>
@@ -442,7 +442,7 @@ namespace Penca_uy2026.Migrations
 
                     b.HasIndex("SitioId");
 
-                    b.ToTable("SolicitudesIngreso");
+                    b.ToTable("SolicitudesIngreso", (string)null);
                 });
 
             modelBuilder.Entity("Penca_uy2026.Models.UsuarioSitio", b =>
@@ -490,7 +490,7 @@ namespace Penca_uy2026.Migrations
 
                     b.HasIndex("SitioId");
 
-                    b.ToTable("UsuariosSitio");
+                    b.ToTable("UsuariosSitio", (string)null);
                 });
 
             modelBuilder.Entity("Penca_uy2026.Models.Equipo", b =>

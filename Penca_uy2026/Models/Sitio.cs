@@ -15,6 +15,10 @@ namespace Penca_uy2026.Models
         [MaxLength(100)]
         public string Nombre { get; set; } = string.Empty;
 
+        [Required]
+        [MaxLength(150)]
+        public string Slug { get; set; } = string.Empty;
+
         [MaxLength(300)]
         public string? Descripcion { get; set; }
 

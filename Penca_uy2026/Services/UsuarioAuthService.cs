@@ -33,12 +33,17 @@ namespace Penca_uy2026.Services
         /// Procesa el inicio de sesión con correo y contraseña.
         /// </summary>
         /// <returns>Objeto con el JWT y los datos del usuario si las credenciales son válidas; de lo contrario, null.</returns>
-        public async Task<SocialLoginResponse?> LoginTradicionalAsync(string email, string password)
+        public async Task<SocialLoginResponse?> LoginTradicionalAsync(string email, string password, string? slug = null)
         {
-            // Se busca al usuario en la base de datos incluyendo su relación con el Sitio.
-            var usuario = await _context.UsuariosSitio
-                .Include(u => u.Sitio)
-                .FirstOrDefaultAsync(u => u.Email == email);
+            // Se busca al usuario en la base de datos filtrando por email y, opcionalmente, por el slug del sitio.
+            var query = _context.UsuariosSitio.Include(u => u.Sitio).AsQueryable();
+
+            if (!string.IsNullOrEmpty(slug))
+            {
+                query = query.Where(u => u.Sitio.Slug == slug);
+            }
+
+            var usuario = await query.FirstOrDefaultAsync(u => u.Email == email);
 
             // Se verifica la existencia del usuario y la validez de la contraseña mediante el hash de BCrypt.
             if (usuario == null || string.IsNullOrEmpty(usuario.PasswordHash) || 
@@ -61,10 +66,68 @@ namespace Penca_uy2026.Services
         }
 
         /// <summary>
+        /// Registra un nuevo usuario en un sitio específico, hasheando su contraseña con BCrypt.
+        /// </summary>
+        /// <param name="request">Datos del registro.</param>
+        /// <returns>Datos del usuario y JWT si el registro es exitoso; null si el usuario ya existe.</returns>
+        public async Task<SocialLoginResponse?> RegistrarUsuarioAsync(RegisterRequest request)
+        {
+            int sitioId = request.SitioId;
+
+            // Si se proporciona un slug, se resuelve el SitioId correspondiente.
+            if (!string.IsNullOrEmpty(request.Slug))
+            {
+                var sitio = await _context.Sitios.FirstOrDefaultAsync(s => s.Slug == request.Slug);
+                if (sitio == null) return null;
+                sitioId = sitio.Id;
+            }
+
+            if (sitioId <= 0) return null;
+
+            // Se verifica si ya existe un usuario con el mismo email para el sitio dado.
+            bool existe = await _context.UsuariosSitio
+                .AnyAsync(u => u.Email == request.Email && u.SitioId == sitioId);
+
+            if (existe)
+            {
+                return null;
+            }
+
+            // Se genera el hash de la contraseña de forma segura.
+            string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+            var nuevoUsuario = new UsuarioSitio
+            {
+                Nombre = request.Nombre,
+                Email = request.Email,
+                PasswordHash = passwordHash,
+                SitioId = sitioId,
+                Activo = true,
+                FechaRegistro = DateTime.UtcNow,
+                Rol = RolUsuarioSitio.Jugador
+            };
+
+            _context.UsuariosSitio.Add(nuevoUsuario);
+            await _context.SaveChangesAsync();
+
+            // Se genera el JWT para que el usuario quede logueado inmediatamente tras el registro.
+            var jwt = _tokenService.GenerarJwtParaUsuario(nuevoUsuario);
+
+            return new SocialLoginResponse
+            {
+                Jwt = jwt,
+                UsuarioSitioId = nuevoUsuario.Id,
+                SitioId = nuevoUsuario.SitioId,
+                Nombre = nuevoUsuario.Nombre,
+                Email = nuevoUsuario.Email
+            };
+        }
+
+        /// <summary>
         /// Procesa la autenticación social mediante Auth0/Google.
         /// Valida el token externo y asegura la existencia del perfil local del usuario.
         /// </summary>
-        public async Task<SocialLoginResponse?> LoginGoogleAsync(string auth0Token, int sitioId)
+        public async Task<SocialLoginResponse?> LoginGoogleAsync(string auth0Token, int sitioId, string? slug = null)
         {
             // 1. Se valida el token externo contra el endpoint de información de usuario de Auth0.
             var auth0User = await ValidarTokenAuth0Async(auth0Token);
@@ -75,22 +138,34 @@ namespace Penca_uy2026.Services
             }
 
             // 2. Se confirma que el sitio destino esté disponible para operación.
-            var sitio = await _context.Sitios.FindAsync(sitioId);
+            Sitio? sitio = null;
+            if (!string.IsNullOrEmpty(slug))
+            {
+                sitio = await _context.Sitios.FirstOrDefaultAsync(s => s.Slug == slug);
+            }
+            else
+            {
+                sitio = await _context.Sitios.FindAsync(sitioId);
+            }
+
             if (sitio == null)
             {
-                Console.WriteLine($"DEBUG: No se encontró el sitio con ID {sitioId} en la base de datos.");
+                Console.WriteLine($"DEBUG: No se encontró el sitio (ID: {sitioId}, Slug: {slug}) en la base de datos.");
                 return null;
             }
             
             if (!sitio.Activo)
             {
-                Console.WriteLine($"DEBUG: El sitio {sitioId} existe pero no está activo.");
+                Console.WriteLine($"DEBUG: El sitio {sitio.Id} existe pero no está activo.");
                 return null;
             }
+
+            sitioId = sitio.Id;
 
             // 3. Se busca al usuario local o se procede a su creación (Sincronización).
             var usuario = await _context.UsuariosSitio
                 .FirstOrDefaultAsync(u => u.Auth0Id == auth0User.Sub && u.SitioId == sitioId);
+
 
             if (usuario == null)
             {
