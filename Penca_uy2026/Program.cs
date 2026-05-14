@@ -54,6 +54,17 @@ builder.Services.AddHttpClient();
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<MobileAuthService>();
+builder.Services.AddScoped<PayPalService>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReact", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173") // La URL de tu Vite
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
 
@@ -68,7 +79,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
+app.UseCors("AllowReact");
 // El orden aquí es vital: Autenticación antes que Autorización
 app.UseAuthentication();
 app.UseAuthorization();

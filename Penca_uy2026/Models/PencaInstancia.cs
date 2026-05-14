@@ -14,6 +14,10 @@ namespace Penca_uy2026.Models
 
         [Required]
         [Column(TypeName = "decimal(18,2)")]
+        public decimal Costo { get; set; } = 0;
+
+        [Required]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal PorcentajeComision { get; set; } = 0;
 
         // --- RELACIONES ---

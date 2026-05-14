@@ -112,7 +112,7 @@ namespace Penca_uy2026.Services
         /// <summary>
         /// Genera un JWT propio de la plataforma para el UsuarioSitio.
         /// </summary>
-        private string GenerarJwt(UsuarioSitio usuario)
+        public string GenerarJwt(UsuarioSitio usuario)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]!);

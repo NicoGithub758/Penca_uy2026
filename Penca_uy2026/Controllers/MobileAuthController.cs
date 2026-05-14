@@ -71,7 +71,7 @@ namespace Penca_uy2026.Controllers
         /// POST /api/mobile/auth/fcm-token
         /// </summary>
         [HttpPost("auth/fcm-token")]
-        [Authorize(Roles = "UsuarioSitio")]
+        [Authorize]
         public async Task<IActionResult> GuardarFcmToken([FromBody] FcmTokenRequest request)
         {
             if (string.IsNullOrEmpty(request.FcmToken))
