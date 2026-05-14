@@ -20,6 +20,16 @@ namespace Penca_uy2026.Models
         [Required]
         [MaxLength(150)]
         public string Slug { get; set; } = string.Empty;
+
+        [MaxLength(500)]
+        public string? Descripcion { get; set; }
+
+        [MaxLength(500)]
+        public string? LogoUrl { get; set; }
+
+        [MaxLength(20)]
+        public string? ColorPrincipal { get; set; }
+
         [Required]
         public TipoRegistro TipoRegistro { get; set; }
 

@@ -24,6 +24,16 @@ namespace Penca_uy2026.Models
         [Required]
         public RolUsuarioSitio Rol { get; set; } = RolUsuarioSitio.Jugador;
 
+        [MaxLength(200)]
+        public string? Auth0Id { get; set; }
+
+        public bool Activo { get; set; } = true;
+
+        public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
+
+        [MaxLength(500)]
+        public string? FcmToken { get; set; }
+
         // --- RELACIONES ---
 
         [Required]

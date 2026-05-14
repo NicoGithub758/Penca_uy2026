@@ -18,7 +18,7 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Equipo Local</label>
-                        <select name="Local" class="form-select" required>
+                        <select asp-for="Local" class="form-select" required>
                             <option value="">Seleccione...</option>
                             @foreach (var equipo in Model.Equipos)
                             {
@@ -28,7 +28,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Equipo Visitante</label>
-                        <select name="Visitante" class="form-select" required>
+                        <select asp-for="Visitante" class="form-select" required>
                             <option value="">Seleccione...</option>
                             @foreach (var equipo in Model.Equipos)
                             {

@@ -22,6 +22,16 @@
         </a>
     </div>
 
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
     <div class="card shadow-sm border-0">
         <div class="table-responsive">
             <table class="table table-hover mb-0 align-middle">
@@ -79,10 +89,19 @@
                                     </span>
                                 </td>
                                 <td class="text-end pe-3">
-                                    <a asp-action="CargarResultado" asp-route-id="@partido.Id"
-                                           class="btn btn-sm @(partido.Jugado ? "btn-outline-secondary" : "btn-success")">
-                                        <i class="bi bi-pencil-square"></i> @(partido.Jugado ? "Editar" : "Cargar")
-                                    </a>
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <form asp-action="ActualizarResultadoDesdeApi" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@partido.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-cloud-arrow-down"></i> API
+                                            </button>
+                                        </form>
+                                        <a asp-action="CargarResultado" asp-route-id="@partido.Id"
+                                               class="btn btn-sm @(partido.Jugado ? "btn-outline-secondary" : "btn-success")">
+                                            <i class="bi bi-pencil-square"></i> @(partido.Jugado ? "Editar" : "Cargar")
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         }

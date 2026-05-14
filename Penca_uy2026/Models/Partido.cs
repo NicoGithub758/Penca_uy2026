@@ -11,5 +11,9 @@
         public DateTime Fecha { get; set; }
         public string Fase { get; set; } = "Regular"; // Ej: "Octavos", "Cuartos", "Final"
         public bool Jugado { get; set; } = false;
+        public int? ApiFootballFixtureId { get; set; }
+        public string? EstadoApi { get; set; }
+        public int? Minuto { get; set; }
+        public DateTime? UltimaSyncApi { get; set; }
     }
 }

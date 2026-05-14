@@ -21,11 +21,19 @@ builder.Services.AddControllersWithViews();
 
 // Configuración del DbContext (SQL Server)
 builder.Services.AddDbContext<MyDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? builder.Configuration.GetConnectionString("DATABASE_URL")));
 
 // Registro de Servicios de Lógica de Negocio
 builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.Configure<ApiFootballOptions>(builder.Configuration.GetSection("ApiFootball"));
+builder.Services.AddHttpClient<ApiFootballService>((serviceProvider, client) =>
+{
+    var options = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<ApiFootballOptions>>().Value;
+    client.BaseAddress = new Uri(options.BaseUrl);
+});
 
 // -----------------------------------------------------------
 // 2. CONFIGURACIÓN DE SEGURIDAD (JWT + COOKIES)
@@ -36,7 +44,8 @@ builder.Services.AddAuthentication(options =>
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-.AddJwtBearer(options => {
+.AddJwtBearer(options =>
+{
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,

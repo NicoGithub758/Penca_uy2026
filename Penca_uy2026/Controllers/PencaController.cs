@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Penca_uy2026.Data;
 using Penca_uy2026.Models;
 using Penca_uy2026.Models.ViewModels;
+using Penca_uy2026.Services;
 
 namespace Penca_uy2026.Controllers
 {
@@ -12,10 +13,12 @@ namespace Penca_uy2026.Controllers
     public class PencaController : Controller
     {
         private readonly MyDbContext _context;
+        private readonly ApiFootballService _apiFootballService;
 
-        public PencaController(MyDbContext context)
+        public PencaController(MyDbContext context, ApiFootballService apiFootballService)
         {
             _context = context;
+            _apiFootballService = apiFootballService;
         }
 
         // Listado de Pencas
@@ -161,6 +164,43 @@ namespace Penca_uy2026.Controllers
             return RedirectToAction(nameof(Calendario), new { id = partido.PencaId });
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ActualizarResultadoDesdeApi(int id)
+        {
+            var partido = await _context.Partidos.FindAsync(id);
+            if (partido == null) return NotFound();
+
+            try
+            {
+                var fixture = await _apiFootballService.BuscarPartidoFinalizadoAsync(partido);
+                if (fixture == null)
+                {
+                    TempData["Error"] = "No se encontró un partido finalizado en API-Football con esos equipos y esa fecha.";
+                    return RedirectToAction(nameof(Calendario), new { id = partido.PencaId });
+                }
+
+                var apiLocalEsLocal = ApiFootballService.NombresEquivalentes(fixture.Teams.Home.Name, partido.Local);
+
+                partido.ApiFootballFixtureId = fixture.Fixture.Id;
+                partido.EstadoApi = fixture.Fixture.Status.Short;
+                partido.Minuto = fixture.Fixture.Status.Elapsed;
+                partido.GolesLocal = apiLocalEsLocal ? fixture.Goals.Home : fixture.Goals.Away;
+                partido.GolesVisitante = apiLocalEsLocal ? fixture.Goals.Away : fixture.Goals.Home;
+                partido.Jugado = true;
+                partido.UltimaSyncApi = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Resultado actualizado desde API-Football.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+
+            return RedirectToAction(nameof(Calendario), new { id = partido.PencaId });
+        }
+
         // POST: Penca/AgendarPartido (Versión corregida para tu POST)
         [HttpPost]
         public async Task<IActionResult> AgendarPartido(PartidoViewModel model)
@@ -171,9 +211,8 @@ namespace Penca_uy2026.Controllers
                 var nuevoPartido = new Partido
                 {
                     PencaId = model.PencaId,
-                    // Aseguramos que los nombres se guarden bien (asumiendo que model.LocalId trae el nombre)
-                    Local = model.LocalId.ToString(),
-                    Visitante = model.VisitanteId.ToString(),
+                    Local = model.Local,
+                    Visitante = model.Visitante,
 
                     // ESTA ES LA LÍNEA CLAVE: Especificamos que es UTC
                     Fecha = DateTime.SpecifyKind(model.Fecha, DateTimeKind.Utc),
