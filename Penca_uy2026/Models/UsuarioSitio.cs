@@ -1,13 +1,10 @@
+using Penca_uy2026.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Penca_uy2026.Models
 {
-    /// <summary>
-    /// Representa un usuario final registrado en un sitio específico.
-    /// Un mismo usuario físico podría estar registrado en múltiples sitios con diferentes perfiles.
-    /// </summary>
-    public class UsuarioSitio
+    public class UsuarioSitio : IMultiTenant
     {
         [Key]
         public int Id { get; set; }
@@ -20,22 +17,19 @@ namespace Penca_uy2026.Models
         [EmailAddress(ErrorMessage = "Formato de correo inválido")]
         public string Email { get; set; } = string.Empty;
 
-        // Login con Google/Auth0
-        [MaxLength(200)]
-        public string? Auth0Id { get; set; }
-
-        // Login interno
-        [MaxLength(500)]
+        // Tiene que poder ser nullable para los casos de usuarios que sólo se loguean mediante proveedor externo.
         public string? PasswordHash { get; set; }
 
-        // Notificaciones push
-        [MaxLength(500)]
-        public string? FcmToken { get; set; }
+        [Required]
+        public RolUsuarioSitio Rol { get; set; } = RolUsuarioSitio.Jugador;
 
         public bool Activo { get; set; } = true;
+
+        public string? Auth0Id { get; set; }
+
         public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
 
-        public RolUsuarioSitio Rol { get; set; } = RolUsuarioSitio.Jugador;
+        public string? FcmToken { get; set; }
 
         // --- RELACIONES ---
 
@@ -45,14 +39,7 @@ namespace Penca_uy2026.Models
         [ForeignKey("SitioId")]
         public Sitio Sitio { get; set; } = null!;
 
-        /// <summary>
-        /// Historial de pencas en las que el usuario ha participado o está participando.
-        /// </summary>
         public ICollection<Participacion> Participaciones { get; set; } = new List<Participacion>();
-
-        /// <summary>
-        /// Notificaciones recibidas por el usuario dentro del sitio.
-        /// </summary>
         public ICollection<Notificacion> Notificaciones { get; set; } = new List<Notificacion>();
     }
 

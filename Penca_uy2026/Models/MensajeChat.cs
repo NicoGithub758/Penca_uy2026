@@ -1,3 +1,4 @@
+using Penca_uy2026.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -6,7 +7,7 @@ namespace Penca_uy2026.Models
     /// <summary>
     /// Representa un mensaje enviado por un participante en el chat de una instancia de penca.
     /// </summary>
-    public class MensajeChat
+    public class MensajeChat : IMultiTenant
     {
         [Key]
         public int Id { get; set; }
@@ -21,7 +22,9 @@ namespace Penca_uy2026.Models
 
         [Required]
         public int ParticipacionId { get; set; }
-        
+
+        public int SitioId { get; set; }
+
         [ForeignKey("ParticipacionId")]
         public Participacion Participacion { get; set; } = null!;
     }

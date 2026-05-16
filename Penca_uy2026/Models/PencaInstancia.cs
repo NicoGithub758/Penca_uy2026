@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Penca_uy2026.Interfaces;
 
 namespace Penca_uy2026.Models
 {
@@ -7,7 +8,7 @@ namespace Penca_uy2026.Models
     /// Representa la instanciación de una Penca global dentro de un Sitio específico.
     /// Permite personalizar comisiones y gestionar participaciones locales.
     /// </summary>
-    public class PencaInstancia
+    public class PencaInstancia : IMultiTenant
     {
         [Key]
         public int Id { get; set; }
@@ -30,7 +31,7 @@ namespace Penca_uy2026.Models
 
         [Required]
         public int SitioId { get; set; }
-        
+
         [ForeignKey("SitioId")]
         public Sitio Sitio { get; set; } = null!;
 

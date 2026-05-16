@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Penca_uy2026.Data;
 
@@ -11,9 +12,11 @@ using Penca_uy2026.Data;
 namespace Penca_uy2026.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    partial class MyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260513005437_EliminarColumnaEsAdminDefinitivo")]
+    partial class EliminarColumnaEsAdminDefinitivo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -177,22 +180,12 @@ namespace Penca_uy2026.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Estado")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
                     b.Property<DateTime>("FechaPago")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("IdTransaccionExterna")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MetodoPago")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
 
                     b.Property<decimal>("Monto")
                         .HasColumnType("decimal(18,2)");
@@ -323,9 +316,6 @@ namespace Penca_uy2026.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal>("Costo")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<int>("PencaId")
                         .HasColumnType("int");
 
@@ -369,7 +359,7 @@ namespace Penca_uy2026.Migrations
                         {
                             Id = 1,
                             Email = "admin@tupenca.uy",
-                            PasswordHash = "$2a$11$XJYwFyQsoePf2PAkwRgXD.Ske1iMlVsHqodB8ikf3CWwXwI2pCIza"
+                            PasswordHash = "$2a$11$hBiA7SwPidKSK9cHH.SqIecpurfiygnakfrfxNRYgAE5kf4rdy.QW"
                         });
                 });
 
@@ -418,18 +408,6 @@ namespace Penca_uy2026.Migrations
 
                     b.Property<bool>("Activo")
                         .HasColumnType("bit");
-
-                    b.Property<string>("ColorPrincipal")
-                        .HasMaxLength(7)
-                        .HasColumnType("nvarchar(7)");
-
-                    b.Property<string>("Descripcion")
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
-
-                    b.Property<string>("LogoUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
@@ -491,21 +469,12 @@ namespace Penca_uy2026.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("Activo")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Auth0Id")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("FcmToken")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("FechaRegistro")
-                        .HasColumnType("datetime2");
+                    b.Property<bool>("EsAdminSitio")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
@@ -515,9 +484,6 @@ namespace Penca_uy2026.Migrations
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Rol")
-                        .HasColumnType("int");
 
                     b.Property<int>("SitioId")
                         .HasColumnType("int");
