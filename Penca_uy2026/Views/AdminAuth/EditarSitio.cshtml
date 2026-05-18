@@ -13,9 +13,9 @@
                 <div class="card-header bg-dark text-white py-3 rounded-top-4">
                     <h4 class="m-0 fw-bold"><i class="bi bi-pencil-square me-2"></i>Modificar Configuración del Sitio</h4>
                 </div>
-                
                 <div class="card-body p-4">
-                    <form asp-controller="AdminAuth" asp-action="EditarSitio" asp-route-id="@Model.Id" method="post">
+                    
+                    <form asp-controller="AdminAuth" asp-action="EditarSitio" asp-route-id="@Model.Id" method="post" asp-antiforgery="false">
                         
                         <input type="hidden" asp-for="Id" />
 
@@ -49,6 +49,7 @@
                             <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold">Guardar Cambios</button>
                         </div>
                     </form>
+
                 </div>
             </div>
         </div>

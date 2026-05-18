@@ -171,22 +171,28 @@ namespace Penca_uy2026.Controllers
         [HttpGet("EditarSitio/{id}")]
         public async Task<IActionResult> EditarSitio(int id)
         {
-            // Usamos IgnoreQueryFilters para que el administrador global siempre encuentre el sitio
+            // Usamos IgnoreQueryFilters para asegurarnos de que el Admin Global encuentre el sitio
             var sitio = await _context.Sitios
                                       .IgnoreQueryFilters()
                                       .FirstOrDefaultAsync(s => s.Id == id);
 
-            if (sitio == null) return NotFound();
+            if (sitio == null)
+            {
+                return NotFound();
+            }
 
             return View(sitio);
         }
 
         // POST: /AdminAuth/EditarSitio/5
         [HttpPost("EditarSitio/{id}")]
-        [IgnoreAntiforgeryToken] // <-- ESTO APAGA POR COMPLETO EL FILTRO DE SEGURIDAD INTERNO PARA ESTE MÉTODO
+        [IgnoreAntiforgeryToken] // Le dice al backend: "No valides tokens de seguridad para este POST"
         public async Task<IActionResult> EditarSitio(int id, Sitio sitioActualizado)
         {
-            if (id != sitioActualizado.Id) return NotFound();
+            if (id != sitioActualizado.Id)
+            {
+                return NotFound();
+            }
 
             if (!ModelState.IsValid)
             {
@@ -195,22 +201,26 @@ namespace Penca_uy2026.Controllers
 
             try
             {
-                // Buscamos el sitio original ignorando los filtros del tenant middleware
+                // Buscamos el registro real en la BD ignorando los filtros automáticos del middleware
                 var sitioOriginal = await _context.Sitios
                                                   .IgnoreQueryFilters()
                                                   .FirstOrDefaultAsync(s => s.Id == id);
 
-                if (sitioOriginal == null) return NotFound();
+                if (sitioOriginal == null)
+                {
+                    return NotFound();
+                }
 
-                // Mapeamos los campos editables
+                // Mapeamos únicamente los campos que modificás en el formulario
                 sitioOriginal.Nombre = sitioActualizado.Nombre;
                 sitioOriginal.Url = sitioActualizado.Url;
                 sitioOriginal.Activo = sitioActualizado.Activo;
 
+                // Marcamos el registro como modificado e impactamos la base de datos
                 _context.Sitios.Update(sitioOriginal);
                 await _context.SaveChangesAsync();
 
-                TempData["Success"] = $"El sitio '{sitioOriginal.Nombre}' se modificó correctamente.";
+                TempData["Success"] = $"El sitio '{sitioOriginal.Nombre}' se actualizó correctamente.";
                 return RedirectToAction("VerSitios", "AdminAuth");
             }
             catch (Exception ex)
