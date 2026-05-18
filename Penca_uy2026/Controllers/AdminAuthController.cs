@@ -207,12 +207,10 @@ namespace Penca_uy2026.Controllers
             return View(sitioActualizado);
         }
 
-        // POST: /AdminAuth/EliminarSitio/5
         [HttpPost("EliminarSitio/{id}")]
-        // [ValidateAntiForgeryToken] // Comentado temporalmente para evitar bloqueos por reinicios de Railway
+        // [ValidateAntiForgeryToken] // Seguimos dejándolo comentado para que Railway no moleste con cookies
         public async Task<IActionResult> EliminarSitio(int id)
         {
-            // 1. Buscamos el sitio/tenant que se quiere borrar
             var sitio = await _context.Sitios.FindAsync(id);
             if (sitio == null)
             {
@@ -221,36 +219,31 @@ namespace Penca_uy2026.Controllers
 
             try
             {
-                // 2. Limpiamos todas las tablas dependientes que apuntan a este SitioId
-                // Así evitamos el error de Foreign Key en SQL Server
+                // Agregamos .IgnoreQueryFilters() a cada consulta para asegurarnos de que limpie TODO en la BD
 
-                var invitaciones = _context.Invitaciones.Where(i => i.SitioId == id);
+                var invitaciones = await _context.Invitaciones.IgnoreQueryFilters().Where(i => i.SitioId == id).ToListAsync();
                 _context.Invitaciones.RemoveRange(invitaciones);
 
-                var solicitudes = _context.SolicitudesIngreso.Where(s => s.SitioId == id);
+                var solicitudes = await _context.SolicitudesIngreso.IgnoreQueryFilters().Where(s => s.SitioId == id).ToListAsync();
                 _context.SolicitudesIngreso.RemoveRange(solicitudes);
 
-                var instanciasPencas = _context.PencaInstancias.Where(pi => pi.SitioId == id);
+                var instanciasPencas = await _context.PencaInstancias.IgnoreQueryFilters().Where(pi => pi.SitioId == id).ToListAsync();
                 _context.PencaInstancias.RemoveRange(instanciasPencas);
 
-                var usuarios = _context.UsuariosSitio.Where(u => u.SitioId == id);
+                var usuarios = await _context.UsuariosSitio.IgnoreQueryFilters().Where(u => u.SitioId == id).ToListAsync();
                 _context.UsuariosSitio.RemoveRange(usuarios);
 
-                // 3. Ahora que no hay registros hijos, removemos el Sitio
+                // Ahora que barrimos todo usando IgnoreQueryFilters, removemos el Sitio libremente
                 _context.Sitios.Remove(sitio);
 
-                // 4. Guardamos todo en una sola transacción en la Base de Datos
                 await _context.SaveChangesAsync();
-
                 TempData["Success"] = $"El sitio '{sitio.Nombre}' y todos sus datos asociados se eliminaron correctamente.";
             }
             catch (Exception ex)
             {
-                // Si llega a quedar alguna otra tabla vinculada, el error saltará acá y lo verás en pantalla
                 TempData["Error"] = "Error al eliminar en la Base de Datos: " + (ex.InnerException?.Message ?? ex.Message);
             }
 
-            // Redirección explícita segura a la tabla
             return RedirectToAction("VerSitios", "AdminAuth");
         }
     }
