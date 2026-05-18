@@ -166,5 +166,58 @@ namespace Penca_uy2026.Controllers
             // Retorna la vista VerSitios.cshtml pasándole los datos
             return View(listaSitios);
         }
+
+        // GET: /AdminAuth/EditarSitio/5
+        [HttpGet("EditarSitio/{id}")]
+        public async Task<IActionResult> EditarSitio(int id)
+        {
+            var sitio = await _context.Sitios.FindAsync(id);
+            if (sitio == null) return NotFound();
+
+            // Puedes pasar el mismo sitio o mapearlo a un ViewModel específico de edición
+            return View(sitio);
+        }
+
+        // POST: /AdminAuth/EditarSitio/5
+        [HttpPost("EditarSitio/{id}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditarSitio(int id, Sitio sitioActualizado)
+        {
+            if (id != sitioActualizado.Id) return BadRequest();
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    // Ojo: Si modifican el nombre, recuerda volver a pasarle la función GenerarSlug si quieres que cambie
+                    sitioActualizado.Slug = GenerarSlug(sitioActualizado.Nombre);
+
+                    _context.Update(sitioActualizado);
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Sitio actualizado correctamente.";
+                    return RedirectToAction(nameof(VerSitios));
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "Error al actualizar: " + ex.Message);
+                }
+            }
+            return View(sitioActualizado);
+        }
+
+        // GET: /AdminAuth/EliminarSitio/5
+        [HttpGet("EliminarSitio/{id}")]
+        public async Task<IActionResult> EliminarSitio(int id)
+        {
+            var sitio = await _context.Sitios.FindAsync(id);
+            if (sitio == null) return NotFound();
+
+            // Para hacerlo rápido y directo con el confirm que pusimos en el HTML:
+            _context.Sitios.Remove(sitio);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"El sitio '{sitio.Nombre}' fue eliminado con éxito.";
+            return RedirectToAction(nameof(VerSitios));
+        }
     }
 }
