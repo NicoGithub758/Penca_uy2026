@@ -207,18 +207,45 @@ namespace Penca_uy2026.Controllers
             return View(sitioActualizado);
         }
 
-        // POST: /AdminAuth/EliminarSitio/5
         [HttpPost("EliminarSitio/{id}")]
-        [ValidateAntiForgeryToken] // Ahora viaja seguro y compatible con el formulario
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EliminarSitio(int id)
         {
             var sitio = await _context.Sitios.FindAsync(id);
             if (sitio == null) return NotFound();
 
-            _context.Sitios.Remove(sitio);
-            await _context.SaveChangesAsync();
+            try
+            {
+                // 1. Borramos las invitaciones del sitio
+                var invitaciones = _context.Invitaciones.Where(i => i.SitioId == id);
+                _context.Invitaciones.RemoveRange(invitaciones);
 
-            TempData["Success"] = $"El sitio '{sitio.Nombre}' fue eliminado con éxito.";
+                // 2. Borramos las solicitudes de ingreso del sitio
+                var solicitudes = _context.SolicitudesIngreso.Where(s => s.SitioId == id);
+                _context.SolicitudesIngreso.RemoveRange(solicitudes);
+
+                // 3. Borramos las instancias de pencas locales vinculadas al sitio
+                var instanciasPencas = _context.PencaInstancias.Where(pi => pi.SitioId == id);
+                _context.PencaInstancias.RemoveRange(instanciasPencas);
+
+                // 4. Borramos los usuarios vinculados al sitio (UsuariosSitio)
+                var usuarios = _context.UsuariosSitio.Where(u => u.SitioId == id);
+                _context.UsuariosSitio.RemoveRange(usuarios);
+
+                // 5. Ahora que la casa está limpia de dependencias, eliminamos el Sitio/Tenant
+                _context.Sitios.Remove(sitio);
+
+                // Impactamos todos los cambios juntos en una sola transacción atómica
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = $"El sitio '{sitio.Nombre}' y todos sus datos locales asociados fueron eliminados con éxito.";
+            }
+            catch (Exception ex)
+            {
+                // En caso de que falte alguna otra tabla hija por limpiar (ej. Predicciones o Pagos si EF no los borra en cascada automáticamente)
+                TempData["Error"] = "No se pudo eliminar el sitio: " + ex.InnerException?.Message;
+            }
+
             return RedirectToAction("VerSitios", "AdminAuth");
         }
     }
