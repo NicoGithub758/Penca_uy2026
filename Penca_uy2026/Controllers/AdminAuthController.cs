@@ -166,8 +166,9 @@ namespace Penca_uy2026.Controllers
             // Retorna la vista VerSitios.cshtml pasándole los datos
             return View(listaSitios);
         }
-/ GET: /AdminAuth/EditarSitio/5
-[HttpGet("EditarSitio/{id}")]
+
+        // GET: /AdminAuth/EditarSitio/5
+        [HttpGet("EditarSitio/{id}")]
         public async Task<IActionResult> EditarSitio(int id)
         {
             // Usamos IgnoreQueryFilters para que el administrador global siempre encuentre el sitio
