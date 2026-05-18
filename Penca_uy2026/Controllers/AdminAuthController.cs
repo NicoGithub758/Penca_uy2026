@@ -207,14 +207,14 @@ namespace Penca_uy2026.Controllers
             return View(sitioActualizado);
         }
 
-        // GET: /AdminAuth/EliminarSitio/5
-        [HttpGet("EliminarSitio/{id}")]
+        // POST: /AdminAuth/EliminarSitio/5
+        [HttpPost("EliminarSitio/{id}")]
+        [ValidateAntiForgeryToken] // Ahora viaja seguro y compatible con el formulario
         public async Task<IActionResult> EliminarSitio(int id)
         {
             var sitio = await _context.Sitios.FindAsync(id);
             if (sitio == null) return NotFound();
 
-            // Para hacerlo rápido y directo con el confirm que pusimos en el HTML:
             _context.Sitios.Remove(sitio);
             await _context.SaveChangesAsync();
 
