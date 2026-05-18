@@ -167,56 +167,40 @@ namespace Penca_uy2026.Controllers
             return View(listaSitios);
         }
 
-        // GET: /AdminAuth/EditarSitio/5
-        [HttpGet("EditarSitio/{id}")]
-        public async Task<IActionResult> EditarSitio(int id)
-        {
-            // Usamos IgnoreQueryFilters para asegurarnos de que el Admin Global encuentre el sitio
-            var sitio = await _context.Sitios
-                                      .IgnoreQueryFilters()
-                                      .FirstOrDefaultAsync(s => s.Id == id);
-
-            if (sitio == null)
-            {
-                return NotFound();
-            }
-
-            return View(sitio);
-        }
-
-        // POST: /AdminAuth/EditarSitio/5
         [HttpPost("EditarSitio/{id}")]
-        [IgnoreAntiforgeryToken] // Le dice al backend: "No valides tokens de seguridad para este POST"
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> EditarSitio(int id, Sitio sitioActualizado)
         {
-            if (id != sitioActualizado.Id)
-            {
-                return NotFound();
-            }
+            if (id != sitioActualizado.Id) return NotFound();
 
             if (!ModelState.IsValid)
             {
+                // Esto te va a cantar en el log de Railway EXACTAMENTE qué propiedad está fallando si no es el Slug
+                foreach (var modelStateKey in ModelState.Keys)
+                {
+                    var value = ModelState[modelStateKey];
+                    foreach (var error in value.Errors)
+                    {
+                        Console.WriteLine($"[MODELSTATE ERROR] Propiedad: {modelStateKey} - Error: {error.ErrorMessage}");
+                    }
+                }
                 return View(sitioActualizado);
             }
 
             try
             {
-                // Buscamos el registro real en la BD ignorando los filtros automáticos del middleware
                 var sitioOriginal = await _context.Sitios
                                                   .IgnoreQueryFilters()
                                                   .FirstOrDefaultAsync(s => s.Id == id);
 
-                if (sitioOriginal == null)
-                {
-                    return NotFound();
-                }
+                if (sitioOriginal == null) return NotFound();
 
-                // Mapeamos únicamente los campos que modificás en el formulario
+                // Mapeamos los cambios
                 sitioOriginal.Nombre = sitioActualizado.Nombre;
                 sitioOriginal.Url = sitioActualizado.Url;
                 sitioOriginal.Activo = sitioActualizado.Activo;
+                sitioOriginal.Slug = sitioActualizado.Slug; // Conservamos el slug actual
 
-                // Marcamos el registro como modificado e impactamos la base de datos
                 _context.Sitios.Update(sitioOriginal);
                 await _context.SaveChangesAsync();
 
