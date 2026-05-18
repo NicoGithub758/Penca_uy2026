@@ -189,13 +189,15 @@ namespace Penca_uy2026.Controllers
             {
                 try
                 {
-                    // Ojo: Si modifican el nombre, recuerda volver a pasarle la función GenerarSlug si quieres que cambie
                     sitioActualizado.Slug = GenerarSlug(sitioActualizado.Nombre);
 
                     _context.Update(sitioActualizado);
                     await _context.SaveChangesAsync();
-                    TempData["Success"] = "Sitio actualizado correctamente.";
-                    return RedirectToAction(nameof(VerSitios));
+
+                    TempData["Success"] = $"El sitio '{sitioActualizado.Nombre}' fue actualizado con éxito.";
+
+                    // Redirección explícita segura para producción
+                    return RedirectToAction("VerSitios", "AdminAuth");
                 }
                 catch (Exception ex)
                 {
@@ -217,7 +219,7 @@ namespace Penca_uy2026.Controllers
             await _context.SaveChangesAsync();
 
             TempData["Success"] = $"El sitio '{sitio.Nombre}' fue eliminado con éxito.";
-            return RedirectToAction(nameof(VerSitios));
+            return RedirectToAction("VerSitios", "AdminAuth");
         }
     }
 }
