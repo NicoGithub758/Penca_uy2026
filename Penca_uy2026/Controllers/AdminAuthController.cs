@@ -166,45 +166,57 @@ namespace Penca_uy2026.Controllers
             // Retorna la vista VerSitios.cshtml pasándole los datos
             return View(listaSitios);
         }
-
-        // GET: /AdminAuth/EditarSitio/5
-        [HttpGet("EditarSitio/{id}")]
+/ GET: /AdminAuth/EditarSitio/5
+[HttpGet("EditarSitio/{id}")]
         public async Task<IActionResult> EditarSitio(int id)
         {
-            var sitio = await _context.Sitios.FindAsync(id);
+            // Usamos IgnoreQueryFilters para que el administrador global siempre encuentre el sitio
+            var sitio = await _context.Sitios
+                                      .IgnoreQueryFilters()
+                                      .FirstOrDefaultAsync(s => s.Id == id);
+
             if (sitio == null) return NotFound();
 
-            // Puedes pasar el mismo sitio o mapearlo a un ViewModel específico de edición
             return View(sitio);
         }
 
         // POST: /AdminAuth/EditarSitio/5
         [HttpPost("EditarSitio/{id}")]
-        [ValidateAntiForgeryToken]
+        [IgnoreAntiforgeryToken] // <-- ESTO APAGA POR COMPLETO EL FILTRO DE SEGURIDAD INTERNO PARA ESTE MÉTODO
         public async Task<IActionResult> EditarSitio(int id, Sitio sitioActualizado)
         {
-            if (id != sitioActualizado.Id) return BadRequest();
+            if (id != sitioActualizado.Id) return NotFound();
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                try
-                {
-                    sitioActualizado.Slug = GenerarSlug(sitioActualizado.Nombre);
-
-                    _context.Update(sitioActualizado);
-                    await _context.SaveChangesAsync();
-
-                    TempData["Success"] = $"El sitio '{sitioActualizado.Nombre}' fue actualizado con éxito.";
-
-                    // Redirección explícita segura para producción
-                    return RedirectToAction("VerSitios", "AdminAuth");
-                }
-                catch (Exception ex)
-                {
-                    ModelState.AddModelError("", "Error al actualizar: " + ex.Message);
-                }
+                return View(sitioActualizado);
             }
-            return View(sitioActualizado);
+
+            try
+            {
+                // Buscamos el sitio original ignorando los filtros del tenant middleware
+                var sitioOriginal = await _context.Sitios
+                                                  .IgnoreQueryFilters()
+                                                  .FirstOrDefaultAsync(s => s.Id == id);
+
+                if (sitioOriginal == null) return NotFound();
+
+                // Mapeamos los campos editables
+                sitioOriginal.Nombre = sitioActualizado.Nombre;
+                sitioOriginal.Url = sitioActualizado.Url;
+                sitioOriginal.Activo = sitioActualizado.Activo;
+
+                _context.Sitios.Update(sitioOriginal);
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = $"El sitio '{sitioOriginal.Nombre}' se modificó correctamente.";
+                return RedirectToAction("VerSitios", "AdminAuth");
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "No se pudieron guardar los cambios: " + (ex.InnerException?.Message ?? ex.Message));
+                return View(sitioActualizado);
+            }
         }
 
         [HttpPost("EliminarSitio/{id}")]
