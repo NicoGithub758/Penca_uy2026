@@ -1,6 +1,72 @@
-﻿namespace Penca_uy2026.Views.AdminAuth
-{
-    public class VerSitios
-    {
-    }
+﻿@model IEnumerable<Penca_uy2026.Models.Sitio>
+
+@{
+    ViewData["Title"] = "Sitios Disponibles";
 }
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Sitios Disponibles en la Plataforma</h2>
+        <a asp-action="CrearSitio" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Crear Nuevo Sitio
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-warning">No hay ningún sitio registrado en el sistema.</div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0 align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 80px;">ID</th>
+                                <th>Nombre</th>
+                                <th>URL del Sitio (Vercel/Railway)</th>
+                                <th>Slug identificador</th>
+                                <th style="width: 120px;" class="text-center">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var sitio in Model)
+                            {
+                                <tr>
+                                    <td>@sitio.Id</td>
+                                    <td><strong>@sitio.Nombre</strong></td>
+                                    <td>
+                                        <a href="https://@sitio.Url" target="_blank" class="text-decoration-none text-primary">
+                                            @sitio.Url
+                                        </a>
+                                    </td>
+                                    <td><span class="badge bg-secondary">@sitio.Slug</span></td>
+                                    <td class="text-center">
+                                        @if (sitio.Activo)
+                                        {
+                                            <span class="badge bg-success">Activo</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Inactivo</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>

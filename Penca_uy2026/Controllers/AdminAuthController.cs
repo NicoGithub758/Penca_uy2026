@@ -3,6 +3,7 @@ using Penca_uy2026.Models;
 using Penca_uy2026.Models.ViewModels;
 using Penca_uy2026.Services;
 using Penca_uy2026.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Penca_uy2026.Controllers
 {
@@ -154,6 +155,16 @@ namespace Penca_uy2026.Controllers
             str = str.Replace(" ", "-");
 
             return str;
+        }
+
+        [HttpGet("VerSitios")]
+        public async Task<IActionResult> VerSitios()
+        {
+            // Buscamos la lista de todos los sitios usando tu MyDbContext
+            var listaSitios = await _context.Sitios.ToListAsync();
+
+            // Retorna la vista VerSitios.cshtml pasándole los datos
+            return View(listaSitios);
         }
     }
 }
