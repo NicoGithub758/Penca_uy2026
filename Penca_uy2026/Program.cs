@@ -129,7 +129,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var db = services.GetRequiredService<MyDbContext>();
-        db.Database.Migrate();
+       // db.Database.Migrate();
     }
     catch (Exception ex)
     {
