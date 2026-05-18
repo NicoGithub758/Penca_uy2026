@@ -167,52 +167,52 @@ namespace Penca_uy2026.Controllers
             return View(listaSitios);
         }
 
-        [HttpPost("EditarSitio/{id}")]
-        [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> EditarSitio(int id, Sitio sitioActualizado)
+       [HttpPost("EditarSitio/{id}")]
+[IgnoreAntiforgeryToken]
+public async Task<IActionResult> EditarSitio(int id, Sitio sitioActualizado)
+{
+    if (id != sitioActualizado.Id) return NotFound();
+
+    if (!ModelState.IsValid)
+    {
+        // Esto te va a cantar en el log de Railway EXACTAMENTE qué propiedad está fallando si no es el Slug
+        foreach (var modelStateKey in ModelState.Keys)
         {
-            if (id != sitioActualizado.Id) return NotFound();
-
-            if (!ModelState.IsValid)
+            var value = ModelState[modelStateKey];
+            foreach (var error in value.Errors)
             {
-                // Esto te va a cantar en el log de Railway EXACTAMENTE qué propiedad está fallando si no es el Slug
-                foreach (var modelStateKey in ModelState.Keys)
-                {
-                    var value = ModelState[modelStateKey];
-                    foreach (var error in value.Errors)
-                    {
-                        Console.WriteLine($"[MODELSTATE ERROR] Propiedad: {modelStateKey} - Error: {error.ErrorMessage}");
-                    }
-                }
-                return View(sitioActualizado);
-            }
-
-            try
-            {
-                var sitioOriginal = await _context.Sitios
-                                                  .IgnoreQueryFilters()
-                                                  .FirstOrDefaultAsync(s => s.Id == id);
-
-                if (sitioOriginal == null) return NotFound();
-
-                // Mapeamos los cambios
-                sitioOriginal.Nombre = sitioActualizado.Nombre;
-                sitioOriginal.Url = sitioActualizado.Url;
-                sitioOriginal.Activo = sitioActualizado.Activo;
-                sitioOriginal.Slug = sitioActualizado.Slug; // Conservamos el slug actual
-
-                _context.Sitios.Update(sitioOriginal);
-                await _context.SaveChangesAsync();
-
-                TempData["Success"] = $"El sitio '{sitioOriginal.Nombre}' se actualizó correctamente.";
-                return RedirectToAction("VerSitios", "AdminAuth");
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("", "No se pudieron guardar los cambios: " + (ex.InnerException?.Message ?? ex.Message));
-                return View(sitioActualizado);
+                Console.WriteLine($"[MODELSTATE ERROR] Propiedad: {modelStateKey} - Error: {error.ErrorMessage}");
             }
         }
+        return View(sitioActualizado);
+    }
+
+    try
+    {
+        var sitioOriginal = await _context.Sitios
+                                          .IgnoreQueryFilters()
+                                          .FirstOrDefaultAsync(s => s.Id == id);
+
+        if (sitioOriginal == null) return NotFound();
+
+        // Mapeamos los cambios
+        sitioOriginal.Nombre = sitioActualizado.Nombre;
+        sitioOriginal.Url = sitioActualizado.Url;
+        sitioOriginal.Activo = sitioActualizado.Activo;
+        sitioOriginal.Slug = sitioActualizado.Slug; // Conservamos el slug actual
+
+        _context.Sitios.Update(sitioOriginal);
+        await _context.SaveChangesAsync();
+
+        TempData["Success"] = $"El sitio '{sitioOriginal.Nombre}' se actualizó correctamente.";
+        return RedirectToAction("VerSitios", "AdminAuth");
+    }
+    catch (Exception ex)
+    {
+        ModelState.AddModelError("", "No se pudieron guardar los cambios: " + (ex.InnerException?.Message ?? ex.Message));
+        return View(sitioActualizado);
+    }
+}
 
         [HttpPost("EliminarSitio/{id}")]
         // [ValidateAntiForgeryToken] // Seguimos dejándolo comentado para que Railway no moleste con cookies
