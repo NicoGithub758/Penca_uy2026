@@ -24,8 +24,10 @@ namespace Penca_uy2026.Services
         /// <returns>SitioConfigDTO si existe y está activo, null en caso contrario.</returns>
         public async Task<SitioConfigDTO?> ObtenerConfiguracionPorSlugAsync(string slug)
         {
+            var slugNormalizado = slug.Trim().ToLowerInvariant();
+
             return await _context.Sitios
-                .Where(s => s.Slug == slug && s.Activo)
+                .Where(s => s.Slug == slugNormalizado && s.Activo)
                 .Select(s => new SitioConfigDTO
                 {
                     Nombre = s.Nombre,

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Penca_uy2026.Data;
 using Penca_uy2026.Models;
 using Penca_uy2026.Models.ViewModels;
+using System.Security.Claims;
 
 namespace Penca_uy2026.Controllers
 {
@@ -85,10 +86,18 @@ namespace Penca_uy2026.Controllers
         [HttpPost]
         public async Task<IActionResult> GuardarEquipos(int pencaId, List<string> nombresEquipos)
         {
+            //Borra predicciones y partidos para evitar error al eliminar todos los equipos
+            
+            var predicciones = _context.Predicciones.Where(p => p.Participacion.PencaInstancia.PencaId == pencaId);
+            _context.Predicciones.RemoveRange(predicciones);
+                
+            var partidos = _context.Partidos.Where(p => p.PencaId == pencaId);
+            _context.Partidos.RemoveRange(partidos);
+
             // Borramos equipos previos si existen (para poder editar)
             var equiposAntiguos = _context.Equipos.Where(e => e.PencaId == pencaId);
             _context.Equipos.RemoveRange(equiposAntiguos);
-
+            
             foreach (var nombre in nombresEquipos)
             {
                 if (!string.IsNullOrWhiteSpace(nombre))
@@ -128,7 +137,7 @@ namespace Penca_uy2026.Controllers
             {
                 PencaId = id,
                 PencaNombre = penca.Nombre,
-                Equipos = penca.Equipos.Select(e => new SelectListItem { Value = e.Nombre, Text = e.Nombre }).ToList()
+                Equipos = penca.Equipos.Select(e => new SelectListItem { Value = e.Id.ToString(), Text = e.Nombre }).ToList()
             };
 
             return View(model);
@@ -172,8 +181,8 @@ namespace Penca_uy2026.Controllers
                 {
                     PencaId = model.PencaId,
                     // Aseguramos que los nombres se guarden bien (asumiendo que model.LocalId trae el nombre)
-                    Local = model.LocalId.ToString(),
-                    Visitante = model.VisitanteId.ToString(),
+                    idLocal = model.LocalId,
+                    idVisitante = model.VisitanteId,
 
                     // ESTA ES LA LÍNEA CLAVE: Especificamos que es UTC
                     Fecha = DateTime.SpecifyKind(model.Fecha, DateTimeKind.Utc),
@@ -188,5 +197,37 @@ namespace Penca_uy2026.Controllers
             }
             return View(model);
         }
+        
+        // Listado de Pencas de sitio, incluyendo la participación del usuario si es que existe.
+        [Authorize]
+        [HttpGet("api/pencas")]
+        public async Task<IActionResult> Index( [FromQuery] string slug)
+        {  
+            var usuarioId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var pencas = await _context.PencaInstancias.Include(p => p.Penca)
+                                    .Include(p => p.Participaciones)
+                                    .Where(p => p.Sitio.Slug == slug)
+                                    .Select(p=> new
+                                    {
+                                        p.Penca.Id,
+                                        p.Penca.Nombre,
+                                        p.Penca.DeporteId,
+                                        p.Penca.CantidadEquipos,
+                                        p.Penca.Modo,
+                                        Participacion = p.Participaciones.Where(parti => parti.UsuarioSitioId == usuarioId)
+                                        .Select(p => new 
+                                        {
+                                            p.Id,
+                                            p.EstaPagado,
+                                            p.PuntajeTotal,
+                                            p.UsuarioSitioId,
+                                            p.PencaInstanciaId,
+                                        }).FirstOrDefault()
+                                    }).ToListAsync();
+
+            return Ok(pencas);
+        }
+
     }
 }

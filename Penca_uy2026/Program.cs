@@ -20,8 +20,12 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllersWithViews();
 
 // Configuración del DbContext (SQL Server)
+/*builder.Services.AddDbContext<MyDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DATABASE_URL")));*/
+
 builder.Services.AddDbContext<MyDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 // Registro de Servicios de Lógica de Negocio
 builder.Services.AddScoped<ITenantService, TenantService>();
@@ -115,6 +119,7 @@ app.UseAuthorization();
 // -----------------------------------------------------------
 // 4. RUTAS Y MIGRACIONES
 // -----------------------------------------------------------
+
 
 app.MapControllerRoute(
     name: "default",
