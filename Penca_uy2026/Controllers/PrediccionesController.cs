@@ -47,7 +47,8 @@ namespace Penca_uy2026.Controllers
                             {
                                 p.Id,
                                 p.GolesEquipoLocal,
-                                p.GolesEquipoVisitante
+                                p.GolesEquipoVisitante,
+                                p.PuntosObtenidos
                             })
                             .FirstOrDefault()}).ToListAsync();
 
