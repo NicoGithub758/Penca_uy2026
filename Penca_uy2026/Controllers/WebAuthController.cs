@@ -45,7 +45,8 @@ namespace Penca_uy2026.Controllers
                     email = result.Email,
                     sitioId = result.SitioId,
                     // Se asume el rol del usuario para la web, el cual será extraído del JWT por el cliente si es necesario.
-                    rol = 0 
+                    rol = 0 ,
+                    tienePassword = result.TienePassword
                 }
             });
         }
@@ -73,7 +74,8 @@ namespace Penca_uy2026.Controllers
                     nombre = result.Nombre,
                     email = result.Email,
                     sitioId = result.SitioId,
-                    rol = 0
+                    rol = 0,
+                    tienePassword = result.TienePassword
                 }
             });
         }
@@ -83,7 +85,7 @@ namespace Penca_uy2026.Controllers
         /// POST /api/auth/google
         /// </summary>
         [HttpPost("google")]
-        public async Task<IActionResult> LoginGoogle([FromBody] SocialLoginRequest request)
+        public async Task<IActionResult> LoginGoogle([FromBody] WebSocialLoginRequest request)
         {
             Console.WriteLine("DEBUG: Petición recibida en WebAuthController -> LoginGoogle");
             // Se delega el flujo de autenticación social al servicio correspondiente.
@@ -103,7 +105,8 @@ namespace Penca_uy2026.Controllers
                     nombre = result.Nombre,
                     email = result.Email,
                     sitioId = result.SitioId,
-                    rol = 0
+                    rol = 0,
+                    tienePassword = result.TienePassword
                 }
             });
         }
