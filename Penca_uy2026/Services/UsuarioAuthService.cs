@@ -33,7 +33,7 @@ namespace Penca_uy2026.Services
         /// Procesa el inicio de sesión con correo y contraseña.
         /// </summary>
         /// <returns>Objeto con el JWT y los datos del usuario si las credenciales son válidas; de lo contrario, null.</returns>
-        public async Task<SocialLoginResponse?> LoginTradicionalAsync(string email, string password, string? slug = null)
+        public async Task<WebSocialLoginResponse?> LoginTradicionalAsync(string email, string password, string? slug = null)
         {
             // Se busca al usuario en la base de datos filtrando por email y, opcionalmente, por el slug del sitio.
             var query = _context.UsuariosSitio.Include(u => u.Sitio).AsQueryable();
@@ -55,13 +55,14 @@ namespace Penca_uy2026.Services
             // Se delega la creación del token al servicio especializado.
             var jwt = _tokenService.GenerarJwtParaUsuario(usuario);
 
-            return new SocialLoginResponse
+            return new WebSocialLoginResponse
             {
                 Jwt = jwt,
                 UsuarioSitioId = usuario.Id,
                 SitioId = usuario.SitioId,
                 Nombre = usuario.Nombre,
-                Email = usuario.Email
+                Email = usuario.Email,
+                TienePassword = !string.IsNullOrEmpty(usuario.PasswordHash)
             };
         }
 
@@ -70,7 +71,7 @@ namespace Penca_uy2026.Services
         /// </summary>
         /// <param name="request">Datos del registro.</param>
         /// <returns>Datos del usuario y JWT si el registro es exitoso; null si el usuario ya existe.</returns>
-        public async Task<SocialLoginResponse?> RegistrarUsuarioAsync(RegisterRequest request)
+        public async Task<WebSocialLoginResponse?> RegistrarUsuarioAsync(RegisterRequest request)
         {
             int sitioId = request.SitioId;
 
@@ -113,13 +114,14 @@ namespace Penca_uy2026.Services
             // Se genera el JWT para que el usuario quede logueado inmediatamente tras el registro.
             var jwt = _tokenService.GenerarJwtParaUsuario(nuevoUsuario);
 
-            return new SocialLoginResponse
+            return new WebSocialLoginResponse
             {
                 Jwt = jwt,
                 UsuarioSitioId = nuevoUsuario.Id,
                 SitioId = nuevoUsuario.SitioId,
                 Nombre = nuevoUsuario.Nombre,
-                Email = nuevoUsuario.Email
+                Email = nuevoUsuario.Email,
+                TienePassword = true // Se acaba de registrar con password
             };
         }
 
@@ -127,7 +129,7 @@ namespace Penca_uy2026.Services
         /// Procesa la autenticación social mediante Auth0/Google.
         /// Valida el token externo y asegura la existencia del perfil local del usuario.
         /// </summary>
-        public async Task<SocialLoginResponse?> LoginGoogleAsync(string auth0Token, int sitioId, string? slug = null)
+        public async Task<WebSocialLoginResponse?> LoginGoogleAsync(string auth0Token, int sitioId, string? slug = null)
         {
             // 1. Se valida el token externo contra el endpoint de información de usuario de Auth0.
             var auth0User = await ValidarTokenAuth0Async(auth0Token);
@@ -192,13 +194,14 @@ namespace Penca_uy2026.Services
             // 4. Se genera el token de identidad propio de la plataforma.
             var jwt = _tokenService.GenerarJwtParaUsuario(usuario);
 
-            return new SocialLoginResponse
+            return new WebSocialLoginResponse
             {
                 Jwt = jwt,
                 UsuarioSitioId = usuario.Id,
                 SitioId = usuario.SitioId,
                 Nombre = usuario.Nombre,
-                Email = usuario.Email
+                Email = usuario.Email,
+                TienePassword = !string.IsNullOrEmpty(usuario.PasswordHash)
             };
         }
 
@@ -222,6 +225,27 @@ namespace Penca_uy2026.Services
             {
                 return null;
             }
+        }
+
+        public async Task<bool> UpdatePasswordAsync(int userId, UpdatePasswordDTO request)
+        {
+            var usuario = await _context.UsuariosSitio.FindAsync(userId);
+            if(usuario == null) return false;
+
+            // Si el usuario ya tiene contraseña, debemos validar que oldPassword sea correcta antes de actualizar su contraseña.
+            if(!string.IsNullOrEmpty(usuario.PasswordHash))
+            {
+                if(string.IsNullOrEmpty(request.OldPassword) || !BCrypt.Net.BCrypt.Verify(request.OldPassword, usuario.PasswordHash))
+                {
+                    // La contraseña anterior venía vacía o venía correctamente indicada pero no es la que ya tiene el usuario.
+                    return false;
+                }
+            }
+
+            usuario.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }
