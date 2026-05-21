@@ -29,5 +29,16 @@ namespace Penca_uy2026.Services
                 .Select(x => x.Team)
                 .ToList() ?? new List<ApiFootballTeamDto>();
         }
+
+        public async Task<ApiFootballFixtureItem?> GetFixtureResultAsync(int leagueId, int season, int localTeamId,
+                                                                            int visitanteTeamId, DateTime fecha)
+        {
+            var date = fecha.ToString("yyyy-MM-dd");
+
+            var result = await _httpClient.GetFromJsonAsync<ApiFootballFixturesResponse>(
+                $"fixtures/headtohead?h2h={localTeamId}-{visitanteTeamId}&league={leagueId}&season={season}&date={date}");
+
+            return result?.Response.FirstOrDefault();
+        }
     }
 }
