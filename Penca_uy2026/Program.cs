@@ -26,6 +26,7 @@ builder.Services.AddDbContext<MyDbContext>(options =>
 // Registro de Servicios de Lógica de Negocio
 builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<ApiFootballService>();
 
 // -----------------------------------------------------------
 // 2. CONFIGURACIÓN DE SEGURIDAD (JWT + COOKIES)

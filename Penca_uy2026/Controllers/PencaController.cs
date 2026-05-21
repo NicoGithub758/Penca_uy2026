@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Penca_uy2026.Data;
 using Penca_uy2026.Models;
 using Penca_uy2026.Models.ViewModels;
+using Penca_uy2026.Services;
 
 namespace Penca_uy2026.Controllers
 {
@@ -12,10 +13,12 @@ namespace Penca_uy2026.Controllers
     public class PencaController : Controller
     {
         private readonly MyDbContext _context;
+        private readonly ApiFootballService _apiFootballService;
 
-        public PencaController(MyDbContext context)
+        public PencaController(MyDbContext context, ApiFootballService apiFootballService)
         {
             _context = context;
+            _apiFootballService = apiFootballService;
         }
 
         // Listado de Pencas
@@ -37,35 +40,69 @@ namespace Penca_uy2026.Controllers
             return View(model);
         }
 
-        // POST: Guardar Penca
-        [HttpPost]
-        public async Task<IActionResult> Create(PencaViewModel model)
+        private async Task RecargarDeportesAsync(PencaViewModel model)
         {
-            if (ModelState.IsValid)
-            {
-                var nuevaPenca = new Penca
-                {
-                    Nombre = model.Nombre,
-                    DeporteId = model.DeporteId,
-                    CantidadEquipos = model.CantidadEquipos,
-                    Modo = model.Modo
-                };
-
-                _context.Pencas.Add(nuevaPenca);
-
-                // REEMPLAZA LA LÍNEA DEL ERROR POR ESTA:
-                await _context.SaveChangesAsync();
-
-                // Redirigimos al Index (o a la carga de equipos después)
-                return RedirectToAction(nameof(Index));
-            }
-
-            // Si algo falla, recargamos la lista de deportes para el dropdown
             model.Deportes = await _context.Deportes
                 .Select(d => new SelectListItem { Value = d.Id.ToString(), Text = d.Nombre })
                 .ToListAsync();
+        }
 
-            return View(model);
+        // POST: Guardar Penca
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(PencaViewModel model)
+        {
+            if (!model.ApiFootballLeagueId.HasValue)
+            {
+                ModelState.AddModelError(nameof(model.ApiFootballLeagueId), "Debes ingresar el ID de la competición.");
+            }
+
+            if (!model.ApiFootballSeason.HasValue)
+            {
+                ModelState.AddModelError(nameof(model.ApiFootballSeason), "Debes ingresar la temporada.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                await RecargarDeportesAsync(model);
+                return View(model);
+            }
+
+            var equiposApi = await _apiFootballService.GetTeamsAsync(
+                model.ApiFootballLeagueId.Value,
+                model.ApiFootballSeason.Value);
+
+            if (!equiposApi.Any())
+            {
+                ModelState.AddModelError("", "No se encontraron equipos para esa competición y temporada.");
+                await RecargarDeportesAsync(model);
+                return View(model);
+            }
+
+            var nuevaPenca = new Penca
+            {
+                Nombre = model.Nombre,
+                DeporteId = model.DeporteId,
+                CantidadEquipos = equiposApi.Count,
+                Modo = model.Modo,
+                ApiFootballLeagueId = model.ApiFootballLeagueId.Value,
+                ApiFootballSeason = model.ApiFootballSeason.Value
+            };
+
+            foreach (var equipoApi in equiposApi)
+            {
+                nuevaPenca.Equipos.Add(new Equipo
+                {
+                    Nombre = equipoApi.Name,
+                    ApiFootballTeamId = equipoApi.Id,
+                    LogoUrl = equipoApi.Logo
+                });
+            }
+
+            _context.Pencas.Add(nuevaPenca);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Penca/ConfigurarEquipos/5
