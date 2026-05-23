@@ -291,5 +291,55 @@ namespace Penca_uy2026.Controllers
 
             return RedirectToAction("VerSitios", "AdminAuth");
         }
+
+        // GET: /AdminAuth/CrearAdmin
+        [HttpGet("CrearAdmin")]
+        public IActionResult CrearAdmin()
+        {
+            return View(new RegistrarAdminViewModel());
+        }
+
+        // POST: /AdminAuth/CrearAdmin
+        [HttpPost("CrearAdmin")]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> CrearAdmin(RegistrarAdminViewModel request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(request);
+            }
+
+            try
+            {
+                var existe = await _context.PlataformaAdmins
+                                           .AnyAsync(a => a.Email.ToLower() == request.Email.ToLower());
+
+                if (existe)
+                {
+                    ModelState.AddModelError("Email", "Este correo electrónico ya está registrado.");
+                    return View(request);
+                }
+
+                // Hasheamos de forma segura con BCrypt
+                string hashSeguro = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+                var nuevoAdmin = new PlataformaAdmin
+                {
+                    Email = request.Email.Trim(),
+                    PasswordHash = hashSeguro
+                };
+
+                _context.PlataformaAdmins.Add(nuevoAdmin);
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = $"El administrador '{nuevoAdmin.Email}' fue creado con éxito.";
+                return RedirectToAction("VerSitios", "AdminAuth");
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Error en la Base de Datos: " + (ex.InnerException?.Message ?? ex.Message));
+                return View(request);
+            }
+        }
     }
 }
