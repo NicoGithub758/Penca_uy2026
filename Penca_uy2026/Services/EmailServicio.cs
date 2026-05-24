@@ -1,6 +1,5 @@
-﻿using MimeKit;
-using MailKit.Net.Smtp;
-using MailKit.Security;
+﻿using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Penca_uy2026.Interfaces;
 
@@ -9,20 +8,20 @@ namespace Penca_uy2026.Services
     public class EmailServicio : IEmailServicio
     {
         private readonly IConfiguration _configuration;
+        private readonly HttpClient _httpClient;
 
         public EmailServicio(IConfiguration configuration)
         {
             _configuration = configuration;
+            _httpClient = new HttpClient();
         }
 
         public async Task EnviarEmailInvitacionAsync(string emailDestino, string nombreAdmin, string tokenInvitacion, string urlSitio)
         {
-            var smtpHost = _configuration["EmailSettings:SmtpHost"] ?? "smtp.gmail.com";
-            var smtpPort = int.Parse(_configuration["EmailSettings:SmtpPort"] ?? "465");
             var emailEmisor = _configuration["EmailSettings:SenderEmail"];
-            var passwordEmisor = _configuration["EmailSettings:SenderPassword"];
+            var apiKey = _configuration["EmailSettings:SenderPassword"]; // Usamos la API Key acá
 
-            if (string.IsNullOrEmpty(emailEmisor) || string.IsNullOrEmpty(passwordEmisor))
+            if (string.IsNullOrEmpty(emailEmisor) || string.IsNullOrEmpty(apiKey))
             {
                 Console.WriteLine("--- [ALERTA EMAIL NO CONFIGURADO] ---");
                 return;
@@ -30,15 +29,13 @@ namespace Penca_uy2026.Services
 
             string linkActivacion = $"https://{urlSitio}/AdminAuth/ConfigurarPassword?token={tokenInvitacion}";
 
-            // 1. Crear el mensaje con MimeKit
-            var mensaje = new MimeMessage();
-            mensaje.From.Add(new MailboxAddress("Plataforma Penca .UY", emailEmisor));
-            mensaje.To.Add(new MailboxAddress(nombreAdmin, emailDestino));
-            mensaje.Subject = "🔑 Activación de tu cuenta de Administrador";
-
-            var bodyBuilder = new BodyBuilder
+            // Estructura de la petición HTTP según la API de Brevo
+            var payload = new
             {
-                HtmlBody = $@"
+                sender = new { email = emailEmisor, name = "Plataforma Penca .UY" },
+                to = new[] { new { email = emailDestino, name = nombreAdmin } },
+                subject = "🔑 Activación de tu cuenta de Administrador",
+                htmlContent = $@"
                     <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
                         <h2 style='color: #212529; text-align: center;'>¡Bienvenido a tu nueva Penca!</h2>
                         <p>Hola <strong>{nombreAdmin}</strong>,</p>
@@ -50,35 +47,30 @@ namespace Penca_uy2026.Services
                         <p style='color: #6c757d; font-size: 12px;'>Si el botón no funciona, copia el enlace:<br>{linkActivacion}</p>
                     </div>"
             };
-            mensaje.Body = bodyBuilder.ToMessageBody();
 
-            // 2. Enviar el mensaje usando el cliente de MailKit
-            using var client = new SmtpClient();
             try
             {
-                // CAMBIO CLAVE: Usamos StartTls para el puerto 587 (Aceptado por Railway)
-                await client.ConnectAsync(smtpHost, smtpPort, SecureSocketOptions.StartTls);
+                var request = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
+                request.Headers.Add("api-key", apiKey);
 
-                // Autenticación
-                await client.AuthenticateAsync(emailEmisor, passwordEmisor);
+                var json = JsonSerializer.Serialize(payload);
+                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                // Envío
-                await client.SendAsync(mensaje);
+                var response = await _httpClient.SendAsync(request);
 
-                Console.WriteLine($"=== [EMAIL ENVIADO EXITOSAMENTE] a {emailDestino} ===");
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"=== [EMAIL ENVIADO VIA HTTP EXITOSAMENTE] a {emailDestino} ===");
+                }
+                else
+                {
+                    var errorBody = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"=== [ERROR API BREVO]: Status {response.StatusCode} - {errorBody} ===");
+                }
             }
             catch (Exception ex)
             {
-                // ESTO NOS VA A DECIR EL ERROR REAL EN RAILWAY
-                Console.WriteLine($"=== [ERROR CRITICO SMTP MAILKIT]: {ex.Message} ===");
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine($"=== [INNER EXCEPTION]: {ex.InnerException.Message} ===");
-                }
-            }
-            finally
-            {
-                await client.DisconnectAsync(true);
+                Console.WriteLine($"=== [ERROR CRITICO HTTP EMAIL]: {ex.Message} ===");
             }
         }
     }
