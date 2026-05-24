@@ -56,8 +56,8 @@ namespace Penca_uy2026.Services
             using var client = new SmtpClient();
             try
             {
-                // Forzamos el puerto 465 de forma segura
-                await client.ConnectAsync(smtpHost, smtpPort, SecureSocketOptions.SslOnConnect);
+                // CAMBIO CLAVE: Usamos StartTls para el puerto 587 (Aceptado por Railway)
+                await client.ConnectAsync(smtpHost, smtpPort, SecureSocketOptions.StartTls);
 
                 // Autenticación
                 await client.AuthenticateAsync(emailEmisor, passwordEmisor);
