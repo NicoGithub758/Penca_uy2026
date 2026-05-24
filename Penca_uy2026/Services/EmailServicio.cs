@@ -18,10 +18,10 @@ namespace Penca_uy2026.Services
 
         public async Task EnviarEmailInvitacionAsync(string emailDestino, string nombreAdmin, string tokenInvitacion, string urlSitio)
         {
-            var emailEmisor = _configuration["EmailSettings:SenderEmail"]?.Trim();
-            var smtpPassword = _configuration["EmailSettings:SenderPassword"]?.Trim(); // Acá vas a poner la contraseña SMTP vieja (la xsmtpsib-)
+            var emailEmisor = _configuration["EmailSettings:SenderEmail"];
+            var apiKey = _configuration["EmailSettings:SenderPassword"]; // <--- Nos aseguramos de que se llame 'apiKey' acá arriba
 
-            if (string.IsNullOrEmpty(emailEmisor) || string.IsNullOrEmpty(smtpPassword))
+            if (string.IsNullOrEmpty(emailEmisor) || string.IsNullOrEmpty(apiKey))
             {
                 Console.WriteLine("--- [ALERTA EMAIL NO CONFIGURADO] ---");
                 return;
@@ -31,7 +31,7 @@ namespace Penca_uy2026.Services
 
             var payload = new
             {
-                sender = new { email = emailEmisor, name = "Plataforma Penca UY" },
+                sender = new { email = emailEmisor.Trim(), name = "Plataforma Penca UY" },
                 to = new[] { new { email = emailDestino.Trim(), name = nombreAdmin.Trim() } },
                 subject = "🔑 Activación de tu cuenta de Administrador",
                 htmlContent = $@"
@@ -51,10 +51,8 @@ namespace Penca_uy2026.Services
             {
                 var request = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
 
-                // 🔑 TRUCO MAESTRO: Autenticación básica (usuario:password) convertida a Base64
-                // Usamos el mail como usuario y la clave SMTP como password
-                var authString = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{emailEmisor}:{smtpPassword}"));
-                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authString);
+                // Ahora sí, 'apiKey' coincide perfectamente con la variable de arriba
+                request.Headers.Add("api-key", apiKey.Trim());
                 request.Headers.Add("accept", "application/json");
 
                 var json = JsonSerializer.Serialize(payload);
@@ -64,7 +62,7 @@ namespace Penca_uy2026.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"=== [EMAIL ENVIADO VIA HTTP-BASIC EXITOSAMENTE] a {emailDestino} ===");
+                    Console.WriteLine($"=== [EMAIL ENVIADO VIA HTTP EXITOSAMENTE] a {emailDestino} ===");
                 }
                 else
                 {
