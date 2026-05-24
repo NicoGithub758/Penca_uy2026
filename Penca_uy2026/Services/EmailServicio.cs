@@ -52,11 +52,11 @@ namespace Penca_uy2026.Services
             };
             mensaje.Body = bodyBuilder.ToMessageBody();
 
-            // 2. Enviar el mensaje usando el cliente de MailKit (¡Ojo! Usa MailKit.Net.Smtp)
+            // 2. Enviar el mensaje usando el cliente de MailKit
             using var client = new SmtpClient();
             try
             {
-                // Con SmtpSslOption.SslOnConnect forzamos el puerto 465 de forma nativa y segura para Linux/Docker
+                // Forzamos el puerto 465 de forma segura
                 await client.ConnectAsync(smtpHost, smtpPort, SecureSocketOptions.SslOnConnect);
 
                 // Autenticación
@@ -64,6 +64,17 @@ namespace Penca_uy2026.Services
 
                 // Envío
                 await client.SendAsync(mensaje);
+
+                Console.WriteLine($"=== [EMAIL ENVIADO EXITOSAMENTE] a {emailDestino} ===");
+            }
+            catch (Exception ex)
+            {
+                // ESTO NOS VA A DECIR EL ERROR REAL EN RAILWAY
+                Console.WriteLine($"=== [ERROR CRITICO SMTP MAILKIT]: {ex.Message} ===");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"=== [INNER EXCEPTION]: {ex.InnerException.Message} ===");
+                }
             }
             finally
             {
