@@ -18,6 +18,9 @@
         public bool Finalizada { get; set; } = false;
         public int? ApiFootballLeagueId { get; set; }
         public int? ApiFootballSeason { get; set; }
+        public string? ApiFootballLeagueName { get; set; }
+        public string? ApiFootballCountry { get; set; }
+
 
         // Relación con Equipos y Partidos
         public ICollection<Equipo> Equipos { get; set; } = new List<Equipo>();

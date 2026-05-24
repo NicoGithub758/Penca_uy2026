@@ -15,6 +15,7 @@ namespace Penca_uy2026.Controllers
         private readonly MyDbContext _context;
         private readonly ApiFootballService _apiFootballService;
 
+
         public PencaController(MyDbContext context, ApiFootballService apiFootballService)
         {
             _context = context;
@@ -24,12 +25,22 @@ namespace Penca_uy2026.Controllers
         // Listado de Pencas
         public async Task<IActionResult> Index()
         {
-            var pencas = await _context.Pencas.Include(p => p.Deporte).ToListAsync();
+            var pencas = await _context.Pencas
+                .Include(p => p.Deporte)
+                .ToListAsync();
+
             return View(pencas);
         }
 
-        // GET: Formulario de Creación
+        // Selección de competición para crear una Penca
         public async Task<IActionResult> Create()
+        {
+            var ligas = await _apiFootballService.ObtenerLigasActualesAsync();
+            return View(ligas);
+        }
+
+        // GET: Formulario de Creación
+        /*public async Task<IActionResult> Create()
         {
             var model = new PencaViewModel
             {
@@ -38,7 +49,7 @@ namespace Penca_uy2026.Controllers
                     .ToListAsync()
             };
             return View(model);
-        }
+        }*/
 
         private async Task RecargarDeportesAsync(PencaViewModel model)
         {
@@ -48,6 +59,49 @@ namespace Penca_uy2026.Controllers
         }
 
         // POST: Guardar Penca
+
+        [HttpPost]
+        public async Task<IActionResult> CrearDesdeCompeticion(
+            int leagueId,
+            int season,
+            string nombreLiga,
+            string pais,
+            string? logoUrl)
+        {
+            var equiposApi = await _apiFootballService.GetTeamsAsync(leagueId, season);
+
+            var nuevaPenca = new Penca
+            {
+                Nombre = $"{nombreLiga} {season}",
+                DeporteId = 1,
+                CantidadEquipos = equiposApi.Count,
+                Modo = ModoPenca.Liga,
+                ApiFootballLeagueId = leagueId,
+                ApiFootballSeason = season,
+                ApiFootballLeagueName = nombreLiga,
+                ApiFootballCountry = pais
+            };
+
+            _context.Pencas.Add(nuevaPenca);
+            await _context.SaveChangesAsync();
+
+            foreach (var equipoApi in equiposApi)
+            {
+                _context.Equipos.Add(new Equipo
+                {
+                    PencaId = nuevaPenca.Id,
+                    Nombre = equipoApi.Name,
+                    ApiFootballTeamId = equipoApi.Id,
+                    Codigo = equipoApi.Code,
+                    Pais = equipoApi.Country,
+                    LogoUrl = equipoApi.Logo
+                });
+            }
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Calendario), new { id = nuevaPenca.Id });
+        }
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(PencaViewModel model)

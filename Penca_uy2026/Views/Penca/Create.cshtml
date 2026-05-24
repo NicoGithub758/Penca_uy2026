@@ -1,37 +1,39 @@
-﻿@model Penca_uy2026.Models.ViewModels.PencaViewModel
-
+﻿@model List<Penca_uy2026.DTOs.ApiFootballLigaDto>
 <div class="container mt-5">
-    <div class="card shadow-sm mx-auto" style="max-width: 500px;">
-        <div class="card-body">
-            <h2 class="text-center mb-4">Nueva Penca</h2>
-            <form asp-action="Create" method="post">
-                <div class="mb-3">
-                    <label class="form-label">Nombre de la Penca</label>
-                    <input asp-for="Nombre" class="form-control" placeholder="Ej: Mundial 2026" required />
-                </div>
+    <h2 class="mb-4">Crear penca desde competición</h2>
 
-                <div class="mb-3">
-                    <label class="form-label">Deporte</label>
-                    <select asp-for="DeporteId" asp-items="Model.Deportes" class="form-select"></select>
-                </div>
+    <div class="row">
+        @foreach (var liga in Model)
+        {
+            <div class="col-md-4 col-lg-3 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <img src="@liga.LogoUrl"
+                             alt="@liga.Nombre"
+                             style="height: 70px; object-fit: contain;"
+                             class="mb-3" />
 
-                <div class="mb-3">
-                    <label class="form-label">ID competicion API-Football</label>
-                    <input asp-for="ApiFootballLeagueId" type="number" class="form-control" required />
-                </div>
+                        <h5 class="card-title">@liga.Nombre</h5>
 
-                <div class="mb-3">
-                    <label class="form-label">Temporada API-Football</label>
-                    <input asp-for="ApiFootballSeason" type="number" class="form-control" required />
-                </div>
+                        <p class="text-muted mb-1">@liga.Pais</p>
+                        <small class="text-muted">Temporada @liga.Temporada</small>
+                    </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Modo de Juego</label>
-                    <select asp-for="Modo" asp-items="Html.GetEnumSelectList<Penca_uy2026.Models.ModoPenca>()" class="form-select"></select>
-                </div>
+                    <div class="card-footer bg-white border-0">
+                        <form asp-action="CrearDesdeCompeticion" method="post">
+                            <input type="hidden" name="leagueId" value="@liga.LeagueId" />
+                            <input type="hidden" name="season" value="@liga.Temporada" />
+                            <input type="hidden" name="nombreLiga" value="@liga.Nombre" />
+                            <input type="hidden" name="pais" value="@liga.Pais" />
+                            <input type="hidden" name="logoUrl" value="@liga.LogoUrl" />
 
-                <button type="submit" class="btn btn-primary w-100">Crear Penca y Continuar</button>
-            </form>
-        </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                Agregar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 </div>

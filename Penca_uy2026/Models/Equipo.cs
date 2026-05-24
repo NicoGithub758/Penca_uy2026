@@ -6,6 +6,8 @@
         public string Nombre { get; set; } = string.Empty;
         public int? ApiFootballTeamId { get; set; }
         public string? LogoUrl { get; set; }
+        public string? Codigo { get; set; }
+        public string? Pais { get; set; }
         public int PencaId { get; set; }
     }
 }
