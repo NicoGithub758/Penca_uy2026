@@ -88,6 +88,9 @@ builder.Services.AddCors(options =>
         });
 });
 
+// Registrar el servicio de Email
+builder.Services.AddScoped<IEmailServicio, EmailServicio>();
+
 var app = builder.Build();
 
 // -----------------------------------------------------------
@@ -140,7 +143,6 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Registrar el servicio de Email
-builder.Services.AddScoped<IEmailServicio, EmailServicio>();
+
 
 app.Run();
