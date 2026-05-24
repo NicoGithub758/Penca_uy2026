@@ -1,5 +1,6 @@
-﻿using System.Net;
-using System.Net.Mail;
+﻿using MimeKit;
+using MailKit.Net.Smtp;
+using MailKit.Security;
 using Microsoft.Extensions.Configuration;
 using Penca_uy2026.Interfaces;
 
@@ -16,60 +17,58 @@ namespace Penca_uy2026.Services
 
         public async Task EnviarEmailInvitacionAsync(string emailDestino, string nombreAdmin, string tokenInvitacion, string urlSitio)
         {
-            // 1. Leemos las credenciales desde la configuración (Local o Railway)
             var smtpHost = _configuration["EmailSettings:SmtpHost"] ?? "smtp.gmail.com";
-            var smtpPort = int.Parse(_configuration["EmailSettings:SmtpPort"] ?? "587");
+            var smtpPort = int.Parse(_configuration["EmailSettings:SmtpPort"] ?? "465");
             var emailEmisor = _configuration["EmailSettings:SenderEmail"];
-            var passwordEmisor = _configuration["EmailSettings:SenderPassword"]; // Contraseña de aplicación
+            var passwordEmisor = _configuration["EmailSettings:SenderPassword"];
 
             if (string.IsNullOrEmpty(emailEmisor) || string.IsNullOrEmpty(passwordEmisor))
             {
-                // Si no configuraste el mail todavía, lo tiramos a la consola de Railway para poder debuguear el token sin trancar el flujo
-                Console.WriteLine($"--- [ALERTA EMAIL NO CONFIGURADO] ---");
-                Console.WriteLine($"Token para {emailDestino}: {tokenInvitacion}");
+                Console.WriteLine("--- [ALERTA EMAIL NO CONFIGURADO] ---");
                 return;
             }
 
-            // 2. Armamos el link definitivo. Apunta al endpoint GET que creamos recién
-            // En producción 'urlSitio' será "tupenca.uy" o tu dominio en Railway
             string linkActivacion = $"https://{urlSitio}/AdminAuth/ConfigurarPassword?token={tokenInvitacion}";
 
-            // 3. Diseñamos el cuerpo del Mail (HTML limpio)
-            string cuerpoHtml = $@"
-                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
-                    <h2 style='color: #212529; text-align: center;'>¡Bienvenido a tu nueva Penca!</h2>
-                    <p>Hola <strong>{nombreAdmin}</strong>,</p>
-                    <p>Se ha registrado un nuevo sitio para ti en nuestra plataforma de pencas deportivas.</p>
-                    <p>Para activar tu cuenta de administrador y configurar tu contraseña de acceso de forma segura, haz clic en el siguiente botón (este enlace expira en 48 horas):</p>
-                    <div style='text-align: center; margin: 30px 0;'>
-                        <a href='{linkActivacion}' style='background-color: #0d6efd; color: white; padding: 12px 25px; text-decoration: none; font-weight: bold; border-radius: 5px; display: inline-block;'>Configurar mi Contraseña</a>
-                    </div>
-                    <p style='color: #6c757d; font-size: 12px;'>Si el botón no funciona, copia y pega este enlace en tu navegador:<br>{linkActivacion}</p>
-                    <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
-                    <p style='font-size: 11px; color: #999; text-align: center;'>Equipo de Penca_uy2026</p>
-                </div>";
+            // 1. Crear el mensaje con MimeKit
+            var mensaje = new MimeMessage();
+            mensaje.From.Add(new MailboxAddress("Plataforma Penca .UY", emailEmisor));
+            mensaje.To.Add(new MailboxAddress(nombreAdmin, emailDestino));
+            mensaje.Subject = "🔑 Activación de tu cuenta de Administrador";
 
-            // 4. Despachamos el correo usando SMTP nativo configurado para SSL implícito
-            using var client = new SmtpClient(smtpHost, smtpPort)
+            var bodyBuilder = new BodyBuilder
             {
-                Credentials = new NetworkCredential(emailEmisor, passwordEmisor),
-                EnableSsl = true // Con el puerto 465 esto fuerza el cifrado seguro desde el inicio
+                HtmlBody = $@"
+                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
+                        <h2 style='color: #212529; text-align: center;'>¡Bienvenido a tu nueva Penca!</h2>
+                        <p>Hola <strong>{nombreAdmin}</strong>,</p>
+                        <p>Se ha registrado un nuevo sitio para ti en nuestra plataforma.</p>
+                        <p>Para activar tu cuenta de administrador y configurar tu contraseña de acceso, haz clic en el siguiente botón:</p>
+                        <div style='text-align: center; margin: 30px 0;'>
+                            <a href='{linkActivacion}' style='background-color: #0d6efd; color: white; padding: 12px 25px; text-decoration: none; font-weight: bold; border-radius: 5px; display: inline-block;'>Configurar mi Contraseña</a>
+                        </div>
+                        <p style='color: #6c757d; font-size: 12px;'>Si el botón no funciona, copia el enlace:<br>{linkActivacion}</p>
+                    </div>"
             };
+            mensaje.Body = bodyBuilder.ToMessageBody();
 
-            // IMPORTANTE: Añadir esta línea justo abajo para asegurar que el protocolo TLS sea el moderno
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
-
-            using var mailMessage = new MailMessage
+            // 2. Enviar el mensaje usando el cliente de MailKit (¡Ojo! Usa MailKit.Net.Smtp)
+            using var client = new SmtpClient();
+            try
             {
-                From = new MailAddress(emailEmisor, "Plataforma Penca .UY"),
-                Subject = "🔑 Activación de tu cuenta de Administrador",
-                Body = cuerpoHtml,
-                IsBodyHtml = true
-            };
+                // Con SmtpSslOption.SslOnConnect forzamos el puerto 465 de forma nativa y segura para Linux/Docker
+                await client.ConnectAsync(smtpHost, smtpPort, SecureSocketOptions.SslOnConnect);
 
-            mailMessage.To.Add(emailDestino);
+                // Autenticación
+                await client.AuthenticateAsync(emailEmisor, passwordEmisor);
 
-            await client.SendMailAsync(mailMessage);
+                // Envío
+                await client.SendAsync(mensaje);
+            }
+            finally
+            {
+                await client.DisconnectAsync(true);
+            }
         }
     }
 }
