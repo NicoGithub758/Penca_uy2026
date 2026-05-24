@@ -6,6 +6,8 @@ using Penca_uy2026.Data;
 using Penca_uy2026.Services;
 using Penca_uy2026.Interfaces;
 using Penca_uy2026.Middleware;
+using Penca_uy2026.Interfaces;
+using Penca_uy2026.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -137,5 +139,8 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "Ocurrió un error al migrar la base de datos.");
     }
 }
+
+// Registrar el servicio de Email
+builder.Services.AddScoped<IEmailServicio, EmailServicio>();
 
 app.Run();

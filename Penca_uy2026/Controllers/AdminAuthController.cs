@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Penca_uy2026.Data;
+using Penca_uy2026.Interfaces;
 using Penca_uy2026.Models;
 using Penca_uy2026.Models.ViewModels;
 using Penca_uy2026.Services;
-using Penca_uy2026.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace Penca_uy2026.Controllers
 {
@@ -12,11 +13,12 @@ namespace Penca_uy2026.Controllers
     {
         private readonly AuthService _authService;
         private readonly MyDbContext _context;
-
-        public AdminAuthController(AuthService authService, MyDbContext context)
+        private readonly IEmailServicio _emailServicio;
+        public AdminAuthController(AuthService authService, MyDbContext context, IEmailServicio emailServicio)
         {
             _authService = authService;
             _context = context;
+            _emailServicio = emailServicio;
         }
         // GET: /AdminAuth/Login
         [HttpGet("Login")]
@@ -73,88 +75,86 @@ namespace Penca_uy2026.Controllers
 
         // POST: /AdminAuth/CrearSitio
         [HttpPost("CrearSitio")]
-        [ValidateAntiForgeryToken]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> CrearSitio(CrearSitioViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
 
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // 1. Generamos el Slug a partir del nombre
-                string slugGenerado = GenerarSlug(model.NombreSitio);
-
-                // 2. Creamos el Sitio con los nuevos campos
+                // 1. Crear el Sitio (Tenant) sin tocar datos de diseño por ahora
                 var nuevoSitio = new Sitio
                 {
                     Nombre = model.NombreSitio,
-                    Url = model.UrlVercel.ToLower().Trim(),
-                    Slug = slugGenerado, // <-- Campo nuevo
-                    TipoRegistro = model.TipoRegistro, // <-- Tu nuevo Enum
-                    Activo = true
+                    Url = model.UrlVercel.Trim().ToLower(),
+                    Activo = true,
+                    TipoRegistro = model.TipoRegistro,
+                    Slug = model.NombreSitio.ToLower().Trim().Replace(" ", "-"),
+                    ColorPrincipal = "#000000", // Valores por defecto
+                    Descripcion = "",
+                    LogoUrl = ""
                 };
 
                 _context.Sitios.Add(nuevoSitio);
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(); // Genera el nuevoSitio.Id
 
-                // 3. Creamos el Administrador del Sitio
+                // 2. Crear el Administrador del Sitio con PasswordHash en NULL
                 var adminSitio = new UsuarioSitio
                 {
-                    Nombre = model.NombreAdmin,
-                    Email = model.EmailAdmin,
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.PasswordAdmin),                  
+                    Nombre = model.NombreAdmin.Trim(),
+                    Email = model.EmailAdmin.Trim().ToLower(),
+                    PasswordHash = null, // No maneja contraseña inicial, queda pendiente
                     SitioId = nuevoSitio.Id,
-                    Rol = RolUsuarioSitio.AdminSitio
+                    Rol = RolUsuarioSitio.AdminSitio,
+                    Activo = true,
+                    FechaRegistro = DateTime.UtcNow
                 };
 
                 _context.UsuariosSitio.Add(adminSitio);
+                await _context.SaveChangesAsync(); // Genera el adminSitio.Id
+
+                // 3. Generar el Token único y temporal para la invitación
+                string tokenSeguro = Guid.NewGuid().ToString("N"); // Crea un string alfanumérico aleatorio y limpio
+
+                var invitacion = new InvitacionAdmin
+                {
+                    Token = tokenSeguro,
+                    UsuarioSitioId = adminSitio.Id,
+                    FechaExpiracion = DateTime.UtcNow.AddHours(48), // El link expira en 48 horas
+                    Usado = false
+                };
+
+                _context.InvitacionesAdmin.Add(invitacion);
                 await _context.SaveChangesAsync();
 
+                // 4. Comprometer la transacción en la BD local/Azure
                 await transaction.CommitAsync();
 
-                TempData["Success"] = $"El sitio '{model.NombreSitio}' con slug '{slugGenerado}' ha sido creado.";
-                return RedirectToAction("Index", "Penca");
+                // 5. ENVIAR EL CORREO ELECTRÓNICO (Usamos Request.Host para saber la URL actual corriendo de forma dinámica)
+                try
+                {
+                    string urlActual = Request.Host.Value; // Captura si estás en localhost:xxxx o en tu dominio de Railway
+                    await _emailServicio.EnviarEmailInvitacionAsync(adminSitio.Email, adminSitio.Nombre, tokenSeguro, urlActual);
+                }
+                catch (Exception ex)
+                {
+                    // Si el mail falla, dejamos registro en consola de Railway pero no le rompemos la pantalla al usuario, el sitio ya se creó.
+                    Console.WriteLine($"[ERROR SMTP] No se pudo despachar el correo: {ex.Message}");
+                }
+
+                TempData["Success"] = $"Sitio '{nuevoSitio.Nombre}' registrado. Se enviará un correo de configuración a {adminSitio.Email}.";
+                return RedirectToAction("VerSitios", "AdminAuth");
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                ModelState.AddModelError("", "Error al guardar: " + ex.Message);
+                ModelState.AddModelError("", "Error crítico al procesar el alta: " + (ex.InnerException?.Message ?? ex.Message));
                 return View(model);
             }
-        }
-
-        // Función auxiliar para normalizar el Slug
-        private string GenerarSlug(string nombre)
-        {
-            if (string.IsNullOrEmpty(nombre)) return "sitio-sin-nombre";
-
-            // 1. Convertir a minúsculas y normalizar (descompone caracteres como 'ñ' en 'n' + '~')
-            string str = nombre.ToLower().Trim().Normalize(System.Text.NormalizationForm.FormD);
-
-            // 2. Filtrar caracteres: dejamos la letra base y quitamos el acento/tilde
-            var sb = new System.Text.StringBuilder();
-            foreach (char c in str)
-            {
-                // Usamos UnicodeCategory (corregido)
-                var category = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c);
-
-                // NonSpacingMark son los acentos, tildes y diéresis que queremos ignorar
-                if (category != System.Globalization.UnicodeCategory.NonSpacingMark)
-                {
-                    sb.Append(c);
-                }
-            }
-
-            // 3. Limpieza final
-            str = sb.ToString();
-            // Quita cualquier cosa que no sea a-z o 0-9
-            str = System.Text.RegularExpressions.Regex.Replace(str, @"[^a-z0-9\s-]", "");
-            // Colapsa espacios múltiples en uno solo
-            str = System.Text.RegularExpressions.Regex.Replace(str, @"\s+", " ").Trim();
-            // Cambia espacios por guiones
-            str = str.Replace(" ", "-");
-
-            return str;
         }
 
         [HttpGet("VerSitios")]
@@ -339,6 +339,86 @@ namespace Penca_uy2026.Controllers
             {
                 ModelState.AddModelError("", "Error en la Base de Datos: " + (ex.InnerException?.Message ?? ex.Message));
                 return View(request);
+            }
+        }
+
+        // GET: /AdminAuth/ConfigurarPassword?token=XXXX-XXXX...
+        [HttpGet("ConfigurarPassword")]
+        public async Task<IActionResult> ConfigurarPassword(string token)
+        {
+            if (string.IsNullOrEmpty(token))
+            {
+                TempData["Error"] = "El token de invitación no es válido o no fue proporcionado.";
+                return RedirectToAction("Login", "Home"); // O a tu pantalla de login común
+            }
+
+            // Buscamos la invitación e incluimos al usuario para validar todo junto
+            var invitacion = await _context.InvitacionesAdmin
+                                          .Include(i => i.UsuarioSitio)
+                                          .FirstOrDefaultAsync(i => i.Token == token);
+
+            // Validamos que exista, no esté usada y no haya expirado
+            if (invitacion == null || !invitacion.IsValido)
+            {
+                ViewData["ErrorMessage"] = "El enlace de invitación ha expirado, ya fue utilizado o es inválido.";
+                return View("ErrorInvitacion"); // Una vista simple de error que crearemos luego
+            }
+
+            // Si está todo bien, le mostramos la pantalla de contraseña pasándole el token
+            var model = new ConfirmarPasswordViewModel { Token = token };
+            return View(model);
+        }
+
+        // POST: /AdminAuth/ConfigurarPassword
+        [HttpPost("ConfigurarPassword")]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> ConfigurarPassword(ConfirmarPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // Volvemos a buscar la invitación con su usuario bajo una transacción
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var invitacion = await _context.InvitacionesAdmin
+                                              .Include(i => i.UsuarioSitio)
+                                              .FirstOrDefaultAsync(i => i.Token == model.Token);
+
+                if (invitacion == null || !invitacion.IsValido)
+                {
+                    ModelState.AddModelError("", "La invitación ya no es válida.");
+                    return View(model);
+                }
+
+                var usuario = invitacion.UsuarioSitio;
+                if (usuario == null)
+                {
+                    return NotFound();
+                }
+
+                // 1. Reemplazamos el NULL por el PasswordHash real usando BCrypt
+                usuario.PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.Password);
+                _context.UsuariosSitio.Update(usuario);
+
+                // 2. Quemamos el token para que nadie pueda volver a usar el link
+                invitacion.Usado = true;
+                _context.InvitacionesAdmin.Update(invitacion);
+
+                // Guardamos todo e impactamos la BD
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                TempData["Success"] = "¡Contraseña configurada con éxito! Ya podés ingresar a tu panel.";
+                return RedirectToAction("Login", "Home"); // Redireccionar al login oficial de la app
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                ModelState.AddModelError("", "Ocurrió un error al guardar la contraseña: " + ex.Message);
+                return View(model);
             }
         }
     }
