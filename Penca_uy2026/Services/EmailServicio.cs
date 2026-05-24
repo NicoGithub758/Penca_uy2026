@@ -18,18 +18,10 @@ namespace Penca_uy2026.Services
 
         public async Task EnviarEmailInvitacionAsync(string emailDestino, string nombreAdmin, string tokenInvitacion, string urlSitio)
         {
-            var emailEmisor = _configuration["EmailSettings:SenderEmail"];
-            var apiKey = _configuration["EmailSettings:SenderPassword"];
+            var emailEmisor = _configuration["EmailSettings:SenderEmail"]?.Trim();
+            var smtpPassword = _configuration["EmailSettings:SenderPassword"]?.Trim(); // Acá vas a poner la contraseña SMTP vieja (la xsmtpsib-)
 
-            // 🔍 LOGS DE CONTROL TEMPORALES
-            Console.WriteLine($"=== [DEBUG ENTORNO] Emisor configurado: '{emailEmisor}' ===");
-            Console.WriteLine($"=== [DEBUG ENTORNO] Longitud de la API Key: {apiKey?.Length ?? 0} caracteres ===");
-            if (apiKey != null && apiKey.Length > 10)
-            {
-                Console.WriteLine($"=== [DEBUG ENTORNO] Comienzo de la Key: '{apiKey.Substring(0, 10)}...' ===");
-            }
-
-            if (string.IsNullOrEmpty(emailEmisor) || string.IsNullOrEmpty(apiKey))
+            if (string.IsNullOrEmpty(emailEmisor) || string.IsNullOrEmpty(smtpPassword))
             {
                 Console.WriteLine("--- [ALERTA EMAIL NO CONFIGURADO] ---");
                 return;
@@ -39,8 +31,8 @@ namespace Penca_uy2026.Services
 
             var payload = new
             {
-                sender = new { email = emailEmisor, name = "Plataforma Penca .UY" },
-                to = new[] { new { email = emailDestino, name = nombreAdmin } },
+                sender = new { email = emailEmisor, name = "Plataforma Penca UY" },
+                to = new[] { new { email = emailDestino.Trim(), name = nombreAdmin.Trim() } },
                 subject = "🔑 Activación de tu cuenta de Administrador",
                 htmlContent = $@"
                     <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
@@ -59,9 +51,11 @@ namespace Penca_uy2026.Services
             {
                 var request = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
 
-                // Agregamos ambas cabeceras por compatibilidad según la versión de la API
-                request.Headers.Add("api-key", apiKey);
-                request.Headers.TryAddWithoutValidation("api-key", apiKey);
+                // 🔑 TRUCO MAESTRO: Autenticación básica (usuario:password) convertida a Base64
+                // Usamos el mail como usuario y la clave SMTP como password
+                var authString = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{emailEmisor}:{smtpPassword}"));
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authString);
+                request.Headers.Add("accept", "application/json");
 
                 var json = JsonSerializer.Serialize(payload);
                 request.Content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -70,7 +64,7 @@ namespace Penca_uy2026.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"=== [EMAIL ENVIADO VIA HTTP EXITOSAMENTE] a {emailDestino} ===");
+                    Console.WriteLine($"=== [EMAIL ENVIADO VIA HTTP-BASIC EXITOSAMENTE] a {emailDestino} ===");
                 }
                 else
                 {
