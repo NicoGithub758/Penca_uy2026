@@ -19,7 +19,15 @@ namespace Penca_uy2026.Services
         public async Task EnviarEmailInvitacionAsync(string emailDestino, string nombreAdmin, string tokenInvitacion, string urlSitio)
         {
             var emailEmisor = _configuration["EmailSettings:SenderEmail"];
-            var apiKey = _configuration["EmailSettings:SenderPassword"]; // Usamos la API Key acá
+            var apiKey = _configuration["EmailSettings:SenderPassword"];
+
+            // 🔍 LOGS DE CONTROL TEMPORALES
+            Console.WriteLine($"=== [DEBUG ENTORNO] Emisor configurado: '{emailEmisor}' ===");
+            Console.WriteLine($"=== [DEBUG ENTORNO] Longitud de la API Key: {apiKey?.Length ?? 0} caracteres ===");
+            if (apiKey != null && apiKey.Length > 10)
+            {
+                Console.WriteLine($"=== [DEBUG ENTORNO] Comienzo de la Key: '{apiKey.Substring(0, 10)}...' ===");
+            }
 
             if (string.IsNullOrEmpty(emailEmisor) || string.IsNullOrEmpty(apiKey))
             {
@@ -29,7 +37,6 @@ namespace Penca_uy2026.Services
 
             string linkActivacion = $"https://{urlSitio}/AdminAuth/ConfigurarPassword?token={tokenInvitacion}";
 
-            // Estructura de la petición HTTP según la API de Brevo
             var payload = new
             {
                 sender = new { email = emailEmisor, name = "Plataforma Penca .UY" },
@@ -51,7 +58,10 @@ namespace Penca_uy2026.Services
             try
             {
                 var request = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
+
+                // Agregamos ambas cabeceras por compatibilidad según la versión de la API
                 request.Headers.Add("api-key", apiKey);
+                request.Headers.TryAddWithoutValidation("api-key", apiKey);
 
                 var json = JsonSerializer.Serialize(payload);
                 request.Content = new StringContent(json, Encoding.UTF8, "application/json");
