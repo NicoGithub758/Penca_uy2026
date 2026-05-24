@@ -49,12 +49,15 @@ namespace Penca_uy2026.Services
                     <p style='font-size: 11px; color: #999; text-align: center;'>Equipo de Penca_uy2026</p>
                 </div>";
 
-            // 4. Despachamos el correo usando SMTP nativo
+            // 4. Despachamos el correo usando SMTP nativo configurado para SSL implícito
             using var client = new SmtpClient(smtpHost, smtpPort)
             {
                 Credentials = new NetworkCredential(emailEmisor, passwordEmisor),
-                EnableSsl = true
+                EnableSsl = true // Con el puerto 465 esto fuerza el cifrado seguro desde el inicio
             };
+
+            // IMPORTANTE: Añadir esta línea justo abajo para asegurar que el protocolo TLS sea el moderno
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
 
             using var mailMessage = new MailMessage
             {
