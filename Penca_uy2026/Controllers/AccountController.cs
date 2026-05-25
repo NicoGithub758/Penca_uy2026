@@ -49,6 +49,19 @@ namespace Penca_uy2026.Controllers
                 return View(model);
             }
 
+            Console.WriteLine($"DEBUG POST: El token recibido es -> '{model.Token}'");
+
+            if (string.IsNullOrEmpty(model.Token))
+            {
+                ModelState.AddModelError("", "Error: El token no llegó al servidor.");
+                return View(model);
+            }
+
+            // Aquí buscamos con el token que SÍ sabemos que llegó
+            var invitacion = await _context.InvitacionesAdmin
+                                          .Include(i => i.UsuarioSitio)
+                                          .FirstOrDefaultAsync(i => i.Token == model.Token);
+
             if (!ModelState.IsValid)
             {
                 return View(model);
