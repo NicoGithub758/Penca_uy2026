@@ -19,6 +19,7 @@ namespace Penca_uy2026.Controllers
 
         // GET: /Account/ConfigurarPassword?token=...
         [HttpGet]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> ConfigurarPassword(string token)
         {
             var invitacion = await _context.InvitacionesAdmin
@@ -33,8 +34,8 @@ namespace Penca_uy2026.Controllers
             return View(new ConfirmarPasswordViewModel { Token = token });
         }
 
-        // POST: /AdminAuth/ConfigurarPassword
-        [HttpPost] // Esto hace que responda a /Account/ConfigurarPassword
+        // POST: /Account/ConfigurarPassword
+        [HttpPost]
         [IgnoreAntiforgeryToken]
         public async Task<IActionResult> ConfigurarPassword(ConfirmarPasswordViewModel model)
         {
@@ -43,45 +44,52 @@ namespace Penca_uy2026.Controllers
                 return View(model);
             }
 
-            // Volvemos a buscar la invitación con su usuario bajo una transacción
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
+                // CORRECCIÓN: Usar model.Token y .Include(i => i.UsuarioSitio)
                 var invitacion = await _context.InvitacionesAdmin
                                               .Include(i => i.UsuarioSitio)
                                               .FirstOrDefaultAsync(i => i.Token == model.Token);
 
-                if (invitacion == null || !invitacion.IsValido)
+                if (invitacion == null)
                 {
-                    ModelState.AddModelError("", "La invitación ya no es válida.");
+                    Console.WriteLine("DEBUG: Token no encontrado en BD");
+                    ModelState.AddModelError("", "Token no encontrado.");
+                    return View(model);
+                }
+
+                if (invitacion.Usado)
+                {
+                    Console.WriteLine("DEBUG: El token ya fue usado");
+                    ModelState.AddModelError("", "La invitación ya fue utilizada.");
                     return View(model);
                 }
 
                 var usuario = invitacion.UsuarioSitio;
                 if (usuario == null)
                 {
-                    return NotFound();
+                    return NotFound("Usuario no encontrado.");
                 }
 
-                // 1. Reemplazamos el NULL por el PasswordHash real usando BCrypt
+                // 1. Hasheamos y actualizamos
                 usuario.PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.Password);
                 _context.UsuariosSitio.Update(usuario);
 
-                // 2. Quemamos el token para que nadie pueda volver a usar el link
+                // 2. Quemamos el token
                 invitacion.Usado = true;
                 _context.InvitacionesAdmin.Update(invitacion);
 
-                // Guardamos todo e impactamos la BD
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                TempData["Success"] = "¡Contraseña configurada con éxito! Ya podés ingresar a tu panel.";
-                return RedirectToAction("Login", "Home"); // Redireccionar al login oficial de la app
+                TempData["Success"] = "¡Contraseña configurada con éxito!";
+                return RedirectToAction("Login", "Home");
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                ModelState.AddModelError("", "Ocurrió un error al guardar la contraseña: " + ex.Message);
+                ModelState.AddModelError("", "Error al guardar: " + ex.Message);
                 return View(model);
             }
         }
