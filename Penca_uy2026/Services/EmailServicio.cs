@@ -18,7 +18,7 @@ namespace Penca_uy2026.Services
 
         public async Task EnviarEmailInvitacionAsync(string emailDestino, string nombreAdmin, string tokenInvitacion, string urlSitio)
         {
-            var emailEmisor = _configuration["EmailSettings:SenderEmail"];
+           var emailEmisor = _configuration["EmailSettings:SenderEmail"];
             var apiKey = _configuration["EmailSettings:SenderPassword"]; // <--- Nos aseguramos de que se llame 'apiKey' acá arriba
 
             if (string.IsNullOrEmpty(emailEmisor) || string.IsNullOrEmpty(apiKey))
@@ -27,7 +27,7 @@ namespace Penca_uy2026.Services
                 return;
             }
 
-            string linkActivacion = $"https://{urlSitio}/AdminAuth/ConfigurarPassword?token={tokenInvitacion}";
+            string linkActivacion = $"https://{urlSitio}/Account/ConfigurarPassword?token={tokenInvitacion}";
 
             var payload = new
             {
@@ -50,7 +50,7 @@ namespace Penca_uy2026.Services
             try
             {
                 var request = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
-
+                
                 // Ahora sí, 'apiKey' coincide perfectamente con la variable de arriba
                 request.Headers.Add("api-key", apiKey.Trim());
                 request.Headers.Add("accept", "application/json");
