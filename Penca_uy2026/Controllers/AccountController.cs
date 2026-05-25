@@ -20,9 +20,18 @@ namespace Penca_uy2026.Controllers
         [HttpGet]
         [AllowAnonymous]
         [IgnoreAntiforgeryToken]
-        public IActionResult ConfigurarPassword(string token)
+        public async Task<IActionResult> ConfigurarPassword(string token)
         {
-            // Ignora todo y muestra la vista directamente
+            // Buscamos la invitación
+            var invitacion = await _context.InvitacionesAdmin
+                                          .FirstOrDefaultAsync(i => i.Token == token);
+
+            if (invitacion == null || invitacion.Usado)
+            {
+                return View("ErrorInvitacion");
+            }
+
+            // PASAMOS EL TOKEN AL MODELO PARA QUE EL HTML LO TENGA
             return View(new ConfirmarPasswordViewModel { Token = token });
         }
 
@@ -31,6 +40,15 @@ namespace Penca_uy2026.Controllers
         [IgnoreAntiforgeryToken]
         public async Task<IActionResult> ConfigurarPassword(ConfirmarPasswordViewModel model)
         {
+            // LOG DE DEBUG: ¿Qué está llegando realmente?
+            Console.WriteLine($"DEBUG: Token recibido en POST: '{model.Token}'");
+
+            if (string.IsNullOrEmpty(model.Token))
+            {
+                ModelState.AddModelError("", "El token no fue recibido por el servidor.");
+                return View(model);
+            }
+
             if (!ModelState.IsValid)
             {
                 return View(model);
