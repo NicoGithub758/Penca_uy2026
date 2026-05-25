@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Penca_uy2026.Data;
@@ -6,6 +7,7 @@ using Penca_uy2026.Models.ViewModels;
 namespace Penca_uy2026.Controllers
 {
     // Al no tener [Route("AdminAuth")], este controlador es independiente
+    [AllowAnonymous]
     public class AccountController : Controller
     {
         private readonly MyDbContext _context;
@@ -32,7 +34,7 @@ namespace Penca_uy2026.Controllers
         }
 
         // POST: /AdminAuth/ConfigurarPassword
-        [HttpPost("ConfigurarPassword")]
+        [HttpPost] // Esto hace que responda a /Account/ConfigurarPassword
         [IgnoreAntiforgeryToken]
         public async Task<IActionResult> ConfigurarPassword(ConfirmarPasswordViewModel model)
         {
