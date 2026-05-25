@@ -17,21 +17,12 @@ namespace Penca_uy2026.Controllers
         {
             _context = context;
         }
-
-        // GET: /Account/ConfigurarPassword?token=...
         [HttpGet]
+        [AllowAnonymous]
         [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> ConfigurarPassword(string token)
+        public IActionResult ConfigurarPassword(string token)
         {
-            var invitacion = await _context.InvitacionesAdmin
-                                          .Include(i => i.UsuarioSitio)
-                                          .FirstOrDefaultAsync(i => i.Token == token);
-
-            if (invitacion == null || !invitacion.IsValido)
-            {
-                return View("ErrorInvitacion");
-            }
-
+            // Ignora todo y muestra la vista directamente
             return View(new ConfirmarPasswordViewModel { Token = token });
         }
 
