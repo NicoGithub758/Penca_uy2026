@@ -8,6 +8,7 @@ namespace Penca_uy2026.Controllers
 {
     // Al no tener [Route("AdminAuth")], este controlador es independiente
     [AllowAnonymous]
+    [IgnoreAntiforgeryToken]
     public class AccountController : Controller
     {
         private readonly MyDbContext _context;

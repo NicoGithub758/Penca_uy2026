@@ -8,6 +8,7 @@ using Penca_uy2026.Interfaces;
 using Penca_uy2026.Middleware;
 using Penca_uy2026.Interfaces;
 using Penca_uy2026.Services;
+using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,12 @@ builder.Services.AddDbContext<MyDbContext>(options =>
 // Registro de Servicios de Lógica de Negocio
 builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<AuthService>();
+
+builder.Services.AddDataProtection()
+    .SetApplicationName("PencaUy2026")
+    // En Railway, si no tienes un volumen montado, esto al menos evita el error de "Key not found" 
+    // al intentar usar llaves viejas que ya no existen.
+    .DisableAutomaticKeyGeneration();
 
 // -----------------------------------------------------------
 // 2. CONFIGURACIÓN DE SEGURIDAD (JWT + COOKIES)
