@@ -32,9 +32,7 @@ builder.Services.AddScoped<AuthService>();
 
 builder.Services.AddDataProtection()
     .SetApplicationName("PencaUy2026")
-    // En Railway, si no tienes un volumen montado, esto al menos evita el error de "Key not found" 
-    // al intentar usar llaves viejas que ya no existen.
-    .DisableAutomaticKeyGeneration();
+    .PersistKeysToFileSystem(new DirectoryInfo(@"/home/app/.aspnet/DataProtection-Keys"));
 
 // -----------------------------------------------------------
 // 2. CONFIGURACIÓN DE SEGURIDAD (JWT + COOKIES)
