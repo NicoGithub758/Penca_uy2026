@@ -1,16 +1,37 @@
 ﻿@model List<Penca_uy2026.DTOs.ApiFootballLigaDto>
-<div class="container mt-5">
+<section class="mt-4">
     <h2 class="mb-4">Crear penca desde competición</h2>
 
-    <div class="row">
+    <div class="row g-3 mb-4">
+        <div class="col-md-8">
+            <label class="form-label">Buscar competición</label>
+            <input id="buscarCompeticion"
+                type="search"
+                class="form-control"
+                placeholder="Ej: Libertadores, Premier League, Uruguay..." />
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">País</label>
+            <select id="filtroPais" class="form-select">
+                <option value="">Todos los países</option>
+                @foreach (var pais in Model.Select(l => l.Pais).Distinct().OrderBy(p => p))
+                {
+                    <option value="@pais">@pais</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <div class="row g-3 g-lg-4">
         @foreach (var liga in Model)
         {
-            <div class="col-md-4 col-lg-3 mb-4">
+            <div class="col-12 col-sm-6 col-lg-4 col-xl-3 liga-card" data-nombre="@liga.Nombre.ToLower()" data-pais="@liga.Pais">
                 <div class="card h-100 shadow-sm">
                     <div class="card-body text-center">
                         <img src="@liga.LogoUrl"
                              alt="@liga.Nombre"
-                             style="height: 70px; object-fit: contain;"
+                             style="height: 70px; max-width: 100%; object-fit: contain;"
                              class="mb-3" />
 
                         <h5 class="card-title">@liga.Nombre</h5>
@@ -36,4 +57,37 @@
             </div>
         }
     </div>
-</div>
+</section>
+
+@section Scripts {
+    <script>
+        const buscarInput = document.getElementById('buscarCompeticion');
+        const paisSelect = document.getElementById('filtroPais');
+        const tarjetas = document.querySelectorAll('.liga-card');
+
+        function normalizar(texto) {
+            return (texto || '')
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '');
+        }
+
+        function aplicarFiltros() {
+            const busqueda = normalizar(buscarInput.value);
+            const pais = paisSelect.value;
+
+            tarjetas.forEach(tarjeta => {
+                const nombre = normalizar(tarjeta.dataset.nombre);
+                const paisTarjeta = tarjeta.dataset.pais;
+
+                const coincideNombre = !busqueda || nombre.includes(busqueda);
+                const coincidePais = !pais || paisTarjeta === pais;
+
+                tarjeta.classList.toggle('d-none', !(coincideNombre && coincidePais));
+            });
+        }
+
+        buscarInput.addEventListener('input', aplicarFiltros);
+        paisSelect.addEventListener('change', aplicarFiltros);
+    </script>
+}

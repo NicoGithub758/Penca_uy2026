@@ -61,6 +61,7 @@ namespace Penca_uy2026.Controllers
         // POST: Guardar Penca
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CrearDesdeCompeticion(
             int leagueId,
             int season,
