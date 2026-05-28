@@ -9,5 +9,6 @@
         public string? OldPassword { get; set; }
 
         public string NewPassword { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty; // Es necesario por seguridad.
     }
 }

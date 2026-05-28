@@ -65,6 +65,12 @@ namespace Penca_uy2026.Controllers
                 return BadRequest(new { mensaje = "El usuario ya está registrado en este sitio o los datos son inválidos." });
             }
 
+            // Si el JWT viene vacío, significa que el registro quedó pendiente de aprobación (Tipo 1 o 2).
+            if (string.IsNullOrEmpty(result.Jwt))
+            {
+                return Accepted(new { status = "pending", mensaje = "Tu solicitud ha sido enviada y está a la espera de aprobación por un administrador." });
+            }
+
             return Ok(new
             {
                 jwt = result.Jwt,
@@ -89,24 +95,24 @@ namespace Penca_uy2026.Controllers
         {
             Console.WriteLine("DEBUG: Petición recibida en WebAuthController -> LoginGoogle");
             // Se delega el flujo de autenticación social al servicio correspondiente.
-            var result = await _usuarioAuthService.LoginGoogleAsync(request.Auth0Token, request.SitioId, request.Slug);
+            var (data, errorMessage) = await _usuarioAuthService.LoginGoogleAsync(request.Auth0Token, request.SitioId, request.Slug);
 
-            if (result == null)
+            if (data == null)
             {
-                return Unauthorized(new { mensaje = "No se pudo validar la identidad con Google o el sitio seleccionado no es válido." });
+                return Unauthorized(new { mensaje = errorMessage ?? "No se pudo validar la identidad con Google o el sitio seleccionado no es válido." });
             }
 
             return Ok(new
             {
-                jwt = result.Jwt,
+                jwt = data.Jwt,
                 usuario = new
                 {
-                    id = result.UsuarioSitioId,
-                    nombre = result.Nombre,
-                    email = result.Email,
-                    sitioId = result.SitioId,
+                    id = data.UsuarioSitioId,
+                    nombre = data.Nombre,
+                    email = data.Email,
+                    sitioId = data.SitioId,
                     rol = 0,
-                    tienePassword = result.TienePassword
+                    tienePassword = data.TienePassword
                 }
             });
         }
