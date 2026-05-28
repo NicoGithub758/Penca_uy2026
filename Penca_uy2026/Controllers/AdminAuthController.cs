@@ -343,48 +343,36 @@ namespace Penca_uy2026.Controllers
             }
         }
         [HttpGet("Estadisticas")]
+        [IgnoreAntiforgeryToken] // Agregado para evitar errores de cookie temporalmente
         public async Task<IActionResult> Estadisticas()
         {
-            // 1. Datos Generales
-            var totalPencas = await _context.Pencas.CountAsync();
-            var totalUsuarios = await _context.UsuariosSitio.CountAsync();
-            var dineroTotal = await _context.Pagos.SumAsync(p => p.Monto);
-
-            // 2. Deporte popular
-            var deportePopular = await _context.Pencas
-                .GroupBy(p => p.Deporte.Nombre)
-                .OrderByDescending(g => g.Count())
-                .Select(g => g.Key)
-                .FirstOrDefaultAsync() ?? "Sin datos";
-
-            // 3. Detalle por Sitio
-            var detallesSitio = await _context.Sitios
-                .Include(s => s.PencaInstancias)
-                    .ThenInclude(pi => pi.Participaciones)
-                        .ThenInclude(part => part.Pagos)
-                .Include(s => s.Usuarios)
-                .Select(s => new EstadisticaSitioDTO
-                {
-                    NombreSitio = s.Nombre,
-                    CantidadPencas = s.PencaInstancias.Count,
-                    DineroRecaudado = s.PencaInstancias
-                        .SelectMany(pi => pi.Participaciones)
-                        .SelectMany(part => part.Pagos)
-                        .Sum(p => p.Monto),
-                    CantidadAdmins = s.Usuarios.Count(u => u.Rol == RolUsuarioSitio.AdminSitio),
-                    CantidadUsuarios = s.Usuarios.Count(u => u.Rol == RolUsuarioSitio.Jugador)
-                }).ToListAsync();
-
             var model = new EstadisticasViewModel
             {
-                TotalPencas = totalPencas,
-                DineroTotalIngresado = dineroTotal,
-                TotalUsuarios = totalUsuarios,
-                DeporteMasPopular = deportePopular,
-                EstadisticasPorSitio = detallesSitio
+                TotalPencas = await _context.Pencas.CountAsync(),
+                TotalUsuarios = await _context.UsuariosSitio.CountAsync(),
+                DineroTotalIngresado = await _context.Pagos.SumAsync(p => (decimal?)p.Monto) ?? 0m,
+
+                DeporteMasPopular = await _context.Pencas
+                    .GroupBy(p => p.Deporte.Nombre)
+                    .OrderByDescending(g => g.Count())
+                    .Select(g => g.Key)
+                    .FirstOrDefaultAsync() ?? "Sin datos",
+
+                EstadisticasPorSitio = await _context.Sitios
+                    .Select(s => new EstadisticaSitioDTO
+                    {
+                        NombreSitio = s.Nombre,
+                        CantidadPencas = s.PencaInstancias.Count,
+                        DineroRecaudado = s.PencaInstancias
+                            .SelectMany(pi => pi.Participaciones)
+                            .SelectMany(part => part.Pagos)
+                            .Sum(p => (decimal?)p.Monto) ?? 0m,
+                        CantidadAdmins = s.Usuarios.Count(u => u.Rol == RolUsuarioSitio.AdminSitio),
+                        CantidadUsuarios = s.Usuarios.Count(u => u.Rol == RolUsuarioSitio.Jugador)
+                    }).ToListAsync()
             };
 
-            return View(model); // Asegúrate de tener la vista en Views/AdminAuth/Estadisticas.cshtml
+            return View(model);
         }
     }
 }
