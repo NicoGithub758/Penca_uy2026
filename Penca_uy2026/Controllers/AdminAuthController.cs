@@ -342,23 +342,36 @@ namespace Penca_uy2026.Controllers
                 return View(request);
             }
         }
+
         [HttpGet("Estadisticas")]
-        [IgnoreAntiforgeryToken] // Agregado para evitar errores de cookie temporalmente
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> Estadisticas()
         {
+            // Usamos .IgnoreQueryFilters() para asegurar que traemos TODA la info 
+            // de la base de datos sin importar qué sitio está activo en la sesión.
+
             var model = new EstadisticasViewModel
             {
-                TotalPencas = await _context.Pencas.CountAsync(),
-                TotalUsuarios = await _context.UsuariosSitio.CountAsync(),
-                DineroTotalIngresado = await _context.Pagos.SumAsync(p => (decimal?)p.Monto) ?? 0m,
+                // Conteo total ignorando filtros de seguridad
+                TotalPencas = await _context.Pencas.IgnoreQueryFilters().CountAsync(),
+
+                // Conteo total de usuarios ignorando filtros
+                TotalUsuarios = await _context.UsuariosSitio.IgnoreQueryFilters().CountAsync(),
+
+                // Suma total de todos los pagos
+                DineroTotalIngresado = await _context.Pagos.IgnoreQueryFilters().SumAsync(p => (decimal?)p.Monto) ?? 0m,
 
                 DeporteMasPopular = await _context.Pencas
+                    .IgnoreQueryFilters()
                     .GroupBy(p => p.Deporte.Nombre)
                     .OrderByDescending(g => g.Count())
                     .Select(g => g.Key)
                     .FirstOrDefaultAsync() ?? "Sin datos",
 
+                // Detalle por sitio: Aquí también ignoramos filtros para que 
+                // la lista de sitios sea completa y sus conteos sean reales.
                 EstadisticasPorSitio = await _context.Sitios
+                    .IgnoreQueryFilters()
                     .Select(s => new EstadisticaSitioDTO
                     {
                         NombreSitio = s.Nombre,
