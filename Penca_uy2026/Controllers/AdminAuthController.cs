@@ -254,19 +254,24 @@ namespace Penca_uy2026.Controllers
         }
 
         [HttpPost("EliminarSitio/{id}")]
-        // [ValidateAntiForgeryToken] // Seguimos dejándolo comentado para que Railway no moleste con cookies
         public async Task<IActionResult> EliminarSitio(int id)
         {
             var sitio = await _context.Sitios.FindAsync(id);
-            if (sitio == null)
-            {
-                return NotFound();
-            }
+            if (sitio == null) return NotFound();
 
             try
             {
-                // Agregamos .IgnoreQueryFilters() a cada consulta para asegurarnos de que limpie TODO en la BD
+                // 1. Borrar Pagos y Participaciones (los hijos más profundos)
+                var participaciones = await _context.Participaciones.IgnoreQueryFilters()
+                                        .Where(p => p.SitioId == id).ToListAsync();
 
+                var pagos = await _context.Pagos.IgnoreQueryFilters()
+                                        .Where(p => p.SitioId == id).ToListAsync();
+
+                _context.Pagos.RemoveRange(pagos);
+                _context.Participaciones.RemoveRange(participaciones);
+
+                // 2. Borrar Invitaciones, Solicitudes e Instancias
                 var invitaciones = await _context.Invitaciones.IgnoreQueryFilters().Where(i => i.SitioId == id).ToListAsync();
                 _context.Invitaciones.RemoveRange(invitaciones);
 
@@ -276,18 +281,19 @@ namespace Penca_uy2026.Controllers
                 var instanciasPencas = await _context.PencaInstancias.IgnoreQueryFilters().Where(pi => pi.SitioId == id).ToListAsync();
                 _context.PencaInstancias.RemoveRange(instanciasPencas);
 
+                // 3. Borrar Usuarios (Ahora que ya no tienen participaciones, esto no fallará)
                 var usuarios = await _context.UsuariosSitio.IgnoreQueryFilters().Where(u => u.SitioId == id).ToListAsync();
                 _context.UsuariosSitio.RemoveRange(usuarios);
 
-                // Ahora que barrimos todo usando IgnoreQueryFilters, removemos el Sitio libremente
+                // 4. Borrar el Sitio
                 _context.Sitios.Remove(sitio);
 
                 await _context.SaveChangesAsync();
-                TempData["Success"] = $"El sitio '{sitio.Nombre}' y todos sus datos asociados se eliminaron correctamente.";
+                TempData["Success"] = "Sitio y todos sus datos eliminados.";
             }
             catch (Exception ex)
             {
-                TempData["Error"] = "Error al eliminar en la Base de Datos: " + (ex.InnerException?.Message ?? ex.Message);
+                TempData["Error"] = "Error al eliminar: " + (ex.InnerException?.Message ?? ex.Message);
             }
 
             return RedirectToAction("VerSitios", "AdminAuth");
