@@ -1,0 +1,17 @@
+﻿@model Penca_uy2026.Models.ViewModels.EstadisticasViewModel
+
+@{
+    ViewData["Title"] = "Estadísticas";
+}
+
+<div class="container py-4">
+    <h1 class="fw-bold">Panel de Estadísticas</h1>
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm">
+                <h5>Total Pencas</h5>
+                <h3>@Model.TotalPencas</h3>
+            </div>
+        </div>
+    </div>
+</div>
