@@ -27,7 +27,8 @@ builder.Services.AddDbContext<MyDbContext>(options =>
 builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ApiFootballService>();
-
+builder.Services.AddScoped<ActualizarResultadosService>();
+builder.Services.AddHostedService<ActualizarResultadosBackgroundService>();
 // -----------------------------------------------------------
 // 2. CONFIGURACIÓN DE SEGURIDAD (JWT + COOKIES)
 // -----------------------------------------------------------

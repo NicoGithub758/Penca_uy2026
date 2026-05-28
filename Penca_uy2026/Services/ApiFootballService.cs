@@ -7,9 +7,12 @@ namespace Penca_uy2026.Services
     public class ApiFootballService
     {
         private readonly HttpClient _httpClient;
+        private readonly ILogger<ApiFootballService> _logger;
 
-        public ApiFootballService(IConfiguration config)
+        public ApiFootballService(IConfiguration config, ILogger<ApiFootballService> logger)
         {
+            _logger = logger;
+
             _httpClient = new HttpClient
             {
                 BaseAddress = new Uri("https://v3.football.api-sports.io/")
@@ -91,6 +94,28 @@ namespace Penca_uy2026.Services
                 $"fixtures/headtohead?h2h={localTeamId}-{visitanteTeamId}&league={leagueId}&season={season}&date={date}");
 
             return result?.Response.FirstOrDefault();
+        }
+
+        public async Task<List<ApiFootballFixtureItem>> GetFixturesByLeagueDateAsync(int leagueId, int season, DateTime fecha)
+        {
+            var date = fecha.ToString("yyyy-MM-dd");
+            var timezone = Uri.EscapeDataString("America/Montevideo");
+
+            var url = $"fixtures?league={leagueId}&season={season}&date={date}&timezone={timezone}";
+
+
+            _logger.LogInformation("API-Football request: GET {Url}", url);
+
+            var result = await _httpClient.GetFromJsonAsync<ApiFootballFixturesResponse>(url);
+
+            var fixtures = result?.Response ?? new List<ApiFootballFixtureItem>();
+
+            _logger.LogInformation(
+                "API-Football response: GET {Url}. Fixtures={Count}",
+                url,
+                fixtures.Count);
+
+            return fixtures;
         }
     }
 }

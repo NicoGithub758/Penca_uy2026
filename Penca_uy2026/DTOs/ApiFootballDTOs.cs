@@ -51,6 +51,24 @@ namespace Penca_uy2026.DTOs
 
         [JsonPropertyName("goals")]
         public ApiFootballGoals Goals { get; set; } = new();
+
+        [JsonPropertyName("score")]
+        public ApiFootballScore Score { get; set; } = new();
+    }
+
+    public class ApiFootballScore
+    {
+        [JsonPropertyName("halftime")]
+        public ApiFootballGoals Halftime { get; set; } = new();
+
+        [JsonPropertyName("fulltime")]
+        public ApiFootballGoals Fulltime { get; set; } = new();
+
+        [JsonPropertyName("extratime")]
+        public ApiFootballGoals Extratime { get; set; } = new();
+
+        [JsonPropertyName("penalty")]
+        public ApiFootballGoals Penalty { get; set; } = new();
     }
 
     public class ApiFootballFixture
