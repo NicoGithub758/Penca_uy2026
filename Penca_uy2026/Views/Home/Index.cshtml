@@ -1,8 +1,67 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model Penca_uy2026.Models.ViewModels.EstadisticasViewModel
+
+@{
+    ViewData["Title"] = "Estadísticas Globales";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container py-4">
+    <h2 class="fw-bold mb-4">Panel de Control Global</h2>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card p-3 shadow-sm border-0 text-center">
+                <h6 class="text-muted">Total Pencas</h6>
+                <h3 class="fw-bold text-primary">@Model.TotalPencas</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 shadow-sm border-0 text-center">
+                <h6 class="text-muted">Dinero Recaudado</h6>
+                <h3 class="fw-bold text-success">$@Model.DineroTotalIngresado.ToString("N2")</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 shadow-sm border-0 text-center">
+                <h6 class="text-muted">Usuarios Totales</h6>
+                <h3 class="fw-bold text-dark">@Model.TotalUsuarios</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 shadow-sm border-0 text-center">
+                <h6 class="text-muted">Deporte Favorito</h6>
+                <h3 class="fw-bold text-info">@Model.DeporteMasPopular</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white border-0 py-3">
+            <h5 class="mb-0">Rendimiento por Sitio</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sitio</th>
+                        <th>Pencas</th>
+                        <th>Recaudación</th>
+                        <th>Admins</th>
+                        <th>Usuarios</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model.EstadisticasPorSitio)
+                    {
+                        <tr>
+                            <td><strong>@s.NombreSitio</strong></td>
+                            <td>@s.CantidadPencas</td>
+                            <td>$@s.DineroRecaudado.ToString("N2")</td>
+                            <td><span class="badge bg-dark">@s.CantidadAdmins</span></td>
+                            <td><span class="badge bg-secondary">@s.CantidadUsuarios</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
