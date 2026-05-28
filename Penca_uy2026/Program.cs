@@ -70,6 +70,7 @@ builder.Services.AddScoped<MobileAuthService>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<UsuarioAuthService>();
 builder.Services.AddScoped<SitioService>();
+builder.Services.AddScoped<InvitacionService>();
 
 // Buscar en la config las URLs permitidas, si no encontró nada se asume ambiente de desarrollo.
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string>()?.Split(',') ?? new[] { "http://localhost:5173" };
