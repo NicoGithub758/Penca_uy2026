@@ -31,6 +31,8 @@ namespace Penca_uy2026.Models
 
         public string? FcmToken { get; set; }
 
+        public OrigenRegistro Origen { get; set; } = OrigenRegistro.Abierto;
+
         // --- RELACIONES ---
 
         [Required]
@@ -47,5 +49,12 @@ namespace Penca_uy2026.Models
     {
         Jugador = 0,
         AdminSitio = 1
+    }
+
+    public enum OrigenRegistro
+    {
+        Abierto = 0,
+        Autorizacion = 1,
+        Invitacion = 2
     }
 }
