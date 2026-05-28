@@ -5,44 +5,45 @@
 }
 
 <div class="container py-4">
-    <h2 class="fw-bold mb-4">Panel de Control Global</h2>
+    <h2 class="fw-bold mb-4"><i class="bi bi-speedometer2"></i> Panel de Control Global</h2>
 
     <div class="row g-4 mb-5">
         <div class="col-md-3">
-            <div class="card p-3 shadow-sm border-0 text-center">
-                <h6 class="text-muted">Total Pencas</h6>
+            <div class="card p-3 shadow-sm border-0 text-center h-100">
+                <h6 class="text-muted text-uppercase small">Total Pencas</h6>
                 <h3 class="fw-bold text-primary">@Model.TotalPencas</h3>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card p-3 shadow-sm border-0 text-center">
-                <h6 class="text-muted">Dinero Recaudado</h6>
+            <div class="card p-3 shadow-sm border-0 text-center h-100">
+                <h6 class="text-muted text-uppercase small">Dinero Recaudado</h6>
                 <h3 class="fw-bold text-success">$@Model.DineroTotalIngresado.ToString("N2")</h3>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card p-3 shadow-sm border-0 text-center">
-                <h6 class="text-muted">Usuarios Totales</h6>
+            <div class="card p-3 shadow-sm border-0 text-center h-100">
+                <h6 class="text-muted text-uppercase small">Usuarios Totales</h6>
                 <h3 class="fw-bold text-dark">@Model.TotalUsuarios</h3>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card p-3 shadow-sm border-0 text-center">
-                <h6 class="text-muted">Deporte Favorito</h6>
+            <div class="card p-3 shadow-sm border-0 text-center h-100">
+                <h6 class="text-muted text-uppercase small">Deporte Favorito</h6>
                 <h3 class="fw-bold text-info">@Model.DeporteMasPopular</h3>
             </div>
         </div>
     </div>
 
     <div class="card shadow-sm border-0">
-        <div class="card-header bg-white border-0 py-3">
-            <h5 class="mb-0">Rendimiento por Sitio</h5>
+        <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold">Rendimiento por Sitio</h5>
+            <span class="badge bg-light text-dark">Datos en tiempo real</span>
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>Sitio</th>
+                        <th class="ps-4">Sitio</th>
                         <th>Pencas</th>
                         <th>Recaudación</th>
                         <th>Admins</th>
@@ -50,25 +51,14 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if (Model.EstadisticasPorSitio != null && Model.EstadisticasPorSitio.Any())
-                    {
-                        @foreach (var s in Model.EstadisticasPorSitio)
-                        {
-                            <tr>
-                                <td><strong>@(s.NombreSitio ?? "Sin nombre")</strong></td>
-                                <td>@s.CantidadPencas</td>
-                                <td>$@s.DineroRecaudado.ToString("N2")</td>
-                                <td><span class="badge bg-dark">@s.CantidadAdmins</span></td>
-                                <td><span class="badge bg-secondary">@s.CantidadUsuarios</span></td>
-                            </tr>
-                        }
-                    }
-                    else
+                    @foreach (var s in Model.EstadisticasPorSitio)
                     {
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">
-                                No se encontraron datos para mostrar.
-                            </td>
+                            <td class="ps-4"><strong>@s.NombreSitio</strong></td>
+                            <td><span class="text-primary fw-bold">@s.CantidadPencas</span></td>
+                            <td>$@s.DineroRecaudado.ToString("N2")</td>
+                            <td><span class="badge bg-dark rounded-pill">@s.CantidadAdmins</span></td>
+                            <td><span class="badge bg-secondary rounded-pill">@s.CantidadUsuarios</span></td>
                         </tr>
                     }
                 </tbody>
