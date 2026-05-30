@@ -53,11 +53,21 @@ builder.Services.AddAuthentication(options =>
     {
         OnMessageReceived = context =>
         {
-            var accessToken = context.Request.Cookies["AuthToken"];
-            if (!string.IsNullOrEmpty(accessToken))
+            // 1. Intentar leer el token de la cookie (frontend web Razor)
+            var tokenCookie = context.Request.Cookies["AuthToken"];
+            if (!string.IsNullOrEmpty(tokenCookie))
             {
-                context.Token = accessToken;
+                context.Token = tokenCookie;
+                return Task.CompletedTask;
             }
+
+            // 2. Si no hay cookie, leer del header Authorization (mobile / API)
+            var authHeader = context.Request.Headers["Authorization"].ToString();
+            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
+            {
+                context.Token = authHeader.Substring("Bearer ".Length).Trim();
+            }
+
             return Task.CompletedTask;
         }
     };
@@ -107,13 +117,13 @@ app.UseRouting();
 
 app.UseCors("AllowReactApp"); // No mover de lugar, el orden es importante.
 
-// MIDDLEWARE MULTI-TENANT: Debe ir después de Routing pero antes de Auth
-// Este identifica qué sitio (URL) está accediendo para filtrar la DB
-app.UseMiddleware<TenantMiddleware>();
+
+
 
 app.UseCors("AllowReact");
 // El orden aquí es vital: Autenticación antes que Autorización
 app.UseAuthentication();
+app.UseMiddleware<TenantMiddleware>();
 app.UseAuthorization();
 
 // -----------------------------------------------------------
