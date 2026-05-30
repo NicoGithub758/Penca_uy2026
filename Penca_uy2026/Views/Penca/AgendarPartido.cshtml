@@ -18,22 +18,14 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Equipo Local</label>
-                        <select name="Local" class="form-select" required>
+                        <select asp-for="LocalId" asp-items="Model.Equipos" class="form-select" required>
                             <option value="">Seleccione...</option>
-                            @foreach (var equipo in Model.Equipos)
-                            {
-                                <option value="@equipo.Value">@equipo.Text</option>
-                            }
                         </select>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Equipo Visitante</label>
-                        <select name="Visitante" class="form-select" required>
+                        <select asp-for="VisitanteId" asp-items="Model.Equipos" class="form-select" required>
                             <option value="">Seleccione...</option>
-                            @foreach (var equipo in Model.Equipos)
-                            {
-                                <option value="@equipo.Value">@equipo.Text</option>
-                            }
                         </select>
                     </div>
                 </div>

@@ -29,11 +29,12 @@ builder.Services.AddDbContext<MyDbContext>(options =>
 // Registro de Servicios de Lógica de Negocio
 builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<AuthService>();
-
 builder.Services.AddDataProtection()
     .SetApplicationName("PencaUy2026")
     .PersistKeysToFileSystem(new DirectoryInfo(@"/home/app/.aspnet/DataProtection-Keys"));
-
+builder.Services.AddScoped<ApiFootballService>();
+builder.Services.AddScoped<ActualizarResultadosService>();
+builder.Services.AddHostedService<ActualizarResultadosBackgroundService>();
 // -----------------------------------------------------------
 // 2. CONFIGURACIÓN DE SEGURIDAD (JWT + COOKIES)
 // -----------------------------------------------------------
@@ -77,6 +78,7 @@ builder.Services.AddScoped<MobileAuthService>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<UsuarioAuthService>();
 builder.Services.AddScoped<SitioService>();
+builder.Services.AddScoped<InvitacionService>();
 
 // Buscar en la config las URLs permitidas, si no encontró nada se asume ambiente de desarrollo.
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string>()?.Split(',') ?? new[] { "http://localhost:5173" };
