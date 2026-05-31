@@ -19,11 +19,12 @@ namespace Penca_uy2026.Controllers
         }
 
         [HttpGet("~/")]
-        public IActionResult Root()
+        [HttpGet("Index")]
+        public IActionResult Index()
         {
             if (Request.Cookies.ContainsKey("AuthToken"))
             {
-                return RedirectToAction("Index", "Penca");
+                return View();
             }
 
             return RedirectToAction(nameof(Login));
@@ -36,7 +37,7 @@ namespace Penca_uy2026.Controllers
             // Si ya tiene el token, lo mandamos al panel
             if (Request.Cookies.ContainsKey("AuthToken"))
             {
-                return RedirectToAction("Index", "Penca");
+                return RedirectToAction("Index", "AdminAuth");
             }
             return View(new LoginViewModel());
         }
@@ -63,8 +64,8 @@ namespace Penca_uy2026.Controllers
                 Expires = DateTime.UtcNow.AddHours(8)
             });
 
-            // Redirigir al Index del controlador Penca
-            return RedirectToAction("Index", "Penca");
+            // Redirigir al panel principal del admin
+            return RedirectToAction("Index", "AdminAuth");
         }
 
 
@@ -124,7 +125,7 @@ namespace Penca_uy2026.Controllers
                 await transaction.CommitAsync();
 
                 TempData["Success"] = $"El sitio '{model.NombreSitio}' con slug '{slugGenerado}' ha sido creado.";
-                return RedirectToAction("Index", "Penca");
+                return RedirectToAction("Index", "AdminAuth");
             }
             catch (Exception ex)
             {
