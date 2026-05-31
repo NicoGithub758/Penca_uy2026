@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Penca_uy2026.Data;
 using Penca_uy2026.Models.ViewModels;
+using Penca_uy2026.Services;
 
 namespace Penca_uy2026.Controllers
 {
@@ -11,10 +12,12 @@ namespace Penca_uy2026.Controllers
     public class AccountController : Controller
     {
         private readonly MyDbContext _context;
+        private readonly AuthService _authService;
 
-        public AccountController(MyDbContext context)
+        public AccountController(MyDbContext context, AuthService authService)
         {
             _context = context;
+            _authService = authService;
         }
 
         [HttpGet]

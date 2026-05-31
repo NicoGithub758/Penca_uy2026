@@ -1,9 +1,10 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Penca_uy2026.Data;
 using Penca_uy2026.Models;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace Penca_uy2026.Services
 {
@@ -39,6 +40,18 @@ namespace Penca_uy2026.Services
             };
 
             return tokenHandler.WriteToken(tokenHandler.CreateToken(tokenDescriptor));
+        }
+        public async Task<UsuarioSitio?> ValidarAdminSitioAsync(string email, string password, int sitioId)
+        {
+            var usuario = await _context.UsuariosSitio
+             .FirstOrDefaultAsync<UsuarioSitio>(u => u.Email.ToLower() == email.ToLower()
+                                       && u.SitioId == sitioId
+                                       && u.Rol == RolUsuarioSitio.AdminSitio);
+
+            if (usuario == null || string.IsNullOrEmpty(usuario.PasswordHash)) return null;
+
+            bool esValido = BCrypt.Net.BCrypt.Verify(password, usuario.PasswordHash);
+            return esValido ? usuario : null;
         }
     }
 }
