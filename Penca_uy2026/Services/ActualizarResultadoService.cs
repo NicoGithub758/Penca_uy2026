@@ -9,28 +9,41 @@ namespace Penca_uy2026.Services
     {
         private readonly MyDbContext _context;
         private readonly ApiFootballService _apiFootballService;
+        private readonly ParametrosSistemaService _parametrosSistemaService;
         private readonly ILogger<ActualizarResultadosService> _logger;
 
         public ActualizarResultadosService(
             MyDbContext context,
             ApiFootballService apiFootballService,
+            ParametrosSistemaService parametrosSistemaService,
             ILogger<ActualizarResultadosService> logger)
         {
             _context = context;
             _apiFootballService = apiFootballService;
+            _parametrosSistemaService = parametrosSistemaService;
             _logger = logger;
         }
 
         public async Task ActualizarResultadosAsync(CancellationToken cancellationToken = default)
         {
-            var ahoraUruguay = ObtenerFechaHoraUruguay();
+            var parametrosSistema = await _parametrosSistemaService.ObtenerAsync(cancellationToken);
+
+            if (!parametrosSistema.ActualizacionAutomaticaResultadosActiva)
+            {
+                _logger.LogInformation("Actualizacion automatica de resultados desactivada por parametros del sistema.");
+                return;
+            }
+
+            var zonaHorariaSistema = await _parametrosSistemaService.ObtenerTimeZoneInfoAsync(cancellationToken);
+            var ahoraSistema = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zonaHorariaSistema);
             var ahoraUtc = DateTime.UtcNow;
-            var limiteFinPartido = ahoraUruguay.AddMinutes(-110);
-            var limiteUltimaConsulta = ahoraUtc.AddMinutes(-10);
+            var limiteFinPartido = ahoraSistema.AddMinutes(-parametrosSistema.MinutosDespuesInicioParaConsultarResultado);
+            var limiteUltimaConsulta = ahoraUtc.AddMinutes(-parametrosSistema.IntervaloMinutosConsultaResultados);
 
             _logger.LogInformation(
-                "Buscando partidos pendientes para actualizar. AhoraUruguay={AhoraUruguay}, LimiteFinPartidoUruguay={LimiteFinPartidoUruguay}, AhoraUtc={AhoraUtc}, LimiteUltimaConsultaUtc={LimiteUltimaConsultaUtc}",
-                ahoraUruguay,
+                "Buscando partidos pendientes para actualizar. TimeZone={TimeZone}, AhoraSistema={AhoraSistema}, LimiteFinPartido={LimiteFinPartido}, AhoraUtc={AhoraUtc}, LimiteUltimaConsultaUtc={LimiteUltimaConsultaUtc}",
+                parametrosSistema.TimeZoneId,
+                ahoraSistema,
                 limiteFinPartido,
                 ahoraUtc,
                 limiteUltimaConsulta);
@@ -242,22 +255,5 @@ namespace Penca_uy2026.Services
             partido.Jugado = true;
         }
 
-        private static DateTime ObtenerFechaHoraUruguay()
-        {
-            var zonaUruguay = ObtenerZonaHorariaUruguay();
-            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zonaUruguay);
-        }
-
-        private static TimeZoneInfo ObtenerZonaHorariaUruguay()
-        {
-            try
-            {
-                return TimeZoneInfo.FindSystemTimeZoneById("America/Montevideo");
-            }
-            catch (TimeZoneNotFoundException)
-            {
-                return TimeZoneInfo.FindSystemTimeZoneById("Montevideo Standard Time");
-            }
-        }
     }
 }

@@ -1,3 +1,5 @@
+@model Penca_uy2026.Models.ParametrosSistema
+
 @{
     ViewData["Title"] = "Gestion de parametros del sistema";
 }
@@ -9,4 +11,62 @@
             <p class="text-muted mb-0">Configura los parametros generales de la plataforma.</p>
         </div>
     </section>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success mb-0">
+            @TempData["Success"]
+        </div>
+    }
+
+    <form asp-action="Index" method="post" class="card shadow-sm">
+        @Html.AntiForgeryToken()
+
+        <div class="card-body">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="row g-3">
+                <div class="col-12 col-lg-6">
+                    <label asp-for="TimeZoneId" class="form-label">Huso horario del sistema</label>
+                    <select asp-for="TimeZoneId" asp-items="ViewBag.TimeZones" class="form-select"></select>
+                    <span asp-validation-for="TimeZoneId" class="text-danger"></span>
+                    <div class="form-text">
+                        Este valor se envia a API-Football en el parametro timezone.
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-6">
+                    <label asp-for="MinutosDespuesInicioParaConsultarResultado" class="form-label">Minutos despues del inicio para consultar resultado</label>
+                    <input asp-for="MinutosDespuesInicioParaConsultarResultado" class="form-control" type="number" min="1" max="300" />
+                    <span asp-validation-for="MinutosDespuesInicioParaConsultarResultado" class="text-danger"></span>
+                </div>
+
+                <div class="col-12 col-lg-6">
+                    <label asp-for="IntervaloMinutosConsultaResultados" class="form-label">Intervalo de consulta de resultados</label>
+                    <input asp-for="IntervaloMinutosConsultaResultados" class="form-control" type="number" min="1" max="1440" />
+                    <span asp-validation-for="IntervaloMinutosConsultaResultados" class="text-danger"></span>
+                </div>
+
+                <div class="col-12 col-lg-6 d-flex align-items-end">
+                    <div class="form-check form-switch">
+                        <input asp-for="ActualizacionAutomaticaResultadosActiva" class="form-check-input" type="checkbox" role="switch" />
+                        <label asp-for="ActualizacionAutomaticaResultadosActiva" class="form-check-label">
+                            Actualizacion automatica de resultados activa
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer bg-white d-flex justify-content-end gap-2">
+            <a class="btn btn-outline-secondary" asp-controller="AdminAuth" asp-action="Index">Cancelar</a>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> Guardar parametros
+            </button>
+        </div>
+    </form>
 </div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
