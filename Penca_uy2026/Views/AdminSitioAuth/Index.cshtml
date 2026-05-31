@@ -1,22 +1,41 @@
-﻿namespace Penca_uy2026.Views.AdminSitioAuth
-{
-    public class Index
-    {
-    }
-}
-@model Penca_uy2026.Models.Sitio
+﻿@model Penca_uy2026.Models.Sitio
 
 <div class="container mt-4">
-    <h1>Panel de Administración: @Model.Nombre</h1>
-    <hr />
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card text-white bg-info mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Usuarios Registrados</h5>
-                    <p class="card-text">@Model.Usuarios.Count()</p>
-                </div>
-            </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Panel de Administración: @Model.Nombre</h1>
+        <a asp-action="CrearPencaInstancia" class="btn btn-primary shadow-sm">
+            <i class="bi bi-plus-circle"></i> Agregar nueva Penca
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 text-secondary">Mis Pencas Activas</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nombre Penca</th>
+                        <th>Modo</th>
+                        <th>Comisión</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var inst in Model.PencaInstancias)
+                    {
+                        <tr>
+                            <td class="fw-bold">@inst.Penca.Nombre</td>
+                            <td><span class="badge bg-info text-dark">@inst.Penca.Modo</span></td>
+                            <td>@inst.PorcentajeComision%</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary">Gestionar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

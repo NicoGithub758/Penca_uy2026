@@ -41,16 +41,17 @@ namespace Penca_uy2026.Services
 
             return tokenHandler.WriteToken(tokenHandler.CreateToken(tokenDescriptor));
         }
-        public async Task<UsuarioSitio?> ValidarAdminSitioAsync(string email, string password, int sitioId)
+        public async Task<UsuarioSitio?> ValidarAdminSitioAsync(string email, string password)
         {
+            // Buscamos al usuario por email y rol de admin
             var usuario = await _context.UsuariosSitio
-             .FirstOrDefaultAsync<UsuarioSitio>(u => u.Email.ToLower() == email.ToLower()
-                                       && u.SitioId == sitioId
-                                       && u.Rol == RolUsuarioSitio.AdminSitio);
+                .FirstOrDefaultAsync<UsuarioSitio>(u => u.Email.ToLower() == email.ToLower()
+                                                   && u.Rol == RolUsuarioSitio.AdminSitio);
 
             if (usuario == null || string.IsNullOrEmpty(usuario.PasswordHash)) return null;
 
             bool esValido = BCrypt.Net.BCrypt.Verify(password, usuario.PasswordHash);
+
             return esValido ? usuario : null;
         }
     }

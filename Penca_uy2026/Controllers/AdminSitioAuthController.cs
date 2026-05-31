@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Azure;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore; // Asegúrate de tener este using
 using Penca_uy2026.Data;
-using Penca_uy2026.Models; // Necesario para Sitio y UsuarioSitio
+using Penca_uy2026.Models;
 using Penca_uy2026.Models.ViewModels;
 using Penca_uy2026.Services;
+using Microsoft.EntityFrameworkCore;
 
 [AllowAnonymous]
 [Route("AdminSitioAuth")]
@@ -19,44 +20,80 @@ public class AdminSitioAuthController : Controller
         _authService = authService;
     }
 
-    [HttpGet("Login/{slug}")]
-    public IActionResult Login(string slug)
-    {
-        ViewBag.Slug = slug;
-        return View();
-    }
+    // URL: /AdminSitioAuth/Login
+    [HttpGet("Login")]
+    public IActionResult Login() => View();
 
-    [HttpPost("Login/{slug}")]
-    public async Task<IActionResult> Login(string slug, LoginAdminSitioViewModel model)
+    [HttpPost("Login")]
+    public async Task<IActionResult> Login(LoginAdminSitioViewModel model)
     {
-        // Solución: Especificamos <Sitio>
-        var sitio = await _context.Sitios.FirstOrDefaultAsync<Sitio>(s => s.Slug == slug);
-        if (sitio == null) return NotFound();
-
-        var admin = await _authService.ValidarAdminSitioAsync(model.Email, model.Password, sitio.Id);
+        // 1. Validamos al usuario y obtenemos el objeto admin que contiene su SitioId
+        var admin = await _authService.ValidarAdminSitioAsync(model.Email, model.Password);
 
         if (admin == null)
         {
-            ModelState.AddModelError("", "Credenciales inválidas para este sitio.");
+            ModelState.AddModelError("", "Credenciales incorrectas.");
             return View(model);
         }
 
-        Response.Cookies.Append($"AuthToken_{sitio.Id}", "token_generado", new CookieOptions
+        // 2. Guardamos una cookie con el SitioId para que el sistema sepa 
+        // qué datos filtrar en las siguientes peticiones.
+        Response.Cookies.Append("SitioId_Admin", admin.SitioId.ToString(), new CookieOptions
         {
             HttpOnly = true,
             Secure = true
         });
 
-        return RedirectToAction("Index", "AdminSitioAuth", new { slug = slug });
+        return RedirectToAction("Index", "AdminSitioAuth");
     }
 
-    [HttpGet("Index/{slug}")]
-    public async Task<IActionResult> Index(string slug)
+    // URL: /AdminSitioAuth/Index
+    [HttpGet("Index")]
+    public async Task<IActionResult> Index()
     {
-        // Solución: Especificamos <Sitio>
-        var sitio = await _context.Sitios.FirstOrDefaultAsync<Sitio>(s => s.Slug == slug);
-        if (sitio == null) return NotFound();
+        // Recuperamos el SitioId desde la cookie
+        if (!Request.Cookies.TryGetValue("SitioId_Admin", out string? sitioId))
+            return RedirectToAction("Login");
 
+        var sitio = await _context.Sitios
+        .Include(s => s.PencaInstancias)
+            .ThenInclude(pi => pi.Penca)
+        .FirstOrDefaultAsync(s => s.Id == int.Parse(sitioId));
         return View(sitio);
+    }
+
+    [HttpGet("CrearPencaInstancia")]
+    public async Task<IActionResult> CrearPencaInstancia()
+    {
+        // Listamos todas las pencas globales disponibles
+        var pencasDisponibles = await _context.Pencas.ToListAsync();
+        ViewBag.Pencas = pencasDisponibles;
+        return View(new CrearInstanciaViewModel());
+    }
+
+    [HttpPost("CrearPencaInstancia")]
+    public async Task<IActionResult> CrearPencaInstancia(CrearInstanciaViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            ViewBag.Pencas = await _context.Pencas.ToListAsync();
+            return View(model);
+        }
+
+        // Recuperamos el SitioId de la cookie
+        if (!Request.Cookies.TryGetValue("SitioId_Admin", out string? sitioId))
+            return RedirectToAction("Login");
+
+        var nuevaInstancia = new PencaInstancia
+        {
+            PencaId = model.PencaId,
+            SitioId = int.Parse(sitioId),
+            PorcentajeComision = model.PorcentajeComision
+        };
+
+        _context.PencaInstancias.Add(nuevaInstancia);
+        await _context.SaveChangesAsync();
+
+        return RedirectToAction("Index", "AdminSitioAuth");
     }
 }
