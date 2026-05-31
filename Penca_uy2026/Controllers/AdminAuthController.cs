@@ -17,6 +17,18 @@ namespace Penca_uy2026.Controllers
             _authService = authService;
             _context = context;
         }
+
+        [HttpGet("~/")]
+        public IActionResult Root()
+        {
+            if (Request.Cookies.ContainsKey("AuthToken"))
+            {
+                return RedirectToAction("Index", "Penca");
+            }
+
+            return RedirectToAction(nameof(Login));
+        }
+
         // GET: /AdminAuth/Login
         [HttpGet("Login")]
         public IActionResult Login()
