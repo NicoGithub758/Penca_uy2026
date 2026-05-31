@@ -1,14 +1,18 @@
 ﻿using Azure;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Penca_uy2026.Data;
 using Penca_uy2026.Models;
 using Penca_uy2026.Models.ViewModels;
 using Penca_uy2026.Services;
-using Microsoft.EntityFrameworkCore;
+using Penca_uy2026.Filters;
 
-[AllowAnonymous]
+
+
 [Route("AdminSitioAuth")]
+[AdminSitioAuthorize]
 public class AdminSitioAuthController : Controller
 {
     private readonly MyDbContext _context;
@@ -21,9 +25,11 @@ public class AdminSitioAuthController : Controller
     }
 
     // URL: /AdminSitioAuth/Login
+    [AllowAnonymous]
     [HttpGet("Login")]
     public IActionResult Login() => View();
 
+    [AllowAnonymous]
     [HttpPost("Login")]
     public async Task<IActionResult> Login(LoginAdminSitioViewModel model)
     {
@@ -46,19 +52,34 @@ public class AdminSitioAuthController : Controller
 
         return RedirectToAction("Index", "AdminSitioAuth");
     }
+    [HttpGet("Logout")]
+    public IActionResult Logout() // Ya no necesita ser async
+    {
+        // 1. Borramos la cookie personalizada que nosotros mismos creamos
+        Response.Cookies.Delete("SitioId_Admin");
+
+        // 2. Si también guardas el token JWT en una cookie, bórralo también
+        Response.Cookies.Delete("AuthToken");
+
+        // 3. Redirigimos al Login
+        return RedirectToAction("Login", "AdminSitioAuth");
+    }
 
     // URL: /AdminSitioAuth/Index
     [HttpGet("Index")]
     public async Task<IActionResult> Index()
     {
-        // Recuperamos el SitioId desde la cookie
+        // Verificación manual de seguridad extrema
         if (!Request.Cookies.TryGetValue("SitioId_Admin", out string? sitioId))
-            return RedirectToAction("Login");
+        {
+            return RedirectToAction("Login", "AdminSitioAuth");
+        }
 
         var sitio = await _context.Sitios
-        .Include(s => s.PencaInstancias)
-            .ThenInclude(pi => pi.Penca)
-        .FirstOrDefaultAsync(s => s.Id == int.Parse(sitioId));
+            .Include(s => s.PencaInstancias)
+                .ThenInclude(pi => pi.Penca)
+            .FirstOrDefaultAsync(s => s.Id == int.Parse(sitioId));
+
         return View(sitio);
     }
 
@@ -95,5 +116,78 @@ public class AdminSitioAuthController : Controller
         await _context.SaveChangesAsync();
 
         return RedirectToAction("Index", "AdminSitioAuth");
+    }
+
+    [HttpGet("Solicitudes")]
+    public async Task<IActionResult> Solicitudes()
+    {
+        if (!Request.Cookies.TryGetValue("SitioId_Admin", out string? sitioId))
+            return RedirectToAction("Login");
+
+        var solicitudes = await _context.SolicitudesIngreso
+            .Where(s => s.SitioId == int.Parse(sitioId) && s.Estado == EstadoSolicitud.Pendiente)
+            .ToListAsync();
+
+        return View(solicitudes);
+    }
+
+    [HttpPost("AprobarSolicitud/{id}")]
+    public async Task<IActionResult> AprobarSolicitud(int id)
+    {
+        var solicitud = await _context.SolicitudesIngreso.FindAsync(id);
+        if (solicitud == null) return NotFound();
+
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            // 1. Crear el nuevo usuario basado en la solicitud
+            var nuevoUsuario = new UsuarioSitio
+            {
+                Email = solicitud.Email,
+                Nombre = solicitud.Nombre,
+                PasswordHash = solicitud.PasswordHash, // Ya venía hasheada de la solicitud
+                SitioId = solicitud.SitioId,
+                Rol = RolUsuarioSitio.Jugador,
+                Activo = true
+            };
+
+            _context.UsuariosSitio.Add(nuevoUsuario);
+
+            // 2. Marcar solicitud como aprobada
+            solicitud.Estado = EstadoSolicitud.Aprobada;
+            await _context.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+            return RedirectToAction("Solicitudes");
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            return BadRequest("Error al aprobar la solicitud.");
+        }
+    }
+
+    [HttpGet("EditarInstancia/{id}")]
+    public async Task<IActionResult> EditarInstancia(int id)
+    {
+        var instancia = await _context.PencaInstancias
+            .Include(pi => pi.Penca)
+            .FirstOrDefaultAsync(pi => pi.Id == id);
+
+        if (instancia == null) return NotFound();
+
+        return View(instancia);
+    }
+
+    [HttpPost("EditarInstancia/{id}")]
+    public async Task<IActionResult> EditarInstancia(int id, PencaInstancia model)
+    {
+        var instancia = await _context.PencaInstancias.FindAsync(id);
+        if (instancia == null) return NotFound();
+
+        instancia.PorcentajeComision = model.PorcentajeComision;
+
+        await _context.SaveChangesAsync();
+        return RedirectToAction("Index");
     }
 }

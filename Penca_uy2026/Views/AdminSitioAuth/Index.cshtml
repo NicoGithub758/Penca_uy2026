@@ -1,5 +1,4 @@
 ﻿@model Penca_uy2026.Models.Sitio
-
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Panel de Administración: @Model.Nombre</h1>
@@ -30,7 +29,9 @@
                             <td><span class="badge bg-info text-dark">@inst.Penca.Modo</span></td>
                             <td>@inst.PorcentajeComision%</td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary">Gestionar</button>
+                                <a asp-action="EditarInstancia" asp-route-id="@inst.Id" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i> Gestionar
+                                </a>
                             </td>
                         </tr>
                     }
