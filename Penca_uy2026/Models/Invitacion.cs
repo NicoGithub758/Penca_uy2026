@@ -22,6 +22,12 @@ namespace Penca_uy2026.Models
         [Required]
         public string Token { get; set; } = Guid.NewGuid().ToString();
 
+        /// <summary>
+        /// Para la invitación, controlamos por usos disponibles, para cubrir la posibilidad de que el link pueda ser usado por más de una persona.
+        /// Por el momento, siempre será 1, en un futuro se puede agregar que la funcionalidad de crear link invitación, le pida al usuario cupos para el link.
+        /// </summary>
+        public int UsosDisponibles { get; set; } = 1;
+
         // --- RELACIONES ---
         
         [Required]
