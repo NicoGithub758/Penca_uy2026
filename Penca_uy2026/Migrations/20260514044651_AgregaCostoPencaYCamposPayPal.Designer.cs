@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Penca_uy2026.Data;
 
@@ -11,9 +12,11 @@ using Penca_uy2026.Data;
 namespace Penca_uy2026.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    partial class MyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260514044651_AgregaCostoPencaYCamposPayPal")]
+    partial class AgregaCostoPencaYCamposPayPal
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -69,20 +72,8 @@ namespace Penca_uy2026.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("ApiFootballTeamId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Codigo")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LogoUrl")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Pais")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("PencaId")
@@ -114,9 +105,6 @@ namespace Penca_uy2026.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UsosDisponibles")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("SitioId");
@@ -143,9 +131,6 @@ namespace Penca_uy2026.Migrations
                     b.Property<int>("ParticipacionId")
                         .HasColumnType("int");
 
-                    b.Property<int>("SitioId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ParticipacionId");
@@ -170,9 +155,6 @@ namespace Penca_uy2026.Migrations
                     b.Property<string>("Mensaje")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("SitioId")
-                        .HasColumnType("int");
 
                     b.Property<int>("UsuarioSitioId")
                         .HasColumnType("int");
@@ -215,9 +197,6 @@ namespace Penca_uy2026.Migrations
                     b.Property<int>("ParticipacionId")
                         .HasColumnType("int");
 
-                    b.Property<int>("SitioId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ParticipacionId");
@@ -242,9 +221,6 @@ namespace Penca_uy2026.Migrations
                     b.Property<int>("PuntajeTotal")
                         .HasColumnType("int");
 
-                    b.Property<int>("SitioId")
-                        .HasColumnType("int");
-
                     b.Property<int>("UsuarioSitioId")
                         .HasColumnType("int");
 
@@ -265,12 +241,6 @@ namespace Penca_uy2026.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("ApiFootballFixtureId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ApiFootballStatus")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Fase")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -284,23 +254,19 @@ namespace Penca_uy2026.Migrations
                     b.Property<int?>("GolesVisitante")
                         .HasColumnType("int");
 
-                    b.Property<int>("IntentosConsultaApi")
-                        .HasColumnType("int");
-
                     b.Property<bool>("Jugado")
                         .HasColumnType("bit");
 
-                    b.Property<int>("LocalEquipoId")
-                        .HasColumnType("int");
+                    b.Property<string>("Local")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("PencaId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("UltimaConsultaApi")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("VisitanteEquipoId")
-                        .HasColumnType("int");
+                    b.Property<string>("Visitante")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -316,18 +282,6 @@ namespace Penca_uy2026.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ApiFootballCountry")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("ApiFootballLeagueId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ApiFootballLeagueName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("ApiFootballSeason")
-                        .HasColumnType("int");
 
                     b.Property<int>("CantidadEquipos")
                         .HasColumnType("int");
@@ -406,7 +360,7 @@ namespace Penca_uy2026.Migrations
                         {
                             Id = 1,
                             Email = "admin@tupenca.uy",
-                            PasswordHash = "$2a$11$NkyAcoQRYnR/7HpOtd4cCuuczx2RbaC13LbVGfMvWKb5CGpOsomNq"
+                            PasswordHash = "$2a$11$KYsnBpbqKy7UZm6m4l0Z8e/ipyusbsso1w1dM4izTQpWUPMEU.qTu"
                         });
                 });
 
@@ -433,9 +387,6 @@ namespace Penca_uy2026.Migrations
                     b.Property<int>("PuntosObtenidos")
                         .HasColumnType("int");
 
-                    b.Property<int>("SitioId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ParticipacionId");
@@ -443,39 +394,6 @@ namespace Penca_uy2026.Migrations
                     b.HasIndex("PartidoId");
 
                     b.ToTable("Predicciones");
-                });
-
-            modelBuilder.Entity("Penca_uy2026.Models.PreferenciaNotificacion", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("RecibirGenerales")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("RecibirPartidos")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("RecibirRanking")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("RecibirResultados")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("SitioId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UsuarioSitioId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UsuarioSitioId");
-
-                    b.ToTable("PreferenciasNotificacion");
                 });
 
             modelBuilder.Entity("Penca_uy2026.Models.Sitio", b =>
@@ -508,16 +426,11 @@ namespace Penca_uy2026.Migrations
 
                     b.Property<string>("Slug")
                         .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("TipoRegistro")
                         .HasColumnType("int");
-
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
 
                     b.HasKey("Id");
 
@@ -539,14 +452,7 @@ namespace Penca_uy2026.Migrations
                     b.Property<int>("Estado")
                         .HasColumnType("int");
 
-                    b.Property<bool>("FuePorInvitacion")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -572,14 +478,16 @@ namespace Penca_uy2026.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Auth0Id")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FcmToken")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateTime>("FechaRegistro")
                         .HasColumnType("datetime2");
@@ -589,11 +497,9 @@ namespace Penca_uy2026.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("Origen")
-                        .HasColumnType("int");
-
                     b.Property<string>("PasswordHash")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<int>("Rol")
                         .HasColumnType("int");
@@ -736,17 +642,6 @@ namespace Penca_uy2026.Migrations
                     b.Navigation("Participacion");
 
                     b.Navigation("Partido");
-                });
-
-            modelBuilder.Entity("Penca_uy2026.Models.PreferenciaNotificacion", b =>
-                {
-                    b.HasOne("Penca_uy2026.Models.UsuarioSitio", "UsuarioSitio")
-                        .WithMany()
-                        .HasForeignKey("UsuarioSitioId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("UsuarioSitio");
                 });
 
             modelBuilder.Entity("Penca_uy2026.Models.SolicitudIngreso", b =>
