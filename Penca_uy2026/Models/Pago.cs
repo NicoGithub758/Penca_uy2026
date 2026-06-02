@@ -23,8 +23,20 @@ namespace Penca_uy2026.Models
         /// </summary>
         public string IdTransaccionExterna { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Estado del pago: "COMPLETED", "PENDING", "FAILED".
+        /// </summary>
+        [MaxLength(20)]
+        public string Estado { get; set; } = "PENDING";
+
+        /// <summary>
+        /// Método de pago utilizado: "PayPal", "MercadoPago", etc.
+        /// </summary>
+        [MaxLength(50)]
+        public string MetodoPago { get; set; } = "PayPal";
+
         // --- RELACIONES ---
-        
+
         [Required]
         public int ParticipacionId { get; set; }
 

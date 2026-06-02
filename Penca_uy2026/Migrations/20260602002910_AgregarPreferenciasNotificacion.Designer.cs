@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Penca_uy2026.Data;
 
@@ -11,9 +12,11 @@ using Penca_uy2026.Data;
 namespace Penca_uy2026.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    partial class MyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260602002910_AgregarPreferenciasNotificacion")]
+    partial class AgregarPreferenciasNotificacion
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -122,34 +125,6 @@ namespace Penca_uy2026.Migrations
                     b.HasIndex("SitioId");
 
                     b.ToTable("Invitaciones");
-                });
-
-            modelBuilder.Entity("Penca_uy2026.Models.InvitacionAdmin", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("FechaExpiracion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Usado")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("UsuarioSitioId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UsuarioSitioId");
-
-                    b.ToTable("InvitacionesAdmin");
                 });
 
             modelBuilder.Entity("Penca_uy2026.Models.MensajeChat", b =>
@@ -434,7 +409,7 @@ namespace Penca_uy2026.Migrations
                         {
                             Id = 1,
                             Email = "admin@tupenca.uy",
-                            PasswordHash = "$2a$11$JF6yA0BTWFRcxl02r1wQOOeX6y7MvUDgEdkJqgLSBxYRKH2HeLIdC"
+                            PasswordHash = "$2a$11$NkyAcoQRYnR/7HpOtd4cCuuczx2RbaC13LbVGfMvWKb5CGpOsomNq"
                         });
                 });
 
@@ -654,17 +629,6 @@ namespace Penca_uy2026.Migrations
                         .IsRequired();
 
                     b.Navigation("Sitio");
-                });
-
-            modelBuilder.Entity("Penca_uy2026.Models.InvitacionAdmin", b =>
-                {
-                    b.HasOne("Penca_uy2026.Models.UsuarioSitio", "UsuarioSitio")
-                        .WithMany()
-                        .HasForeignKey("UsuarioSitioId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("UsuarioSitio");
                 });
 
             modelBuilder.Entity("Penca_uy2026.Models.MensajeChat", b =>
