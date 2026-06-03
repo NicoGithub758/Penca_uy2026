@@ -130,7 +130,6 @@ app.UseCors("AllowReactApp"); // No mover de lugar, el orden es importante.
 
 
 
-app.UseCors("AllowReact");
 // El orden aquí es vital: Autenticación antes que Autorización
 app.UseAuthentication();
 app.UseMiddleware<TenantMiddleware>();
@@ -153,7 +152,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var db = services.GetRequiredService<MyDbContext>();
-        db.Database.Migrate();
+        // db.Database.Migrate();
     }
     catch (Exception ex)
     {
