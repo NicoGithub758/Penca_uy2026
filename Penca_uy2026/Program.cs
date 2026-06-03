@@ -26,9 +26,7 @@ builder.Services.AddControllersWithViews();
 /*builder.Services.AddDbContext<MyDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DATABASE_URL")));*/
 
-builder.Services.AddDbContext<MyDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
+options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 
 // Registro de Servicios de Lógica de Negocio
 builder.Services.AddScoped<ITenantService, TenantService>();
