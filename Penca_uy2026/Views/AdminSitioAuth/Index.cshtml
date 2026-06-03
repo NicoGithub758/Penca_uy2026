@@ -1,0 +1,50 @@
+﻿@model Penca_uy2026.Models.Sitio
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Panel de Administración: @Model.Nombre</h1>
+        <a asp-action="CrearPencaInstancia" class="btn btn-primary shadow-sm">
+            <i class="bi bi-plus-circle"></i> Agregar nueva Penca
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 text-secondary">Mis Pencas Activas</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nombre Penca</th>
+                        <th>Modo</th>
+                        <th>Comisión</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var inst in Model.PencaInstancias)
+                    {
+                        <tr>
+                            <td class="fw-bold">@inst.Penca.Nombre</td>
+                            <td><span class="badge bg-info text-dark">@inst.Penca.Modo</span></td>
+                            <td>@inst.PorcentajeComision%</td>
+                            <td>
+                                <a asp-action="EditarInstancia" asp-route-id="@inst.Id" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i> Gestionar
+                                </a>
+
+                                <a asp-controller="AdminSitioAuth"
+                                       asp-action="ConfigurarPremios"
+                                       asp-route-pencaInstanciaId="@inst.Id"
+                                       class="btn btn-sm btn-outline-warning">
+                                    <i class="bi bi-trophy"></i> Premios
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -29,5 +29,10 @@ namespace Penca_uy2026.DTOs
         /// Slug del sitio (tenant) en el que se está registrando el usuario.
         /// </summary>
         public string? Slug { get; set; }
+
+        /// <summary>
+        /// Token de invitación para las solicitudes por link de invitación.
+        /// </summary>
+        public string? TokenInvitacion { get; set; }
     }
 }

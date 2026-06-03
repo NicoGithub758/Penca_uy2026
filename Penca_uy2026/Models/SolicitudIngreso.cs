@@ -23,6 +23,16 @@ namespace Penca_uy2026.Models
 
         public EstadoSolicitud Estado { get; set; } = EstadoSolicitud.Pendiente;
 
+        /// <summary>
+        /// Booleano para almacenar si esta solicitud se generó a partir de un link de invitación o desde un registro con autorización.
+        /// </summary>
+        public bool FuePorInvitacion {  get; set; } = false;
+
+        /// <summary>
+        /// Campo temporal de password, para que el usuario haga su solicitud indicando su contraseña, y esta quede guardada para crear posteriormente su usuario.
+        /// </summary>
+        public string PasswordHash { get; set; } = string.Empty;
+
         // --- RELACIONES ---
         
         [Required]

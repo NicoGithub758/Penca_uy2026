@@ -17,10 +17,25 @@
             <h2 class="mb-0">Calendario: @Model.Nombre</h2>
             <small class="text-muted">Modo: @Model.Modo | Equipos: @Model.CantidadEquipos</small>
         </div>
+
         <a asp-action="AgendarPartido" asp-route-id="@Model.Id" class="btn btn-primary shadow-sm">
             <i class="bi bi-calendar-plus"></i> + Agendar Partido
         </a>
     </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
 
     <div class="card shadow-sm border-0">
         <div class="table-responsive">
@@ -49,38 +64,61 @@
                     {
                         @foreach (var partido in Model.Partidos.OrderBy(p => p.Fecha))
                         {
+                            var equipoLocal = Model.Equipos.FirstOrDefault(e => e.Id == partido.LocalEquipoId);
+                            var equipoVisitante = Model.Equipos.FirstOrDefault(e => e.Id == partido.VisitanteEquipoId);
+
                             <tr>
                                 <td class="ps-3">
                                     <span class="d-block fw-bold">@partido.Fecha.ToString("dd/MM/yyyy")</span>
                                     <small class="text-muted">@partido.Fecha.ToString("HH:mm") hs</small>
                                 </td>
+
                                 <td>
                                     <span class="badge bg-info text-dark">@partido.Fase</span>
                                 </td>
+
                                 <td class="text-center">
-                                    <span class="fw-bold">@partido.Local.Nombre</span>
+
+                                    <span class="fw-bold">@(equipoLocal?.Nombre ?? "Equipo no encontrado")</span>
                                     <span class="mx-2 text-muted">vs</span>
-                                    <span class="fw-bold">@partido.Visitante.Nombre</span>
+                                    <span class="fw-bold">@(equipoVisitante?.Nombre ?? "Equipo no encontrado")</span>
+
                                 </td>
+
                                 <td class="text-center">
                                     @if (partido.Jugado)
                                     {
-                                        <span class="fs-5 fw-bold text-primary">@partido.GolesLocal - @partido.GolesVisitante</span>
+                                        <span class="fs-5 fw-bold text-primary">
+                                            @partido.GolesLocal - @partido.GolesVisitante
+                                        </span>
                                     }
                                     else
                                     {
                                         <span class="text-muted">-- : --</span>
                                     }
                                 </td>
+
                                 <td class="text-center">
                                     <span class="badge @(partido.Jugado ? "bg-success" : "bg-warning")">
                                         <i class="bi @(partido.Jugado ? "bi-check-circle" : "bi-clock")"></i>
                                         @(partido.Jugado ? "Finalizado" : "Pendiente")
                                     </span>
                                 </td>
+
                                 <td class="text-end pe-3">
-                                    <a asp-action="CargarResultado" asp-route-id="@partido.Id"
-                                           class="btn btn-sm @(partido.Jugado ? "btn-outline-secondary" : "btn-success")">
+                                    <form asp-action="ActualizarResultadoDesdeApi"
+                                          asp-route-id="@partido.Id"
+                                          method="post"
+                                          class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                                            API
+                                        </button>
+                                    </form>
+
+                                    <a asp-action="CargarResultado"
+                                       asp-route-id="@partido.Id"
+                                       class="btn btn-sm @(partido.Jugado ? "btn-outline-secondary" : "btn-success")">
                                         <i class="bi bi-pencil-square"></i> @(partido.Jugado ? "Editar" : "Cargar")
                                     </a>
                                 </td>

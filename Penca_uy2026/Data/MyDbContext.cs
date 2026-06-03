@@ -17,7 +17,9 @@ namespace Penca_uy2026.Data
         }
 
         // --- Tablas Globales ---
+        public DbSet<ReglaPremio> ReglasPremios { get; set; }
         public DbSet<PlataformaAdmin> PlataformaAdmins { get; set; }
+        public DbSet<InvitacionAdmin> InvitacionesAdmin { get; set; }
         public DbSet<Deporte> Deportes { get; set; }
         public DbSet<Penca> Pencas { get; set; }
         public DbSet<Equipo> Equipos { get; set; }
@@ -34,6 +36,7 @@ namespace Penca_uy2026.Data
         public DbSet<Notificacion> Notificaciones { get; set; }
         public DbSet<Invitacion> Invitaciones { get; set; }
         public DbSet<SolicitudIngreso> SolicitudesIngreso { get; set; }
+        public DbSet<PreferenciaNotificacion> PreferenciasNotificacion { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

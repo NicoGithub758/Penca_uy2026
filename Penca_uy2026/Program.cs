@@ -6,6 +6,9 @@ using Penca_uy2026.Data;
 using Penca_uy2026.Services;
 using Penca_uy2026.Interfaces;
 using Penca_uy2026.Middleware;
+using Penca_uy2026.Interfaces;
+using Penca_uy2026.Services;
+using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,7 +33,12 @@ builder.Services.AddDbContext<MyDbContext>(options =>
 // Registro de Servicios de Lógica de Negocio
 builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<AuthService>();
-
+builder.Services.AddDataProtection()
+    .SetApplicationName("PencaUy2026")
+    .PersistKeysToFileSystem(new DirectoryInfo(@"/home/app/.aspnet/DataProtection-Keys"));
+builder.Services.AddScoped<ApiFootballService>();
+builder.Services.AddScoped<ActualizarResultadosService>();
+builder.Services.AddHostedService<ActualizarResultadosBackgroundService>();
 // -----------------------------------------------------------
 // 2. CONFIGURACIÓN DE SEGURIDAD (JWT + COOKIES)
 // -----------------------------------------------------------
@@ -57,11 +65,21 @@ builder.Services.AddAuthentication(options =>
     {
         OnMessageReceived = context =>
         {
-            var accessToken = context.Request.Cookies["AuthToken"];
-            if (!string.IsNullOrEmpty(accessToken))
+            // 1. Intentar leer el token de la cookie (frontend web Razor)
+            var tokenCookie = context.Request.Cookies["AuthToken"];
+            if (!string.IsNullOrEmpty(tokenCookie))
             {
-                context.Token = accessToken;
+                context.Token = tokenCookie;
+                return Task.CompletedTask;
             }
+
+            // 2. Si no hay cookie, leer del header Authorization (mobile / API)
+            var authHeader = context.Request.Headers["Authorization"].ToString();
+            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
+            {
+                context.Token = authHeader.Substring("Bearer ".Length).Trim();
+            }
+
             return Task.CompletedTask;
         }
     };
@@ -74,6 +92,9 @@ builder.Services.AddScoped<MobileAuthService>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<UsuarioAuthService>();
 builder.Services.AddScoped<SitioService>();
+builder.Services.AddScoped<InvitacionService>();
+builder.Services.AddScoped<PayPalService>();
+builder.Services.AddScoped<FirebaseNotificationService>();
 
 // Buscar en la config las URLs permitidas, si no encontró nada se asume ambiente de desarrollo.
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string>()?.Split(',') ?? new[] { "http://localhost:5173" };
@@ -89,6 +110,9 @@ builder.Services.AddCors(options =>
                 .AllowCredentials();
         });
 });
+
+// Registrar el servicio de Email
+builder.Services.AddScoped<IEmailServicio, EmailServicio>();
 
 var app = builder.Build();
 
@@ -108,12 +132,13 @@ app.UseRouting();
 
 app.UseCors("AllowReactApp"); // No mover de lugar, el orden es importante.
 
-// MIDDLEWARE MULTI-TENANT: Debe ir después de Routing pero antes de Auth
-// Este identifica qué sitio (URL) está accediendo para filtrar la DB
-app.UseMiddleware<TenantMiddleware>();
 
+
+
+app.UseCors("AllowReact");
 // El orden aquí es vital: Autenticación antes que Autorización
 app.UseAuthentication();
+app.UseMiddleware<TenantMiddleware>();
 app.UseAuthorization();
 
 // -----------------------------------------------------------
@@ -142,5 +167,7 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "Ocurrió un error al migrar la base de datos.");
     }
 }
+
+
 
 app.Run();

@@ -1,0 +1,77 @@
+﻿@model IEnumerable<Penca_uy2026.Models.ReglaPremio>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Posición</th>
+            <th>% del Pozo</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr id="row-@item.Id">
+                <form asp-action="EditarRegla" asp-route-id="@item.Id" method="post">
+                    <td>
+                        <span class="display-mode">@item.Posicion ° Lugar</span>
+                        <input type="number" name="Posicion" value="@item.Posicion" class="form-control edit-mode d-none" style="width: 80px;" required />
+                    </td>
+                    <td>
+                        <span class="display-mode">@item.PorcentajeDelPozo %</span>
+                        <input type="number" name="PorcentajeDelPozo" value="@item.PorcentajeDelPozo" class="form-control edit-mode d-none" style="width: 100px;" step="0.1" required />
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-info display-mode" onclick="toggleEdit(@item.Id)">Editar</button>
+                        
+                        <button type="submit" class="btn btn-sm btn-success edit-mode d-none">Guardar</button>
+                        <button type="button" class="btn btn-sm btn-secondary edit-mode d-none" onclick="toggleEdit(@item.Id)">Cancelar</button>
+                    </td>
+                </form>
+                <td>
+                    <form asp-action="BorrarRegla" asp-route-id="@item.Id" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Seguro?')">Borrar</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        
+        <tr class="table-info">
+            <form asp-action="GuardarRegla" method="post">
+                <input type="hidden" name="PencaInstanciaId" value="@ViewBag.PencaInstanciaId" />
+                <td>
+                    <input type="number" name="Posicion" class="form-control" placeholder="Ej: 1" min="1" required />
+                </td>
+                <td>
+                    <input type="number" name="PorcentajeDelPozo" class="form-control" placeholder="Ej: 50" step="0.1" min="0.1" max="100" required />
+                </td>
+                <td>
+                    <button type="submit" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-lg"></i> Agregar
+                    </button>
+                </td>
+            </form>
+            <td></td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="mt-2 text-end">
+    <strong>Total acumulado: @Model.Sum(r => r.PorcentajeDelPozo) % / 100%</strong>
+</div>
+
+<script>
+    function toggleEdit(id) {
+        const row = document.getElementById('row-' + id);
+        row.querySelectorAll('.display-mode').forEach(el => el.classList.toggle('d-none'));
+        row.querySelectorAll('.edit-mode').forEach(el => el.classList.toggle('d-none'));
+    }
+</script>

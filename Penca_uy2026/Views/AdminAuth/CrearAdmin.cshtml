@@ -1,0 +1,62 @@
+﻿@model Penca_uy2026.Models.ViewModels.RegistrarAdminViewModel
+
+@{
+    ViewData["Title"] = "Nuevo Administrador";
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-dark text-white py-3 rounded-top-4">
+                    <h4 class="m-0 fw-bold"><i class="bi bi-person-plus-fill me-2"></i>Registrar Administrador de Plataforma</h4>
+                </div>
+                <div class="card-body p-4">
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3 small"></div>
+                    }
+
+                    <form asp-controller="AdminAuth" asp-action="CrearAdmin" method="post" asp-antiforgery="false">
+                        
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label fw-semibold">Correo Electrónico</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
+                                <input asp-for="Email" type="email" class="form-control rounded-end-3" placeholder="ejemplo@tupenca.uy" required />
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label fw-semibold">Contraseña</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-lock"></i></span>
+                                <input asp-for="Password" type="password" class="form-control rounded-end-3" placeholder="Mínimo 6 caracteres" required />
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="ConfirmPassword" class="form-label fw-semibold">Confirmar Contraseña</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-lock-check"></i></span>
+                                <input asp-for="ConfirmPassword" type="password" class="form-control rounded-end-3" placeholder="Repite la contraseña" required />
+                            </div>
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 border-top pt-3">
+                            <a asp-action="VerSitios" class="btn btn-outline-secondary rounded-pill px-4">Cancelar</a>
+                            <button type="submit" class="btn btn-dark rounded-pill px-4 fw-semibold">Registrar Admin</button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

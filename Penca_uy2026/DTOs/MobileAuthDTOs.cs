@@ -14,11 +14,6 @@ namespace Penca_uy2026.DTOs
         /// ID del sitio al que el usuario quiere acceder.
         /// </summary>
         public int SitioId { get; set; }
-
-        /// <summary>
-        /// Slug del sitio al que el usuario quiere acceder.
-        /// </summary>
-        public string? Slug { get; set; }
     }
 
     /// <summary>

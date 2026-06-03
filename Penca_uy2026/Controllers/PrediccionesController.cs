@@ -24,12 +24,26 @@ namespace Penca_uy2026.Controllers
             _context = context;
         }
 
-        // Listado de partidos de una penca 
+        // Listado de partidos de una penca con las predicciones del usuario
+        [Authorize]
         [HttpGet("partidos")]
-        public async Task<IActionResult> Partidos([FromQuery] int idParticipacion,[FromQuery] int idPenca)
+        public async Task<IActionResult> Partidos([FromQuery] int idParticipacion)
         {
+            
+            var usuarioId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var sitioId = int.Parse(User.FindFirstValue("sitioId"));
+
+            if(! await ValidarParticipacion(usuarioId, sitioId, idParticipacion))
+                return BadRequest("Error participacion inválida.");
+ 
+
             var partidos = await _context.Partidos
-                .Where(pe => pe.PencaId == idPenca).OrderBy(partido => partido.Jugado)
+                .Include(p => p.Local)
+                .Include(p => p.Visitante)
+                .Where(pe => pe.PencaId ==  _context.Participaciones
+                .Where(p => p.Id == idParticipacion)
+                .Select(p => p.PencaInstancia.PencaId)
+                .FirstOrDefault()).OrderBy(partido => partido.Jugado)
                 .Select(partido => new
                     {
                         partido.Id,
@@ -61,9 +75,14 @@ namespace Penca_uy2026.Controllers
         public async Task<IActionResult> RealizarPrediccion([FromBody] PrediccionDTO prediccionDTO){
             
             var usuarioId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var sitioId = int.Parse(User.FindFirstValue("sitioId"));
+
+            if(!await ValidarParticipacion(usuarioId, sitioId, prediccionDTO.ParticipacionId))
+                return BadRequest("Error participacion inválida.");
+            
 
             if(await PartidoYaJugado(prediccionDTO.PartidoId))
-            return BadRequest("No se puede predecir un partido ya jugado.");
+                return BadRequest("No se puede predecir un partido ya jugado.");
             
             if(!ValidarFormatoResultado(prediccionDTO)){
                 return BadRequest("Error en el formato de resultados.");
@@ -80,7 +99,7 @@ namespace Penca_uy2026.Controllers
                     return BadRequest("Error: datos invalidos.");        
                 }
             }else{          // Nueva prediccion
-                if(await ValidarNuevaPenca(usuarioId, prediccionDTO)){
+                if(await ValidarNuevaPrediccion(prediccionDTO)){
                     var nuevaPrediccion = new Prediccion
                     {
                         GolesEquipoLocal = prediccionDTO.GolesEquipoLocal,
@@ -88,7 +107,7 @@ namespace Penca_uy2026.Controllers
                         PuntosObtenidos = 0,
                         ParticipacionId = prediccionDTO.ParticipacionId,
                         PartidoId = prediccionDTO.PartidoId,
-                        SitioId = prediccionDTO.SitioId,
+                        SitioId = sitioId
                     };
                     _context.Predicciones.Add(nuevaPrediccion);
                 }else{
@@ -104,18 +123,23 @@ namespace Penca_uy2026.Controllers
 
         // --------------- Funciones Auxiliares -------------------
 
+        // Valida que la participación obtenida coinicida con [userId|sitioId]
+        private async Task<bool> ValidarParticipacion(int userId, int sitioId, int participacionId){
+            return await _context.Participacion
+            .AnyAsync(p => p.userId == userId && p.sitioId == sitioId && p.Id == participacionId);
+        }
+
         // Funcion auxiliar valida que la prediccion pertenezca al usuario id
         private async Task<bool> ValidarPrediccionExistente(int idUsuario, PrediccionDTO dto){
             return await _context.Predicciones
             .AnyAsync(p => p.Id == dto.Id && p.Participacion.UsuarioSitioId == idUsuario);
         }
         
-        private async Task<bool> ValidarNuevaPenca(int idUsuario, PrediccionDTO dto){
+        private async Task<bool> ValidarNuevaPrediccion(PrediccionDTO dto){
             return await _context.Participaciones
-            .AnyAsync(p => p.SitioId == dto.SitioId && p.UsuarioSitioId == idUsuario
-            && p.PencaInstancia.PencaId == dto.Id && p.PencaInstancia.Penca.Partidos.Any(partido => partido.Id == dto.PartidoId));
+            .AnyAsync(p => p.Id == dto.ParticipacionId
+                && p.PencaInstancia.Penca.Partidos.Any(partido => partido.Id == dto.PartidoId));
         }
-
         private bool ValidarFormatoResultado(PrediccionDTO dto){
             if(dto.GolesEquipoLocal < 0 || dto.GolesEquipoVisitante < 0){
                 return false;
