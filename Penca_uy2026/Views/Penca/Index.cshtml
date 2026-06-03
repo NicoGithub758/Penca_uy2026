@@ -4,54 +4,61 @@
     ViewData["Title"] = "Gestión de Pencas";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="display-6 fw-bold">Mis Pencas</h1>
-    
-    <div class="btn-group shadow-sm" role="group" aria-label="Acciones de administración">
-        <a asp-action="Create" class="btn btn-success">
-            <i class="bi bi-plus-lg"></i> Nueva Penca
-        </a>
+<div class="container py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3">
+        <div>
+            <h1 class="fw-bold text-dark mb-1">Mis Pencas</h1>
+            <p class="text-muted">Gestiona tus torneos y configuración desde aquí.</p>
+        </div>
         
-        <a asp-controller="AdminAuth" asp-action="CrearSitio" class="btn btn-primary">
-            <i class="bi bi-globe"></i> Registrar Sitio
-        </a>
-
-        <a asp-controller="AdminAuth" asp-action="ListarSitios" class="btn btn-dark">
-            <i class="bi bi-list-ul"></i> Ver Sitios
-        </a>
+        <div class="btn-group shadow-sm rounded-3 overflow-hidden" role="group">
+            <a asp-action="Create" class="btn btn-success px-3"><i class="bi bi-plus-lg me-1"></i> Nueva</a>
+            <a asp-controller="AdminAuth" asp-action="CrearSitio" class="btn btn-primary px-3"><i class="bi bi-globe me-1"></i> Sitio</a>
+            <a asp-controller="AdminAuth" asp-action="VerSitios" class="btn btn-primary px-3"><i class="bi bi-list-ul me-1"></i> Listar</a>
+            <a asp-controller="AdminAuth" asp-action="CrearAdmin" class="btn btn-dark px-3"><i class="bi bi-person-plus-fill me-1"></i> Admin</a>
+        </div>
     </div>
-</div>
 
     @if (!Model.Any())
     {
-        <div class="alert alert-info shadow-sm" role="alert">
-            Todavía no has creado ninguna penca. ¡Comienza creando la primera!
+        <div class="text-center py-5 bg-light rounded-4 border border-2 border-dashed">
+            <i class="bi bi-trophy display-1 text-muted opacity-50"></i>
+            <h3 class="mt-3 text-secondary">Aún no hay pencas</h3>
+            <p class="text-muted">¿Por qué no creas tu primera penca para empezar?</p>
+            <a asp-action="Create" class="btn btn-primary mt-2 rounded-pill px-4">Crear mi primera penca</a>
         </div>
     }
     else
     {
-        <div class="row">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             @foreach (var item in Model)
             {
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100 shadow-sm border-0">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="card-title mb-0">@item.Nombre</h5>
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm hover-shadow transition-all rounded-4">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title fw-bold text-primary mb-0">@item.Nombre</h5>
+                                <span class="badge bg-light text-dark border">@item.Modo</span>
+                            </div>
+                            
+                            <div class="d-flex align-items-center mb-2 text-muted">
+                                <i class="bi bi-controller me-2"></i>
+                                <span class="small">Deporte: @(item.Deporte?.Nombre ?? "No definido")</span>
+                            </div>
+                            <div class="d-flex align-items-center text-muted">
+                                <i class="bi bi-people-fill me-2"></i>
+                                <span class="small">Equipos: @item.CantidadEquipos</span>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <ul class="list-unstyled">
-                                <li><strong>Deporte:</strong> @(item.Deporte?.Nombre ?? "No definido")</li>
-                                <li><strong>Equipos:</strong> @item.CantidadEquipos</li>
-                                <li>
-                                    <strong>Modo:</strong>
-                                    <span class="badge bg-secondary">@item.Modo</span>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="card-footer bg-light d-grid gap-2">
-                            <a asp-action="Calendario" asp-route-id="@item.Id" class="btn btn-outline-secondary btn-sm">
-                                <i class="bi bi-calendar-event"></i> Agendar Partidos
-                            </a>
+                        <div class="card-footer bg-white border-0 p-4 pt-0">
+                            <div class="d-grid gap-2">
+                                <a asp-action="ConfigurarEquipos" asp-route-id="@item.Id" class="btn btn-outline-primary btn-sm rounded-pill">
+                                    <i class="bi bi-gear me-1"></i> Configurar
+                                </a>
+                                <a asp-action="Calendario" asp-route-id="@item.Id" class="btn btn-primary btn-sm rounded-pill">
+                                    <i class="bi bi-calendar-check me-1"></i> Ver Calendario
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -59,3 +66,11 @@
         </div>
     }
 </div>
+
+@section Styles {
+    <style>
+        .hover-shadow:hover { box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; transform: translateY(-5px); }
+        .transition-all { transition: all 0.3s ease; }
+        .border-dashed { border-style: dashed!important; }
+    </style>
+}

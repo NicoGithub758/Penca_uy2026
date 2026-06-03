@@ -14,12 +14,14 @@ namespace Penca_uy2026.Services
         private readonly MyDbContext _context;
         private readonly IConfiguration _config;
         private readonly HttpClient _httpClient;
+        private readonly ILogger<MobileAuthService> _logger;
 
-        public MobileAuthService(MyDbContext context, IConfiguration config, IHttpClientFactory httpClientFactory)
+        public MobileAuthService(MyDbContext context, IConfiguration config, IHttpClientFactory httpClientFactory, ILogger<MobileAuthService> logger)
         {
             _context = context;
             _config = config;
             _httpClient = httpClientFactory.CreateClient();
+            _logger = logger;
         }
 
         /// <summary>
@@ -63,6 +65,9 @@ namespace Penca_uy2026.Services
 
             // 4. Generar JWT propio
             var jwt = GenerarJwt(usuario);
+
+            _logger.LogInformation($"[JWT GENERADO] Usuario: {usuario.Email}");
+            _logger.LogInformation($"[JWT] {jwt}");
 
             return new SocialLoginResponse
             {
@@ -112,7 +117,7 @@ namespace Penca_uy2026.Services
         /// <summary>
         /// Genera un JWT propio de la plataforma para el UsuarioSitio.
         /// </summary>
-        private string GenerarJwt(UsuarioSitio usuario)
+        public string GenerarJwt(UsuarioSitio usuario)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]!);

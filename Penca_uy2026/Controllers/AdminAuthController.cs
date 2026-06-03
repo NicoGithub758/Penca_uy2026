@@ -1,21 +1,27 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization; 
+using Penca_uy2026.Data;
+using Penca_uy2026.Interfaces;
 using Penca_uy2026.Models;
 using Penca_uy2026.Models.ViewModels;
 using Penca_uy2026.Services;
-using Penca_uy2026.Data;
 
 namespace Penca_uy2026.Controllers
 {
     [Route("AdminAuth")]
+    [Authorize] 
     public class AdminAuthController : Controller
     {
         private readonly AuthService _authService;
         private readonly MyDbContext _context;
+        private readonly IEmailServicio _emailServicio;
 
-        public AdminAuthController(AuthService authService, MyDbContext context)
+        public AdminAuthController(AuthService authService, MyDbContext context, IEmailServicio emailServicio)
         {
             _authService = authService;
             _context = context;
+            _emailServicio = emailServicio;
         }
 
         [HttpGet("~/")]
@@ -30,11 +36,11 @@ namespace Penca_uy2026.Controllers
             return RedirectToAction(nameof(Login));
         }
 
-        // GET: /AdminAuth/Login
+
+        [AllowAnonymous] // Acceso público para ver el login
         [HttpGet("Login")]
         public IActionResult Login()
         {
-            // Si ya tiene el token, lo mandamos al panel
             if (Request.Cookies.ContainsKey("AuthToken"))
             {
                 return RedirectToAction("Index", "AdminAuth");
@@ -42,9 +48,9 @@ namespace Penca_uy2026.Controllers
             return View(new LoginViewModel());
         }
 
-        // POST: /AdminAuth/Login
+        [AllowAnonymous] // Acceso público para enviar credenciales
         [HttpPost("Login")]
-        [ValidateAntiForgeryToken] // Fundamental para evitar el error 405 en producción
+        [ValidateAntiForgeryToken]
         public IActionResult Login(LoginRequest request)
         {
             var token = _authService.LoginPlataforma(request);
@@ -55,7 +61,6 @@ namespace Penca_uy2026.Controllers
                 return View(new LoginViewModel { Email = request.Email });
             }
 
-            // Guardamos el token en una cookie segura
             Response.Cookies.Append("AuthToken", token, new CookieOptions
             {
                 HttpOnly = true,
@@ -68,24 +73,19 @@ namespace Penca_uy2026.Controllers
             return RedirectToAction("Index", "AdminAuth");
         }
 
-
-
+        [AllowAnonymous] // Permitir logout incluso si la sesión expiró
         [HttpGet("Logout")]
         public IActionResult Logout()
         {
             Response.Cookies.Delete("AuthToken");
             return RedirectToAction("Login");
         }
-        // GET: /AdminAuth/CrearSitio (Muestra el formulario)
-        [HttpGet("CrearSitio")]
-        public IActionResult CrearSitio()
-        {
-            return View(new CrearSitioViewModel());
-        }
 
-        // POST: /AdminAuth/CrearSitio
+        [HttpGet("CrearSitio")]
+        public IActionResult CrearSitio() => View(new CrearSitioViewModel());
+
         [HttpPost("CrearSitio")]
-        [ValidateAntiForgeryToken]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> CrearSitio(CrearSitioViewModel model)
         {
             if (!ModelState.IsValid) return View(model);
@@ -93,80 +93,169 @@ namespace Penca_uy2026.Controllers
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // 1. Generamos el Slug a partir del nombre
-                string slugGenerado = GenerarSlug(model.NombreSitio);
-
-                // 2. Creamos el Sitio con los nuevos campos
                 var nuevoSitio = new Sitio
                 {
                     Nombre = model.NombreSitio,
-                    Url = model.UrlVercel.ToLower().Trim(),
-                    Slug = slugGenerado, // <-- Campo nuevo
-                    TipoRegistro = model.TipoRegistro, // <-- Tu nuevo Enum
-                    Activo = true
+                    Url = model.UrlVercel.Trim().ToLower(),
+                    Activo = true,
+                    TipoRegistro = model.TipoRegistro,
+                    Slug = model.NombreSitio.ToLower().Trim().Replace(" ", "-"),
+                    ColorPrincipal = "#000000",
+                    Descripcion = "",
+                    LogoUrl = ""
                 };
 
                 _context.Sitios.Add(nuevoSitio);
                 await _context.SaveChangesAsync();
 
-                // 3. Creamos el Administrador del Sitio
                 var adminSitio = new UsuarioSitio
                 {
-                    Nombre = model.NombreAdmin,
-                    Email = model.EmailAdmin,
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.PasswordAdmin),                  
+                    Nombre = model.NombreAdmin.Trim(),
+                    Email = model.EmailAdmin.Trim().ToLower(),
+                    PasswordHash = null,
                     SitioId = nuevoSitio.Id,
-                    Rol = RolUsuarioSitio.AdminSitio
+                    Rol = RolUsuarioSitio.AdminSitio,
+                    Activo = true,
+                    FechaRegistro = DateTime.UtcNow
                 };
 
                 _context.UsuariosSitio.Add(adminSitio);
                 await _context.SaveChangesAsync();
 
+                string tokenSeguro = Guid.NewGuid().ToString("N");
+                var invitacion = new InvitacionAdmin
+                {
+                    Token = tokenSeguro,
+                    UsuarioSitioId = adminSitio.Id,
+                    FechaExpiracion = DateTime.UtcNow.AddHours(48),
+                    Usado = false
+                };
+
+                _context.InvitacionesAdmin.Add(invitacion);
+                await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                TempData["Success"] = $"El sitio '{model.NombreSitio}' con slug '{slugGenerado}' ha sido creado.";
-                return RedirectToAction("Index", "AdminAuth");
+                try
+                {
+                    await _emailServicio.EnviarEmailInvitacionAsync(adminSitio.Email, adminSitio.Nombre, tokenSeguro, Request.Host.Value);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[ERROR SMTP] {ex.Message}");
+                }
+
+                TempData["Success"] = $"Sitio '{nuevoSitio.Nombre}' registrado.";
+                return RedirectToAction("VerSitios", "AdminAuth");
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                ModelState.AddModelError("", "Error al guardar: " + ex.Message);
+                ModelState.AddModelError("", "Error: " + ex.Message);
                 return View(model);
             }
         }
 
-        // Función auxiliar para normalizar el Slug
-        private string GenerarSlug(string nombre)
+        [HttpGet("VerSitios")]
+        public async Task<IActionResult> VerSitios() => View(await _context.Sitios.ToListAsync());
+
+        [HttpGet("EditarSitio/{id}")]
+        public async Task<IActionResult> EditarSitio(int id)
         {
-            if (string.IsNullOrEmpty(nombre)) return "sitio-sin-nombre";
+            var sitio = await _context.Sitios.IgnoreQueryFilters().FirstOrDefaultAsync(s => s.Id == id);
+            return sitio == null ? NotFound() : View(sitio);
+        }
 
-            // 1. Convertir a minúsculas y normalizar (descompone caracteres como 'ñ' en 'n' + '~')
-            string str = nombre.ToLower().Trim().Normalize(System.Text.NormalizationForm.FormD);
+        [HttpPost("EditarSitio/{id}")]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> EditarSitio(int id, Sitio sitioActualizado)
+        {
+            var sitioOriginal = await _context.Sitios.IgnoreQueryFilters().FirstOrDefaultAsync(s => s.Id == id);
+            if (sitioOriginal == null) return NotFound();
 
-            // 2. Filtrar caracteres: dejamos la letra base y quitamos el acento/tilde
-            var sb = new System.Text.StringBuilder();
-            foreach (char c in str)
+            sitioActualizado.Slug = sitioOriginal.Slug;
+            sitioActualizado.ColorPrincipal = sitioOriginal.ColorPrincipal;
+            sitioActualizado.Descripcion = sitioOriginal.Descripcion;
+            sitioActualizado.LogoUrl = sitioOriginal.LogoUrl;
+            sitioActualizado.TipoRegistro = sitioOriginal.TipoRegistro;
+
+            ModelState.Clear();
+            TryValidateModel(sitioActualizado);
+
+            if (!ModelState.IsValid) return View(sitioActualizado);
+
+            sitioOriginal.Nombre = sitioActualizado.Nombre;
+            sitioOriginal.Url = sitioActualizado.Url;
+            sitioOriginal.Activo = sitioActualizado.Activo;
+
+            _context.Sitios.Update(sitioOriginal);
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Actualizado correctamente.";
+            return RedirectToAction("VerSitios", "AdminAuth");
+        }
+
+        [HttpPost("EliminarSitio/{id}")]
+        public async Task<IActionResult> EliminarSitio(int id)
+        {
+            var sitio = await _context.Sitios.FindAsync(id);
+            if (sitio == null) return NotFound();
+
+            // Lógica de borrado en cascada manual
+            var participaciones = await _context.Participaciones.IgnoreQueryFilters().Where(p => p.SitioId == id).ToListAsync();
+            var pagos = await _context.Pagos.IgnoreQueryFilters().Where(p => p.SitioId == id).ToListAsync();
+            var invitaciones = await _context.Invitaciones.IgnoreQueryFilters().Where(i => i.SitioId == id).ToListAsync();
+            var solicitudes = await _context.SolicitudesIngreso.IgnoreQueryFilters().Where(s => s.SitioId == id).ToListAsync();
+            var instancias = await _context.PencaInstancias.IgnoreQueryFilters().Where(pi => pi.SitioId == id).ToListAsync();
+            var usuarios = await _context.UsuariosSitio.IgnoreQueryFilters().Where(u => u.SitioId == id).ToListAsync();
+
+            _context.Pagos.RemoveRange(pagos);
+            _context.Participaciones.RemoveRange(participaciones);
+            _context.Invitaciones.RemoveRange(invitaciones);
+            _context.SolicitudesIngreso.RemoveRange(solicitudes);
+            _context.PencaInstancias.RemoveRange(instancias);
+            _context.UsuariosSitio.RemoveRange(usuarios);
+            _context.Sitios.Remove(sitio);
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction("VerSitios", "AdminAuth");
+        }
+
+        [HttpGet("CrearAdmin")]
+        public IActionResult CrearAdmin() => View(new RegistrarAdminViewModel());
+
+        [HttpPost("CrearAdmin")]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> CrearAdmin(RegistrarAdminViewModel request)
+        {
+            if (!ModelState.IsValid) return View(request);
+
+            var existe = await _context.PlataformaAdmins.AnyAsync(a => a.Email.ToLower() == request.Email.ToLower());
+            if (existe) { ModelState.AddModelError("Email", "Ya registrado."); return View(request); }
+
+            var nuevoAdmin = new PlataformaAdmin { Email = request.Email.Trim(), PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password) };
+            _context.PlataformaAdmins.Add(nuevoAdmin);
+            await _context.SaveChangesAsync();
+            return RedirectToAction("VerSitios", "AdminAuth");
+        }
+
+        [HttpGet("Estadisticas")]
+        public async Task<IActionResult> Estadisticas()
+        {
+            var model = new EstadisticasViewModel
             {
-                // Usamos UnicodeCategory (corregido)
-                var category = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c);
-
-                // NonSpacingMark son los acentos, tildes y diéresis que queremos ignorar
-                if (category != System.Globalization.UnicodeCategory.NonSpacingMark)
+                TotalPencas = await _context.Pencas.IgnoreQueryFilters().CountAsync(),
+                TotalUsuarios = await _context.UsuariosSitio.IgnoreQueryFilters().CountAsync(),
+                DineroTotalIngresado = await _context.Pagos.IgnoreQueryFilters().SumAsync(p => (decimal?)p.Monto) ?? 0m,
+                DeporteMasPopular = await _context.Pencas.IgnoreQueryFilters().GroupBy(p => p.Deporte.Nombre).OrderByDescending(g => g.Count()).Select(g => g.Key).FirstOrDefaultAsync() ?? "Sin datos",
+                EstadisticasPorSitio = await _context.Sitios.IgnoreQueryFilters().Select(s => new EstadisticaSitioDTO
                 {
-                    sb.Append(c);
-                }
-            }
-
-            // 3. Limpieza final
-            str = sb.ToString();
-            // Quita cualquier cosa que no sea a-z o 0-9
-            str = System.Text.RegularExpressions.Regex.Replace(str, @"[^a-z0-9\s-]", "");
-            // Colapsa espacios múltiples en uno solo
-            str = System.Text.RegularExpressions.Regex.Replace(str, @"\s+", " ").Trim();
-            // Cambia espacios por guiones
-            str = str.Replace(" ", "-");
-
-            return str;
+                    NombreSitio = s.Nombre,
+                    CantidadPencas = s.PencaInstancias.Count,
+                    DineroRecaudado = s.PencaInstancias.SelectMany(pi => pi.Participaciones).SelectMany(part => part.Pagos).Sum(p => (decimal?)p.Monto) ?? 0m,
+                    CantidadAdmins = s.Usuarios.Count(u => u.Rol == RolUsuarioSitio.AdminSitio),
+                    CantidadUsuarios = s.Usuarios.Count(u => u.Rol == RolUsuarioSitio.Jugador)
+                }).ToListAsync()
+            };
+            return View(model);
         }
     }
 }

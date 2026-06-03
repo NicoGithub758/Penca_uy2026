@@ -1,0 +1,24 @@
+﻿@model Penca_uy2026.Models.ViewModels.LoginAdminSitioViewModel
+
+<div class="d-flex align-items-center justify-content-center" style="min-height: 80vh;">
+    <div class="card shadow-lg p-4" style="width: 100%; max-width: 400px;">
+        <div class="card-body">
+            <h3 class="card-title text-center mb-4">Acceso Administrativo</h3>
+            <form asp-action="Login" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Correo Electrónico</label>
+                    <input asp-for="Email" class="form-control form-control-lg" placeholder="admin@sitio.com" />
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label">Contraseña</label>
+                    <input asp-for="Password" type="password" class="form-control form-control-lg" />
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-lg w-100">Ingresar</button>
+            </form>
+        </div>
+    </div>
+</div>
