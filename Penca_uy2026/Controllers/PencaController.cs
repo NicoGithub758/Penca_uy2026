@@ -390,13 +390,15 @@ namespace Penca_uy2026.Controllers
         // Listado de Pencas de sitio, incluyendo la participación del usuario si es que existe.
         [Authorize]
         [HttpGet("api/pencas")]
-        public async Task<IActionResult> Index( [FromQuery] string slug)
+        public async Task<IActionResult> Index()
         {  
             var usuarioId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-
-            var pencas = await _context.PencaInstancias.Include(p => p.Penca)
+            var sitioId = int.Parse(User.FindFirstValue("sitioId"));
+            
+            var pencas = await _context.PencaInstancias
+                                    .Include(p => p.Penca)
                                     .Include(p => p.Participaciones)
-                                    .Where(p => p.Sitio.Slug == slug)
+                                    .Where(p => p.SitioId == sitioId)
                                     .Select(p=> new
                                     {
                                         p.Penca.Id,
