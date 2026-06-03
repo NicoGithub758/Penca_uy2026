@@ -26,9 +26,24 @@ namespace Penca_uy2026.Controllers
 
         [AllowAnonymous]
         [HttpGet("~/")]
-        public IActionResult Root()
+        public async Task<IActionResult> Root()
         {
-            return Content("");
+            if (Request.Cookies.TryGetValue("SitioId_Admin", out var sitioIdCookie) &&
+                int.TryParse(sitioIdCookie, out var sitioId))
+            {
+                var sitioExiste = await _context.Sitios
+                    .IgnoreQueryFilters()
+                    .AnyAsync(s => s.Id == sitioId && s.Activo);
+
+                if (sitioExiste)
+                {
+                    return RedirectToAction("Index", "AdminSitioAuth");
+                }
+
+                Response.Cookies.Delete("SitioId_Admin");
+            }
+
+            return RedirectToAction("Login", "AdminSitioAuth");
         }
 
         [HttpGet("Index")]
