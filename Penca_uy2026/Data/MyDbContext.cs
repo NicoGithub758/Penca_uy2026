@@ -17,6 +17,7 @@ namespace Penca_uy2026.Data
         }
 
         // --- Tablas Globales ---
+        public DbSet<ReglaPremio> ReglasPremios { get; set; }
         public DbSet<PlataformaAdmin> PlataformaAdmins { get; set; }
         public DbSet<InvitacionAdmin> InvitacionesAdmin { get; set; }
         public DbSet<Deporte> Deportes { get; set; }

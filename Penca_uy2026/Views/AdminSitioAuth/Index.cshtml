@@ -1,4 +1,5 @@
 ﻿@model Penca_uy2026.Models.Sitio
+
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Panel de Administración: @Model.Nombre</h1>
@@ -31,6 +32,13 @@
                             <td>
                                 <a asp-action="EditarInstancia" asp-route-id="@inst.Id" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-pencil"></i> Gestionar
+                                </a>
+
+                                <a asp-controller="AdminSitioAuth"
+                                       asp-action="ConfigurarPremios"
+                                       asp-route-pencaInstanciaId="@inst.Id"
+                                       class="btn btn-sm btn-outline-warning">
+                                    <i class="bi bi-trophy"></i> Premios
                                 </a>
                             </td>
                         </tr>

@@ -190,4 +190,88 @@ public class AdminSitioAuthController : Controller
         await _context.SaveChangesAsync();
         return RedirectToAction("Index");
     }
+    [HttpGet("ConfigurarPremios/{pencaInstanciaId}")]
+    public async Task<IActionResult> ConfigurarPremios(int pencaInstanciaId)
+    {
+        var reglas = await _context.ReglasPremios
+            .Where(r => r.PencaInstanciaId == pencaInstanciaId)
+            .OrderBy(r => r.Posicion)
+            .ToListAsync();
+
+        ViewBag.PencaInstanciaId = pencaInstanciaId;
+        return View(reglas);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> GuardarRegla(int PencaInstanciaId, int Posicion, decimal PorcentajeDelPozo)
+    {
+        // 1. Obtener reglas actuales
+        var reglasExistentes = await _context.ReglasPremios
+            .Where(r => r.PencaInstanciaId == PencaInstanciaId)
+            .ToListAsync();
+
+        // 2. Validar duplicados
+        if (reglasExistentes.Any(r => r.Posicion == Posicion))
+        {
+            TempData["Error"] = $"La posición {Posicion} ya está asignada.";
+            return RedirectToAction("ConfigurarPremios", new { pencaInstanciaId = PencaInstanciaId });
+        }
+
+        // 3. Validar suma total (incluyendo la nueva)
+        var sumaActual = reglasExistentes.Sum(r => r.PorcentajeDelPozo);
+        if (sumaActual + PorcentajeDelPozo > 100)
+        {
+            TempData["Error"] = $"La suma total de premios supera el 100%. Llevas {sumaActual}%.";
+            return RedirectToAction("ConfigurarPremios", new { pencaInstanciaId = PencaInstanciaId });
+        }
+          
+        var nuevaRegla = new ReglaPremio
+        {
+            PencaInstanciaId = PencaInstanciaId,
+            Posicion = Posicion,
+            PorcentajeDelPozo = PorcentajeDelPozo,
+            SitioId = int.Parse(Request.Cookies["SitioId_Admin"] ?? "0") // Asegúrate de tener esta lógica
+        };
+
+        _context.ReglasPremios.Add(nuevaRegla);
+        await _context.SaveChangesAsync();
+
+        return RedirectToAction("ConfigurarPremios", new { pencaInstanciaId = PencaInstanciaId });
+    }
+
+    // GET: Muestra la vista para editar
+    [HttpGet("EditarRegla/{id}")]
+    public async Task<IActionResult> EditarRegla(int id)
+    {
+        var regla = await _context.ReglasPremios.FindAsync(id);
+        if (regla == null) return NotFound();
+        return View(regla);
+    }
+
+    [HttpPost("AdminSitioAuth/EditarRegla/{id}")]
+    public async Task<IActionResult> EditarRegla(int id, ReglaPremio regla)
+    {
+        var reglaExistente = await _context.ReglasPremios.FindAsync(id);
+        if (reglaExistente != null)
+        {
+            reglaExistente.Posicion = regla.Posicion;
+            reglaExistente.PorcentajeDelPozo = regla.PorcentajeDelPozo;
+            await _context.SaveChangesAsync();
+        }
+        return RedirectToAction("ConfigurarPremios", new { pencaInstanciaId = reglaExistente.PencaInstanciaId });
+    }
+
+    [HttpPost("AdminSitioAuth/BorrarRegla/{id}")]
+    public async Task<IActionResult> BorrarRegla(int id)
+    {
+        var regla = await _context.ReglasPremios.FindAsync(id);
+        if (regla != null)
+        {
+            int instanciaId = regla.PencaInstanciaId;
+            _context.ReglasPremios.Remove(regla);
+            await _context.SaveChangesAsync();
+            return RedirectToAction("ConfigurarPremios", new { pencaInstanciaId = instanciaId });
+        }
+        return NotFound();
+    }
 }
