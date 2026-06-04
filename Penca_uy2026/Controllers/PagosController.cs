@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Penca_uy2026.Data;
@@ -55,6 +55,7 @@ namespace Penca_uy2026.Controllers
             {
                 UsuarioSitioId = usuarioSitioId,
                 PencaInstanciaId = request.PencaInstanciaId,
+                SitioId = pencaInstancia.SitioId,
                 EstaPagado = false,
                 PuntajeTotal = 0
             };
@@ -69,6 +70,7 @@ namespace Penca_uy2026.Controllers
                 Estado = "PENDING",
                 MetodoPago = "PayPal",
                 ParticipacionId = participacion.Id,
+                SitioId = pencaInstancia.SitioId,
                 FechaPago = DateTime.UtcNow
             };
 
