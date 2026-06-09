@@ -34,6 +34,8 @@ builder.Services.AddScoped<ApiFootballService>();
 builder.Services.AddScoped<ParametrosSistemaService>();
 builder.Services.AddScoped<ActualizarResultadosService>();
 builder.Services.AddHostedService<ActualizarResultadosBackgroundService>();
+builder.Services.AddSignalR();
+
 // -----------------------------------------------------------
 // 2. CONFIGURACIÓN DE SEGURIDAD (JWT + COOKIES)
 // -----------------------------------------------------------
@@ -56,19 +58,31 @@ builder.Services.AddAuthentication(options =>
     };
 
     // Permite que las vistas Razor usen el Token guardado en la Cookie
-    options.Events = new JwtBearerEvents
+    
+   options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
-        {
-            // 1. Intentar leer el token de la cookie (frontend web Razor)
+        {      
+            var path = context.HttpContext.Request.Path;
+        
+            // SignalR: priorizar el token que manda el frontend por query string
+            var accessToken = context.Request.Query["access_token"];
+            if (!string.IsNullOrEmpty(accessToken) &&
+                path.StartsWithSegments("/hubs/chat"))
+            {
+                context.Token = accessToken;
+                return Task.CompletedTask;
+            }
+
+            // 2. Razor / web con cookie
             var tokenCookie = context.Request.Cookies["AuthToken"];
             if (!string.IsNullOrEmpty(tokenCookie))
             {
                 context.Token = tokenCookie;
                 return Task.CompletedTask;
             }
-
-            // 2. Si no hay cookie, leer del header Authorization (mobile / API)
+        
+            // 3. APIs/mobile por header Authorization
             var authHeader = context.Request.Headers["Authorization"].ToString();
             if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
             {
@@ -78,6 +92,12 @@ builder.Services.AddAuthentication(options =>
             return Task.CompletedTask;
         }
     };
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminSitio", policy => policy.RequireRole("AdminSitio"));
+    options.AddPolicy("Jugador", policy => policy.RequireRole("Jugador"));
 });
 
 builder.Services.AddHttpClient();
@@ -144,6 +164,7 @@ app.MapControllerRoute(
     pattern: "{controller=AdminAuth}/{action=Login}/{id?}");
 
 app.MapControllers();
+app.MapHub<Penca_uy2026.Hubs.ChatHub>("/hubs/chat");
 
 // Ejecución automática de migraciones al iniciar (Railway/Producción)
 using (var scope = app.Services.CreateScope())

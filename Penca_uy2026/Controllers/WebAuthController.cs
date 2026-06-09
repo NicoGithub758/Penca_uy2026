@@ -44,8 +44,7 @@ namespace Penca_uy2026.Controllers
                     nombre = result.Nombre,
                     email = result.Email,
                     sitioId = result.SitioId,
-                    // Se asume el rol del usuario para la web, el cual será extraído del JWT por el cliente si es necesario.
-                    rol = 0 ,
+                    rol = result.Rol,
                     tienePassword = result.TienePassword
                 }
             });
@@ -80,7 +79,7 @@ namespace Penca_uy2026.Controllers
                     nombre = result.Nombre,
                     email = result.Email,
                     sitioId = result.SitioId,
-                    rol = 0,
+                    rol = result.Rol,
                     tienePassword = result.TienePassword
                 }
             });
@@ -111,7 +110,7 @@ namespace Penca_uy2026.Controllers
                     nombre = data.Nombre,
                     email = data.Email,
                     sitioId = data.SitioId,
-                    rol = 0,
+                    rol = data.Rol,
                     tienePassword = data.TienePassword
                 }
             });

@@ -42,17 +42,17 @@ namespace Penca_uy2026.Services
             {
                 CheckoutPaymentIntent = "CAPTURE",
                 PurchaseUnits = new List<PurchaseUnitRequest>
-        {
-            new PurchaseUnitRequest
-            {
-                AmountWithBreakdown = new AmountWithBreakdown
                 {
-                    CurrencyCode = currency,
-                    Value = monto.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) // ← Usar punto siempre
+                    new PurchaseUnitRequest
+                    {
+                        AmountWithBreakdown = new AmountWithBreakdown
+                        {
+                            CurrencyCode = currency,
+                            Value = monto.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)
+                        },
+                        Description = "Pago de participación en penca"
+                    }
                 },
-                Description = "Pago de participación en penca"
-            }
-        },
                 ApplicationContext = new ApplicationContext
                 {
                     ReturnUrl = "https://localhost:5173",

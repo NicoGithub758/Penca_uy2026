@@ -375,5 +375,7 @@ namespace Penca_uy2026.Controllers
 
             return RedirectToAction(nameof(Calendario), new { id = model.PencaId });
         }
+
+        
     }
 }
