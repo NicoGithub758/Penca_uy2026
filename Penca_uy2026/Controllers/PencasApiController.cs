@@ -64,11 +64,19 @@ namespace Penca_uy2026.Controllers
                     Deporte = pi.Penca.Deporte != null ? pi.Penca.Deporte.Nombre : "Desconocido",
                     Costo = pi.Costo,
                     // Verificamos si el usuario actual ya tiene una participación
-                    YaParticipa = _context.Participaciones.Any(p => p.PencaInstanciaId == pi.Id && p.UsuarioSitioId == usuarioSitioId)
+                    YaParticipa = _context.Participaciones.Any(p => p.PencaInstanciaId == pi.Id && p.UsuarioSitioId == usuarioSitioId),
+                    IdParticipacion = _context.Participaciones
+                        .Where(p => p.PencaInstanciaId == pi.Id && p.UsuarioSitioId == usuarioSitioId)
+                        .Select(p => p.Id)
+                        .FirstOrDefault()
+ 
                 })
                 .ToListAsync();
 
             return Ok(pencas);
         }
+
     }
+
+
 }

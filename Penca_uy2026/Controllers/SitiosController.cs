@@ -2,6 +2,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Penca_uy2026.Data;
 using Penca_uy2026.Services;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client.AppConfig;
+using System.Security.Claims;
+using Penca_uy2026.Models;
+
 
 namespace Penca_uy2026.Controllers
 {
@@ -9,7 +16,7 @@ namespace Penca_uy2026.Controllers
     /// Controlador para la gestión de sitios. 
     /// Combina acciones de Backoffice (Views) con endpoints de API para el frontend.
     /// </summary>
-    [Authorize(Roles = "PlataformaAdmin")]
+//  [Authorize(Roles = "PlataformaAdmin")]
     public class SitiosController : Controller
     {
         private readonly MyDbContext _context;
@@ -49,5 +56,61 @@ namespace Penca_uy2026.Controllers
 
             return Ok(sitio);
         }
+        
+
+        //Asocia una penca creada en el backoffice a un sitio, creando nueva penca instancia.
+        [Authorize]
+        [HttpPost("api/sitios/asociarpenca")]
+        public async Task<IActionResult> AsociarPenca([FromQuery] int costo, [FromQuery] int pencaId){
+            
+            var usuarioId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var sitioId = int.Parse(User.FindFirstValue("sitioId"));
+            var usuarioRol = User.FindFirstValue(ClaimTypes.Role);
+
+            if(usuarioRol != "AdminSitio")
+                return BadRequest("Usuario no es administrador.");
+            
+            var nuevaPencaInstancia = new PencaInstancia
+            {
+                Costo = costo,
+                PorcentajeComision = 5,
+                PencaId = pencaId, 
+                SitioId = sitioId
+            };
+
+            _context.Add(nuevaPencaInstancia);
+            _context.SaveChanges();
+
+            return Ok();
+        }
+
+    // Trae todas las pencas del sistema para que el administrador pueda asociarlas al sitio.
+    [Authorize]
+    [HttpGet("api/pencasSistema")]
+    public async Task<IActionResult> GetPencasSistema(){
+           
+        var sitioId = int.Parse(User.FindFirstValue("sitioId"));
+        var usuarioRol = User.FindFirstValue(ClaimTypes.Role);
+
+        Console.WriteLine($"ROL: {usuarioRol}");
+        
+        /*if(usuarioRol != 1)
+            return BadRequest("Usuario no es administrador.");*/
+
+        var pencas = await _context.Pencas
+            .Where(p => !_context.PencaInstancias
+                .Any(pi => pi.PencaId == p.Id && pi.SitioId == sitioId))
+            .Select(p => new
+            {
+                p.Id,
+                p.Nombre,
+                p.CantidadEquipos,
+                p.Modo,
+                p.DeporteId
+            }).ToListAsync();
+        return Ok(pencas);
+        }
+
+        
     }
 }
