@@ -1,4 +1,8 @@
-﻿namespace Penca_uy2026.Models
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Penca_uy2026.Interfaces;
+
+namespace Penca_uy2026.Models
 {
     public class Partido
     {
@@ -15,5 +19,17 @@
         public string? ApiFootballStatus { get; set; }
         public DateTime? UltimaConsultaApi { get; set; }
         public int IntentosConsultaApi { get; set; }
+
+        
+        // ----------------- RELACIONES -------------------
+        [ForeignKey("LocalEquipoId")]
+        public Equipo Local { get; set; } = null!;
+
+        [ForeignKey("VisitanteEquipoId")]
+        public Equipo Visitante { get; set; } = null!;
+
+        [ForeignKey("PencaId")]
+        public Penca Penca { get; set; } = null!;
+
     }
 }

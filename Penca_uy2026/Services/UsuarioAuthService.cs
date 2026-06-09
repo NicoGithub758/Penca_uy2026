@@ -62,7 +62,8 @@ namespace Penca_uy2026.Services
                 SitioId = usuario.SitioId,
                 Nombre = usuario.Nombre,
                 Email = usuario.Email,
-                TienePassword = !string.IsNullOrEmpty(usuario.PasswordHash)
+                TienePassword = !string.IsNullOrEmpty(usuario.PasswordHash),
+                Rol = (int)usuario.Rol
             };
         }
 
@@ -159,7 +160,8 @@ namespace Penca_uy2026.Services
                 SitioId = nuevoUsuario.SitioId,
                 Nombre = nuevoUsuario.Nombre,
                 Email = nuevoUsuario.Email,
-                TienePassword = true // Se acaba de registrar con password
+                TienePassword = true, // Se acaba de registrar con password
+                Rol = (int)nuevoUsuario.Rol
             };
         }
 
@@ -248,7 +250,8 @@ namespace Penca_uy2026.Services
                 SitioId = usuario.SitioId,
                 Nombre = usuario.Nombre,
                 Email = usuario.Email,
-                TienePassword = !string.IsNullOrEmpty(usuario.PasswordHash)
+                TienePassword = !string.IsNullOrEmpty(usuario.PasswordHash),
+                Rol = (int)usuario.Rol
             }, null);
         }
 
