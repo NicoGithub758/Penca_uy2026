@@ -62,8 +62,10 @@ namespace Penca_uy2026.Services
                 SitioId = usuario.SitioId,
                 Nombre = usuario.Nombre,
                 Email = usuario.Email,
+                FotoPerfil = usuario.AvatarUrl,
                 TienePassword = !string.IsNullOrEmpty(usuario.PasswordHash),
-                Rol = (int)usuario.Rol
+                Rol = (int)usuario.Rol,
+                TieneGoogle = !string.IsNullOrEmpty(usuario.Auth0Id)
             };
         }
 
@@ -129,7 +131,9 @@ namespace Penca_uy2026.Services
                     SitioId = sitioId,
                     Nombre = request.Nombre,
                     Email = request.Email,
-                    TienePassword = true
+                    FotoPerfil = null,
+                    TienePassword = true,
+                    TieneGoogle = false
                 };
             }
 
@@ -160,8 +164,10 @@ namespace Penca_uy2026.Services
                 SitioId = nuevoUsuario.SitioId,
                 Nombre = nuevoUsuario.Nombre,
                 Email = nuevoUsuario.Email,
+                FotoPerfil = nuevoUsuario.AvatarUrl,
                 TienePassword = true, // Se acaba de registrar con password
-                Rol = (int)nuevoUsuario.Rol
+                Rol = (int)nuevoUsuario.Rol,
+                TieneGoogle = false
             };
         }
 
@@ -232,11 +238,6 @@ namespace Penca_uy2026.Services
                 };
                 _context.UsuariosSitio.Add(usuario);
             }
-            else
-            {
-                // Se actualiza la información que podría haber cambiado en el proveedor externo.
-                usuario.Nombre = auth0User.Name ?? usuario.Nombre;
-            }
 
             await _context.SaveChangesAsync();
 
@@ -250,8 +251,10 @@ namespace Penca_uy2026.Services
                 SitioId = usuario.SitioId,
                 Nombre = usuario.Nombre,
                 Email = usuario.Email,
+                FotoPerfil = usuario.AvatarUrl,
                 TienePassword = !string.IsNullOrEmpty(usuario.PasswordHash),
-                Rol = (int)usuario.Rol
+                Rol = (int)usuario.Rol,
+                TieneGoogle = true
             }, null);
         }
 
@@ -275,6 +278,17 @@ namespace Penca_uy2026.Services
             {
                 return null;
             }
+        }
+
+        public async Task<bool> ValidarAccesoSitioYUsuarioAsync(int userId, int tokenSitioId, string slug)
+        {
+            var sitio = await _context.Sitios.FirstOrDefaultAsync(s => s.Slug == slug);
+            if (sitio == null || sitio.Id != tokenSitioId) return false;
+
+            var usuario = await _context.UsuariosSitio.FindAsync(userId);
+            if (usuario == null || usuario.SitioId != tokenSitioId) return false;
+
+            return true;
         }
 
         public async Task<(bool Success, string? ErrorMessage)> UpdatePasswordAsync(int userId, int tokenSitioId, UpdatePasswordDTO request)
@@ -305,6 +319,93 @@ namespace Penca_uy2026.Services
 
             await _context.SaveChangesAsync();
             return (true, null);
+        }
+
+        public async Task<(bool Success, string? ErrorMessage)> UpdateProfileAsync(int userId, int tokenSitioId, UpdateProfileDTO request)
+        {
+            var sitio = await _context.Sitios.FirstOrDefaultAsync(s => s.Slug == request.Slug);
+            if (sitio == null) return (false, "El sitio especificado no existe.");
+
+            // Seguridad
+            if(tokenSitioId != sitio.Id)
+            {
+                return (false, "FORBIDDEN"); 
+            }
+
+            var usuario = await _context.UsuariosSitio.FindAsync(userId);
+            if (usuario == null) return (false, "Usuario no encontrado.");
+
+            if (!string.IsNullOrWhiteSpace(request.Nombre))
+            {
+                usuario.Nombre = request.Nombre;
+            }
+
+            // Permite actualizar o borrar (null) el avatar.
+            usuario.AvatarUrl = request.AvatarUrl;
+
+            await _context.SaveChangesAsync();
+            return (true, null);
+        }
+
+        public async Task<(bool Success, string? ErrorMessage)> LinkGoogleAccountAsync(int userId, int tokenSitioId, string auth0Token, string slug)
+        {
+            var sitio = await _context.Sitios.FirstOrDefaultAsync(s => s.Slug == slug);
+            if (sitio == null) return (false, "El sitio especificado no existe.");
+
+            // Seguridad
+            if(tokenSitioId != sitio.Id)
+            {
+                return (false, "FORBIDDEN"); 
+            }
+
+            var auth0User = await ValidarTokenAuth0Async(auth0Token);
+            if (auth0User == null)
+            {
+                return (false, "El token de Google proporcionado no es válido.");
+            }
+
+            var usuario = await _context.UsuariosSitio.FindAsync(userId);
+            if (usuario == null) return (false, "Usuario no encontrado.");
+
+            if (!string.IsNullOrEmpty(usuario.Auth0Id))
+            {
+                return (false, "Esta cuenta ya está vinculada a Google.");
+            }
+
+            // Validar que el Auth0Id no esté en uso por otro usuario en el mismo sitio
+            bool auth0IdEnUso = await _context.UsuariosSitio.AnyAsync(u => u.Auth0Id == auth0User.Sub && u.SitioId == usuario.SitioId);
+            if (auth0IdEnUso)
+            {
+                return (false, "Esta cuenta de Google ya está vinculada a otro perfil en este sitio.");
+            }
+
+            usuario.Auth0Id = auth0User.Sub;
+            // Opcionalmente actualizar nombre si estaba vacío o queríamos tomar el de google, 
+            // pero dejamos el nombre que ya tenía configurado por ahora.
+
+            await _context.SaveChangesAsync();
+            return (true, null);
+        }
+
+        public async Task<object?> GetUsuarioPerfilAsync(int userId, int tokenSitioId, string slug)
+        {
+            var sitio = await _context.Sitios.FirstOrDefaultAsync(s => s.Slug == slug);
+            if (sitio == null || sitio.Id != tokenSitioId) return null;
+
+            var usuario = await _context.UsuariosSitio.FindAsync(userId);
+            if (usuario == null || usuario.SitioId != tokenSitioId) return null;
+
+            return new
+            {
+                id = usuario.Id,
+                nombre = usuario.Nombre,
+                email = usuario.Email,
+                sitioId = usuario.SitioId,
+                avatarUrl = usuario.AvatarUrl,
+                rol = (int)usuario.Rol,
+                tienePassword = !string.IsNullOrEmpty(usuario.PasswordHash),
+                tieneGoogle = !string.IsNullOrEmpty(usuario.Auth0Id)
+            };
         }
     }
 }
