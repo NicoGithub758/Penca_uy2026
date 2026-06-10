@@ -33,5 +33,6 @@ namespace Penca_uy2026.DTOs
         public string Email { get; set; } = string.Empty;
         public string? FotoPerfil { get; set; }
         public bool TienePassword { get; set; }
+        public bool TieneGoogle { get; set; }
     }
 }

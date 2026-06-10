@@ -25,6 +25,8 @@ namespace Penca_uy2026.Models
 
         public bool Activo { get; set; } = true;
 
+        public string? AvatarUrl { get; set; }
+
         public string? Auth0Id { get; set; }
 
         public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
