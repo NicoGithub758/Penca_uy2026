@@ -64,6 +64,7 @@ namespace Penca_uy2026.Services
                 Email = usuario.Email,
                 FotoPerfil = usuario.AvatarUrl,
                 TienePassword = !string.IsNullOrEmpty(usuario.PasswordHash),
+                Rol = (int)usuario.Rol,
                 TieneGoogle = !string.IsNullOrEmpty(usuario.Auth0Id)
             };
         }
@@ -165,6 +166,7 @@ namespace Penca_uy2026.Services
                 Email = nuevoUsuario.Email,
                 FotoPerfil = nuevoUsuario.AvatarUrl,
                 TienePassword = true, // Se acaba de registrar con password
+                Rol = (int)nuevoUsuario.Rol,
                 TieneGoogle = false
             };
         }
@@ -251,6 +253,7 @@ namespace Penca_uy2026.Services
                 Email = usuario.Email,
                 FotoPerfil = usuario.AvatarUrl,
                 TienePassword = !string.IsNullOrEmpty(usuario.PasswordHash),
+                Rol = (int)usuario.Rol,
                 TieneGoogle = true
             }, null);
         }
