@@ -10,15 +10,18 @@ namespace Penca_uy2026.Services
         private readonly MyDbContext _context;
         private readonly ApiFootballService _apiFootballService;
         private readonly ILogger<ActualizarResultadosService> _logger;
+        private readonly ProcesadorResultadosService _procesadorResultadosService;
 
         public ActualizarResultadosService(
             MyDbContext context,
             ApiFootballService apiFootballService,
-            ILogger<ActualizarResultadosService> logger)
+            ILogger<ActualizarResultadosService> logger,
+            ProcesadorResultadosService procesadorResultadosService)
         {
             _context = context;
             _apiFootballService = apiFootballService;
             _logger = logger;
+            _procesadorResultadosService = procesadorResultadosService;
         }
 
         public async Task ActualizarResultadosAsync(CancellationToken cancellationToken = default)
@@ -134,6 +137,8 @@ namespace Penca_uy2026.Services
                     Fecha = x.Fecha
                 });
 
+            var partidosProcesadosParaPuntos = new List<int>();
+
             foreach (var grupo in grupos)
             {
                 _logger.LogInformation(
@@ -193,6 +198,9 @@ namespace Penca_uy2026.Services
                             fixture.Fixture.Status.Short,
                             item.Partido.GolesLocal,
                             item.Partido.GolesVisitante);
+                            
+                        // Guardamos el ID para procesar los puntos después del SaveChanges
+                        partidosProcesadosParaPuntos.Add(item.Partido.Id);
                     }
                     else
                     {
@@ -206,6 +214,12 @@ namespace Penca_uy2026.Services
             }
 
             await _context.SaveChangesAsync(cancellationToken);
+
+            // Procesamos los puntos de cada partido actualizado
+            foreach (var pId in partidosProcesadosParaPuntos)
+            {
+                await _procesadorResultadosService.ProcesarPartidoAsync(pId);
+            }
         }
 
         private static ApiFootballFixtureItem? BuscarFixture(

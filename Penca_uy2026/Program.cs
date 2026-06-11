@@ -70,7 +70,7 @@ builder.Services.AddAuthentication(options =>
             // SignalR: priorizar el token que manda el frontend por query string
             var accessToken = context.Request.Query["access_token"];
             if (!string.IsNullOrEmpty(accessToken) &&
-                path.StartsWithSegments("/hubs/chat"))
+                (path.StartsWithSegments("/hubs/chat") || path.StartsWithSegments("/hubs/penca")))
             {
                 context.Token = accessToken;
                 return Task.CompletedTask;
@@ -114,6 +114,8 @@ builder.Services.AddScoped<SitioService>();
 builder.Services.AddScoped<InvitacionService>();
 builder.Services.AddScoped<PayPalService>();
 builder.Services.AddScoped<FirebaseNotificationService>();
+builder.Services.AddScoped<ProcesadorResultadosService>();
+builder.Services.AddScoped<PosicionesService>();
 
 // -----------------------------------------------------------
 // Configuración de Cloudinary
@@ -183,7 +185,7 @@ app.MapControllerRoute(
 
 app.MapControllers();
 app.MapHub<Penca_uy2026.Hubs.ChatHub>("/hubs/chat");
-
+app.MapHub<Penca_uy2026.Hubs.PencaHub>("/hubs/penca");
 // Ejecución automática de migraciones al iniciar (Railway/Producción)
 using (var scope = app.Services.CreateScope())
 {
