@@ -19,6 +19,7 @@ namespace Penca_uy2026.DTOs
         /// Slug del sitio al que el usuario quiere acceder.
         /// </summary>
         public string? Slug { get; set; }
+        
     }
 
     /// <summary>
@@ -33,5 +34,7 @@ namespace Penca_uy2026.DTOs
         public string Email { get; set; } = string.Empty;
         public string? FotoPerfil { get; set; }
         public bool TienePassword { get; set; }
+        public int Rol {get; set;}
+        public bool TieneGoogle { get; set; }
     }
 }

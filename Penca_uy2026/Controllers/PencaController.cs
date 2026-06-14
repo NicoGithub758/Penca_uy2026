@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -14,12 +14,13 @@ namespace Penca_uy2026.Controllers
     {
         private readonly MyDbContext _context;
         private readonly ApiFootballService _apiFootballService;
+        private readonly ProcesadorResultadosService _procesadorResultadosService;
 
-
-        public PencaController(MyDbContext context, ApiFootballService apiFootballService)
+        public PencaController(MyDbContext context, ApiFootballService apiFootballService, ProcesadorResultadosService procesadorResultadosService)
         {
             _context = context;
             _apiFootballService = apiFootballService;
+            _procesadorResultadosService = procesadorResultadosService;
         }
 
         // Listado de Pencas
@@ -257,6 +258,9 @@ namespace Penca_uy2026.Controllers
 
             await _context.SaveChangesAsync();
 
+            // Lógica para procesar los puntos y notificar por SignalR (Carga o Edición)
+            await _procesadorResultadosService.ProcesarPartidoAsync(partido.Id);
+
             // Si la penca es tipo Copa o FaseGruposEliminacion, aquí podrías agregar 
             // lógica para sugerir el siguiente partido del ganador.
 
@@ -325,6 +329,9 @@ namespace Penca_uy2026.Controllers
 
             await _context.SaveChangesAsync();
 
+            // Lógica para procesar los puntos y notificar por SignalR (Llamado manual a API)
+            await _procesadorResultadosService.ProcesarPartidoAsync(partido.Id);
+
             TempData["Success"] = "Resultado actualizado desde API-Football.";
             return RedirectToAction(nameof(Calendario), new { id = partido.PencaId });
         }
@@ -375,5 +382,7 @@ namespace Penca_uy2026.Controllers
 
             return RedirectToAction(nameof(Calendario), new { id = model.PencaId });
         }
+
+        
     }
 }

@@ -1,4 +1,5 @@
 using System.Text;
+using CloudinaryDotNet;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -35,6 +36,8 @@ builder.Services.AddDataProtection()
 builder.Services.AddScoped<ApiFootballService>();
 builder.Services.AddScoped<ActualizarResultadosService>();
 builder.Services.AddHostedService<ActualizarResultadosBackgroundService>();
+builder.Services.AddSignalR();
+
 // -----------------------------------------------------------
 // 2. CONFIGURACIÓN DE SEGURIDAD (JWT + COOKIES)
 // -----------------------------------------------------------
@@ -57,19 +60,31 @@ builder.Services.AddAuthentication(options =>
     };
 
     // Permite que las vistas Razor usen el Token guardado en la Cookie
-    options.Events = new JwtBearerEvents
+    
+   options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
-        {
-            // 1. Intentar leer el token de la cookie (frontend web Razor)
+        {      
+            var path = context.HttpContext.Request.Path;
+        
+            // SignalR: priorizar el token que manda el frontend por query string
+            var accessToken = context.Request.Query["access_token"];
+            if (!string.IsNullOrEmpty(accessToken) &&
+                (path.StartsWithSegments("/hubs/chat") || path.StartsWithSegments("/hubs/penca")))
+            {
+                context.Token = accessToken;
+                return Task.CompletedTask;
+            }
+
+            // 2. Razor / web con cookie
             var tokenCookie = context.Request.Cookies["AuthToken"];
             if (!string.IsNullOrEmpty(tokenCookie))
             {
                 context.Token = tokenCookie;
                 return Task.CompletedTask;
             }
-
-            // 2. Si no hay cookie, leer del header Authorization (mobile / API)
+        
+            // 3. APIs/mobile por header Authorization
             var authHeader = context.Request.Headers["Authorization"].ToString();
             if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
             {
@@ -81,16 +96,39 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminSitio", policy => policy.RequireRole("AdminSitio"));
+    options.AddPolicy("Jugador", policy => policy.RequireRole("Jugador"));
+});
+
 builder.Services.AddHttpClient();
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<MobileAuthService>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<UsuarioAuthService>();
+builder.Services.AddScoped<ImageService>();
+builder.Services.AddScoped<PreferenciasService>();
 builder.Services.AddScoped<SitioService>();
 builder.Services.AddScoped<InvitacionService>();
 builder.Services.AddScoped<PayPalService>();
 builder.Services.AddScoped<FirebaseNotificationService>();
+builder.Services.AddScoped<ProcesadorResultadosService>();
+builder.Services.AddScoped<PosicionesService>();
+
+// -----------------------------------------------------------
+// Configuración de Cloudinary
+// Se lee la configuración desde appsettings.json o user-secrets
+// y se registra la instancia de Cloudinary como Singleton.
+// -----------------------------------------------------------
+var cloudinaryAccount = new Account(
+    builder.Configuration["Cloudinary:CloudName"],
+    builder.Configuration["Cloudinary:ApiKey"],
+    builder.Configuration["Cloudinary:ApiSecret"]
+);
+var cloudinary = new Cloudinary(cloudinaryAccount);
+builder.Services.AddSingleton(cloudinary);
 
 // Buscar en la config las URLs permitidas, si no encontró nada se asume ambiente de desarrollo.
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string>()?.Split(',') ?? new[] { "http://localhost:5173" };
@@ -146,7 +184,8 @@ app.MapControllerRoute(
     pattern: "{controller=AdminAuth}/{action=Login}/{id?}");
 
 app.MapControllers();
-
+app.MapHub<Penca_uy2026.Hubs.ChatHub>("/hubs/chat");
+app.MapHub<Penca_uy2026.Hubs.PencaHub>("/hubs/penca");
 // Ejecución automática de migraciones al iniciar (Railway/Producción)
 using (var scope = app.Services.CreateScope())
 {

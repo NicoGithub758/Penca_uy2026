@@ -44,9 +44,10 @@ namespace Penca_uy2026.Controllers
                     nombre = result.Nombre,
                     email = result.Email,
                     sitioId = result.SitioId,
-                    // Se asume el rol del usuario para la web, el cual será extraído del JWT por el cliente si es necesario.
-                    rol = 0 ,
-                    tienePassword = result.TienePassword
+                    avatarUrl = result.FotoPerfil,
+                    rol = result.Rol,
+                    tienePassword = result.TienePassword,
+                    tieneGoogle = result.TieneGoogle
                 }
             });
         }
@@ -80,8 +81,10 @@ namespace Penca_uy2026.Controllers
                     nombre = result.Nombre,
                     email = result.Email,
                     sitioId = result.SitioId,
-                    rol = 0,
-                    tienePassword = result.TienePassword
+                    avatarUrl = result.FotoPerfil,
+                    rol = result.Rol,
+                    tienePassword = result.TienePassword,
+                    tieneGoogle = result.TieneGoogle
                 }
             });
         }
@@ -111,10 +114,39 @@ namespace Penca_uy2026.Controllers
                     nombre = data.Nombre,
                     email = data.Email,
                     sitioId = data.SitioId,
-                    rol = 0,
-                    tienePassword = data.TienePassword
+                    avatarUrl = data.FotoPerfil,
+                    rol = data.Rol,
+                    tienePassword = data.TienePassword,
+                    tieneGoogle = data.TieneGoogle
                 }
             });
+        }
+
+        [HttpPost("link-google")]
+        [Microsoft.AspNetCore.Authorization.Authorize]
+        public async Task<IActionResult> LinkGoogle([FromBody] WebSocialLoginRequest request)
+        {
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+            var tokenSitioIdClaim = User.FindFirst("sitioId");
+            if (userIdClaim == null || tokenSitioIdClaim == null) return Unauthorized();
+
+            int userId = int.Parse(userIdClaim.Value);
+            int tokenSitioId = int.Parse(tokenSitioIdClaim.Value);
+
+            if (string.IsNullOrEmpty(request.Slug))
+            {
+                return BadRequest(new { mensaje = "El slug del sitio es requerido." });
+            }
+
+            var (success, errorMessage) = await _usuarioAuthService.LinkGoogleAccountAsync(userId, tokenSitioId, request.Auth0Token, request.Slug);
+
+            if (!success)
+            {
+                if (errorMessage == "FORBIDDEN") return Forbid();
+                return BadRequest(new { mensaje = errorMessage ?? "No se pudo vincular la cuenta." });
+            }
+
+            return Ok(new { mensaje = "Cuenta vinculada exitosamente." });
         }
     }
 }
