@@ -1,4 +1,5 @@
 using System.Text;
+using CloudinaryDotNet;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -68,7 +69,7 @@ builder.Services.AddAuthentication(options =>
             // SignalR: priorizar el token que manda el frontend por query string
             var accessToken = context.Request.Query["access_token"];
             if (!string.IsNullOrEmpty(accessToken) &&
-                path.StartsWithSegments("/hubs/chat"))
+                (path.StartsWithSegments("/hubs/chat") || path.StartsWithSegments("/hubs/penca")))
             {
                 context.Token = accessToken;
                 return Task.CompletedTask;
@@ -106,10 +107,27 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<MobileAuthService>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<UsuarioAuthService>();
+builder.Services.AddScoped<ImageService>();
+builder.Services.AddScoped<PreferenciasService>();
 builder.Services.AddScoped<SitioService>();
 builder.Services.AddScoped<InvitacionService>();
 builder.Services.AddScoped<PayPalService>();
 builder.Services.AddScoped<FirebaseNotificationService>();
+builder.Services.AddScoped<ProcesadorResultadosService>();
+builder.Services.AddScoped<PosicionesService>();
+
+// -----------------------------------------------------------
+// Configuración de Cloudinary
+// Se lee la configuración desde appsettings.json o user-secrets
+// y se registra la instancia de Cloudinary como Singleton.
+// -----------------------------------------------------------
+var cloudinaryAccount = new Account(
+    builder.Configuration["Cloudinary:CloudName"],
+    builder.Configuration["Cloudinary:ApiKey"],
+    builder.Configuration["Cloudinary:ApiSecret"]
+);
+var cloudinary = new Cloudinary(cloudinaryAccount);
+builder.Services.AddSingleton(cloudinary);
 
 // Buscar en la config las URLs permitidas, si no encontró nada se asume ambiente de desarrollo.
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string>()?.Split(',') ?? new[] { "http://localhost:5173" };
@@ -165,7 +183,7 @@ app.MapControllerRoute(
 
 app.MapControllers();
 app.MapHub<Penca_uy2026.Hubs.ChatHub>("/hubs/chat");
-
+app.MapHub<Penca_uy2026.Hubs.PencaHub>("/hubs/penca");
 // Ejecución automática de migraciones al iniciar (Railway/Producción)
 using (var scope = app.Services.CreateScope())
 {

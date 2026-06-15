@@ -35,6 +35,6 @@ namespace Penca_uy2026.DTOs
         public string? FotoPerfil { get; set; }
         public bool TienePassword { get; set; }
         public int Rol {get; set;}
-
+        public bool TieneGoogle { get; set; }
     }
 }
