@@ -8,10 +8,15 @@ namespace Penca_uy2026.Services
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<ApiFootballService> _logger;
+        private readonly ParametrosSistemaService _parametrosSistemaService;
 
-        public ApiFootballService(IConfiguration config, ILogger<ApiFootballService> logger)
+        public ApiFootballService(
+            IConfiguration config,
+            ILogger<ApiFootballService> logger,
+            ParametrosSistemaService parametrosSistemaService)
         {
             _logger = logger;
+            _parametrosSistemaService = parametrosSistemaService;
 
             _httpClient = new HttpClient
             {
@@ -89,9 +94,11 @@ namespace Penca_uy2026.Services
                                                                             int visitanteTeamId, DateTime fecha)
         {
             var date = fecha.ToString("yyyy-MM-dd");
+            var parametros = await _parametrosSistemaService.ObtenerAsync();
+            var timezone = Uri.EscapeDataString(parametros.TimeZoneId);
 
             var result = await _httpClient.GetFromJsonAsync<ApiFootballFixturesResponse>(
-                $"fixtures/headtohead?h2h={localTeamId}-{visitanteTeamId}&league={leagueId}&season={season}&date={date}");
+                $"fixtures/headtohead?h2h={localTeamId}-{visitanteTeamId}&league={leagueId}&season={season}&date={date}&timezone={timezone}");
 
             return result?.Response.FirstOrDefault();
         }
@@ -99,7 +106,8 @@ namespace Penca_uy2026.Services
         public async Task<List<ApiFootballFixtureItem>> GetFixturesByLeagueDateAsync(int leagueId, int season, DateTime fecha)
         {
             var date = fecha.ToString("yyyy-MM-dd");
-            var timezone = Uri.EscapeDataString("America/Montevideo");
+            var parametros = await _parametrosSistemaService.ObtenerAsync();
+            var timezone = Uri.EscapeDataString(parametros.TimeZoneId);
 
             var url = $"fixtures?league={leagueId}&season={season}&date={date}&timezone={timezone}";
 

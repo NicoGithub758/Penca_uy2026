@@ -372,7 +372,7 @@ namespace Penca_uy2026.Controllers
                 PencaId = model.PencaId,
                 LocalEquipoId = model.LocalId,
                 VisitanteEquipoId = model.VisitanteId,
-                Fecha = DateTime.SpecifyKind(model.Fecha, DateTimeKind.Utc),
+                Fecha = model.Fecha,
                 Fase = model.Fase,
                 Jugado = false
             };

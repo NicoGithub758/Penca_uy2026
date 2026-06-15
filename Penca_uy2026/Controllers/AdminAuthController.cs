@@ -10,7 +10,7 @@ using Penca_uy2026.Services;
 namespace Penca_uy2026.Controllers
 {
     [Route("AdminAuth")]
-    [Authorize] 
+    [Authorize(Roles = "PlataformaAdmin")] 
     public class AdminAuthController : Controller
     {
         private readonly AuthService _authService;
@@ -24,13 +24,42 @@ namespace Penca_uy2026.Controllers
             _emailServicio = emailServicio;
         }
 
+        [AllowAnonymous]
+        [HttpGet("~/")]
+        public async Task<IActionResult> Root()
+        {
+            if (Request.Cookies.TryGetValue("SitioId_Admin", out var sitioIdCookie) &&
+                int.TryParse(sitioIdCookie, out var sitioId))
+            {
+                var sitioExiste = await _context.Sitios
+                    .IgnoreQueryFilters()
+                    .AnyAsync(s => s.Id == sitioId && s.Activo);
+
+                if (sitioExiste)
+                {
+                    return RedirectToAction("Index", "AdminSitioAuth");
+                }
+
+                Response.Cookies.Delete("SitioId_Admin");
+            }
+
+            return RedirectToAction("Login", "AdminSitioAuth");
+        }
+
+        [HttpGet("Index")]
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+
         [AllowAnonymous] // Acceso público para ver el login
         [HttpGet("Login")]
         public IActionResult Login()
         {
-            if (Request.Cookies.ContainsKey("AuthToken"))
+            if (User.Identity?.IsAuthenticated == true && User.IsInRole("PlataformaAdmin"))
             {
-                return RedirectToAction("Index", "Penca");
+                return RedirectToAction("Index", "AdminAuth");
             }
             return View(new LoginViewModel());
         }
@@ -56,7 +85,8 @@ namespace Penca_uy2026.Controllers
                 Expires = DateTime.UtcNow.AddHours(8)
             });
 
-            return RedirectToAction("Index", "Penca");
+            // Redirigir al panel principal del admin
+            return RedirectToAction("Index", "AdminAuth");
         }
 
         [AllowAnonymous] // Permitir logout incluso si la sesión expiró
@@ -181,6 +211,7 @@ namespace Penca_uy2026.Controllers
         }
 
         [HttpPost("EliminarSitio/{id}")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EliminarSitio(int id)
         {
             var sitio = await _context.Sitios.FindAsync(id);
@@ -193,8 +224,21 @@ namespace Penca_uy2026.Controllers
             var solicitudes = await _context.SolicitudesIngreso.IgnoreQueryFilters().Where(s => s.SitioId == id).ToListAsync();
             var instancias = await _context.PencaInstancias.IgnoreQueryFilters().Where(pi => pi.SitioId == id).ToListAsync();
             var usuarios = await _context.UsuariosSitio.IgnoreQueryFilters().Where(u => u.SitioId == id).ToListAsync();
+            var usuarioIds = usuarios.Select(u => u.Id).ToList();
+            var predicciones = await _context.Predicciones.IgnoreQueryFilters().Where(p => p.SitioId == id).ToListAsync();
+            var mensajesChat = await _context.MensajesChat.IgnoreQueryFilters().Where(m => m.SitioId == id).ToListAsync();
+            var notificaciones = await _context.Notificaciones.IgnoreQueryFilters().Where(n => n.SitioId == id).ToListAsync();
+            var preferencias = await _context.PreferenciasNotificacion.IgnoreQueryFilters().Where(p => p.SitioId == id).ToListAsync();
+            var invitacionesAdmin = await _context.InvitacionesAdmin.Where(i => usuarioIds.Contains(i.UsuarioSitioId)).ToListAsync();
+            var reglasPremios = await _context.ReglasPremios.IgnoreQueryFilters().Where(r => r.SitioId == id).ToListAsync();
 
             _context.Pagos.RemoveRange(pagos);
+            _context.Predicciones.RemoveRange(predicciones);
+            _context.MensajesChat.RemoveRange(mensajesChat);
+            _context.Notificaciones.RemoveRange(notificaciones);
+            _context.PreferenciasNotificacion.RemoveRange(preferencias);
+            _context.InvitacionesAdmin.RemoveRange(invitacionesAdmin);
+            _context.ReglasPremios.RemoveRange(reglasPremios);
             _context.Participaciones.RemoveRange(participaciones);
             _context.Invitaciones.RemoveRange(invitaciones);
             _context.SolicitudesIngreso.RemoveRange(solicitudes);
