@@ -1,4 +1,4 @@
-﻿@model Penca_uy2026.Models.ViewModels.CrearInstanciaViewModel
+@model Penca_uy2026.Models.ViewModels.CrearInstanciaViewModel
 <div class="container mt-4">
     <div class="card shadow-sm border-0 p-4">
         <h2><i class="bi bi-trophy"></i> Configurar nueva Penca</h2>
@@ -17,6 +17,15 @@
             <div class="mb-4">
                 <label class="form-label">Porcentaje de Comisión (%)</label>
                 <input asp-for="PorcentajeComision" type="number" step="0.1" class="form-control form-control-lg" />
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Costo de Entrada (USD)</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                    <input asp-for="Costo" type="number" step="0.01" class="form-control form-control-lg" placeholder="0.00" />
+                </div>
+                <div class="form-text text-muted">Precio que deberá pagar el usuario (vía PayPal) para participar.</div>
             </div>
 
             <div class="d-grid gap-2 d-md-block">

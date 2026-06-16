@@ -6,6 +6,7 @@ using Penca_uy2026.Interfaces;
 using Penca_uy2026.Models;
 using Penca_uy2026.Models.ViewModels;
 using Penca_uy2026.Services;
+using Microsoft.Extensions.Configuration;
 
 namespace Penca_uy2026.Controllers
 {
@@ -16,12 +17,16 @@ namespace Penca_uy2026.Controllers
         private readonly AuthService _authService;
         private readonly MyDbContext _context;
         private readonly IEmailServicio _emailServicio;
+        private readonly ImageService _imageService;
+        private readonly IConfiguration _configuration;
 
-        public AdminAuthController(AuthService authService, MyDbContext context, IEmailServicio emailServicio)
+        public AdminAuthController(AuthService authService, MyDbContext context, IEmailServicio emailServicio, ImageService imageService, IConfiguration configuration)
         {
             _authService = authService;
             _context = context;
             _emailServicio = emailServicio;
+            _imageService = imageService;
+            _configuration = configuration;
         }
 
         [AllowAnonymous]
@@ -109,16 +114,24 @@ namespace Penca_uy2026.Controllers
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
+                string logoUrlResult = "";
+                if (model.Logo != null)
+                {
+                    using var stream = model.Logo.OpenReadStream();
+                    logoUrlResult = await _imageService.UploadImageAsync(stream, model.Logo.FileName, cropToSquare: false);
+                }
+
+                var frontendDomain = _configuration["Cors:AllowedOrigins"] ?? "http://localhost:5173";
                 var nuevoSitio = new Sitio
                 {
                     Nombre = model.NombreSitio,
-                    Url = model.UrlVercel.Trim().ToLower(),
+                    Url = $"{frontendDomain}/{model.Slug}", // URL dinámica en base al frontend
                     Activo = true,
                     TipoRegistro = model.TipoRegistro,
-                    Slug = model.NombreSitio.ToLower().Trim().Replace(" ", "-"),
+                    Slug = model.Slug.ToLower().Trim(),
                     ColorPrincipal = "#000000",
                     Descripcion = "",
-                    LogoUrl = ""
+                    LogoUrl = logoUrlResult
                 };
 
                 _context.Sitios.Add(nuevoSitio);
@@ -128,8 +141,8 @@ namespace Penca_uy2026.Controllers
                 {
                     Nombre = model.NombreAdmin.Trim(),
                     Email = model.EmailAdmin.Trim().ToLower(),
-                    //PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"), // [TEMPORAL FIX] Para pruebas locales
-                    PasswordHash = null,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"), // [TEMPORAL FIX] Para pruebas locales
+                    //PasswordHash = null,
                     SitioId = nuevoSitio.Id,
                     Rol = RolUsuarioSitio.AdminSitio,
                     Activo = true,
@@ -184,25 +197,39 @@ namespace Penca_uy2026.Controllers
 
         [HttpPost("EditarSitio/{id}")]
         [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> EditarSitio(int id, Sitio sitioActualizado)
+        public async Task<IActionResult> EditarSitio(int id, Sitio sitioActualizado, IFormFile? logoFile)
         {
             var sitioOriginal = await _context.Sitios.IgnoreQueryFilters().FirstOrDefaultAsync(s => s.Id == id);
             if (sitioOriginal == null) return NotFound();
 
-            sitioActualizado.Slug = sitioOriginal.Slug;
-            sitioActualizado.ColorPrincipal = sitioOriginal.ColorPrincipal;
-            sitioActualizado.Descripcion = sitioOriginal.Descripcion;
-            sitioActualizado.LogoUrl = sitioOriginal.LogoUrl;
-            sitioActualizado.TipoRegistro = sitioOriginal.TipoRegistro;
+            sitioActualizado.LogoUrl = sitioOriginal.LogoUrl; // Lo mantenemos por defecto para la validación
 
             ModelState.Clear();
             TryValidateModel(sitioActualizado);
 
             if (!ModelState.IsValid) return View(sitioActualizado);
 
+            // Subimos el logo si se envió uno nuevo
+            if (logoFile != null && logoFile.Length > 0)
+            {
+                using var stream = logoFile.OpenReadStream();
+                var newLogoUrl = await _imageService.UploadImageAsync(stream, logoFile.FileName, cropToSquare: false);
+                if (!string.IsNullOrEmpty(newLogoUrl))
+                {
+                    sitioOriginal.LogoUrl = newLogoUrl;
+                }
+            }
+
             sitioOriginal.Nombre = sitioActualizado.Nombre;
-            sitioOriginal.Url = sitioActualizado.Url;
             sitioOriginal.Activo = sitioActualizado.Activo;
+            sitioOriginal.Slug = sitioActualizado.Slug?.ToLower().Trim() ?? sitioOriginal.Slug;
+            
+            var frontendDomain = _configuration["Cors:AllowedOrigins"] ?? "http://localhost:5173";
+            sitioOriginal.Url = $"{frontendDomain}/{sitioOriginal.Slug}";
+            
+            sitioOriginal.TipoRegistro = sitioActualizado.TipoRegistro;
+            sitioOriginal.ColorPrincipal = sitioActualizado.ColorPrincipal;
+            sitioOriginal.Descripcion = sitioActualizado.Descripcion;
 
             _context.Sitios.Update(sitioOriginal);
             await _context.SaveChangesAsync();
