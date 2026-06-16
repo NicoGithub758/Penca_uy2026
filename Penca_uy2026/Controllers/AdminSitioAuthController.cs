@@ -86,8 +86,11 @@ public class AdminSitioAuthController : Controller
     [HttpGet("CrearPencaInstancia")]
     public async Task<IActionResult> CrearPencaInstancia()
     {
-        // Listamos todas las pencas globales disponibles
-        var pencasDisponibles = await _context.Pencas.ToListAsync();
+        // Listamos solo las pencas globales disponibles para ser agregadas a sitios.
+        var pencasDisponibles = await _context.Pencas
+            .Where(p => !p.Finalizada)
+            .ToListAsync();
+
         ViewBag.Pencas = pencasDisponibles;
         return View(new CrearInstanciaViewModel());
     }
@@ -97,13 +100,29 @@ public class AdminSitioAuthController : Controller
     {
         if (!ModelState.IsValid)
         {
-            ViewBag.Pencas = await _context.Pencas.ToListAsync();
+            ViewBag.Pencas = await _context.Pencas
+                .Where(p => !p.Finalizada)
+                .ToListAsync();
+
             return View(model);
         }
 
         // Recuperamos el SitioId de la cookie
         if (!Request.Cookies.TryGetValue("SitioId_Admin", out string? sitioId))
             return RedirectToAction("Login");
+
+        var penca = await _context.Pencas.FindAsync(model.PencaId);
+
+        if (penca == null || penca.Finalizada)
+        {
+            ModelState.AddModelError("", "No se puede agregar una penca finalizada a un sitio.");
+
+            ViewBag.Pencas = await _context.Pencas
+                .Where(p => !p.Finalizada)
+                .ToListAsync();
+
+            return View(model);
+        }
 
         var nuevaInstancia = new PencaInstancia
         {

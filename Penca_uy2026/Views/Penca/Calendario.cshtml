@@ -18,9 +18,27 @@
             <small class="text-muted">Modo: @Model.Modo | Equipos: @Model.CantidadEquipos</small>
         </div>
 
-        <a asp-action="AgendarPartido" asp-route-id="@Model.Id" class="btn btn-primary shadow-sm">
-            <i class="bi bi-calendar-plus"></i> + Agendar Partido
-        </a>
+        <div class="d-flex gap-2">
+            @if (!Model.Finalizada)
+            {
+                <a asp-action="AgendarPartido" asp-route-id="@Model.Id" class="btn btn-primary shadow-sm">
+                    <i class="bi bi-calendar-plus"></i> + Agendar Partido
+                </a>
+
+                <button type="button"
+                        class="btn btn-outline-danger shadow-sm"
+                        data-bs-toggle="modal"
+                        data-bs-target="#finalizarPencaModal">
+                    <i class="bi bi-lock-fill"></i> Finalizar penca
+                </button>
+            }
+            else
+            {
+                <span class="badge bg-secondary d-flex align-items-center px-3">
+                    <i class="bi bi-lock-fill me-2"></i> Penca finalizada
+                </span>
+            }
+        </div>
     </div>
 
     @if (TempData["Success"] != null)
@@ -104,21 +122,28 @@
                                 </td>
 
                                 <td class="text-end pe-3">
-                                    <form asp-action="ActualizarResultadoDesdeApi"
-                                          asp-route-id="@partido.Id"
-                                          method="post"
-                                          class="d-inline">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-sm btn-outline-primary">
-                                            API
-                                        </button>
-                                    </form>
+                                    @if (!Model.Finalizada)
+                                    {
+                                        <form asp-action="ActualizarResultadoDesdeApi"
+                                            asp-route-id="@partido.Id"
+                                            method="post"
+                                            class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                API
+                                            </button>
+                                        </form>
 
-                                    <a asp-action="CargarResultado"
-                                       asp-route-id="@partido.Id"
-                                       class="btn btn-sm @(partido.Jugado ? "btn-outline-secondary" : "btn-success")">
-                                        <i class="bi bi-pencil-square"></i> @(partido.Jugado ? "Editar" : "Cargar")
-                                    </a>
+                                        <a asp-action="CargarResultado"
+                                        asp-route-id="@partido.Id"
+                                        class="btn btn-sm @(partido.Jugado ? "btn-outline-secondary" : "btn-success")">
+                                            <i class="bi bi-pencil-square"></i> @(partido.Jugado ? "Editar" : "Cargar")
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">Sin acciones</span>
+                                    }
                                 </td>
                             </tr>
                         }
@@ -128,3 +153,39 @@
         </div>
     </div>
 </div>
+
+@if (!Model.Finalizada)
+{
+    <div class="modal fade" id="finalizarPencaModal" tabindex="-1" aria-labelledby="finalizarPencaModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="finalizarPencaModalLabel">Finalizar penca</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p class="mb-2">
+                        ¿Seguro que querés finalizar <strong>@Model.Nombre</strong>?
+                    </p>
+                    <p class="text-muted mb-0">
+                        Una vez finalizada, no se podrán agregar partidos ni modificar resultados.
+                    </p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <form asp-action="FinalizarPenca" asp-route-id="@Model.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger">
+                            Sí, finalizar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
