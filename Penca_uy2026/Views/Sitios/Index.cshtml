@@ -1,0 +1,65 @@
+@model IEnumerable<Penca_uy2026.Models.Sitio>
+
+@{
+    ViewData["Title"] = "Sitios disponibles";
+}
+
+<div class="d-flex flex-column gap-4">
+    <section class="py-4">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center">
+            <div>
+                <h1 class="h2 fw-bold mb-2">Sitios disponibles</h1>
+                <p class="text-muted mb-0">Consulta los sitios registrados en la plataforma.</p>
+            </div>
+            <a class="btn btn-primary" asp-controller="AdminAuth" asp-action="CrearSitio">
+                <i class="bi bi-plus-circle"></i> Crear sitio
+            </a>
+        </div>
+    </section>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info mb-0">
+            Todavia no hay sitios registrados.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Slug</th>
+                        <th>URL</th>
+                        <th>Tipo de registro</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var sitio in Model)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@sitio.Nombre</td>
+                            <td>@sitio.Slug</td>
+                            <td>
+                                <span class="text-break">@sitio.Url</span>
+                            </td>
+                            <td>@sitio.TipoRegistro</td>
+                            <td>
+                                @if (sitio.Activo)
+                                {
+                                    <span class="badge text-bg-success">Activo</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-secondary">Inactivo</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

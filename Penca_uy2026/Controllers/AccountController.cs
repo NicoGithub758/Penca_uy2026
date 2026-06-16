@@ -88,7 +88,7 @@ namespace Penca_uy2026.Controllers
                 await transaction.CommitAsync();
 
                 // Redirigimos al Login de administración
-                return RedirectToAction("Login", "AdminAuth");
+                return RedirectToAction("Login", "AdminSitioAuth");
             }
             catch (Exception ex)
             {

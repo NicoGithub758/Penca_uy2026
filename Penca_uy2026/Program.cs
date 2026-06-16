@@ -7,8 +7,6 @@ using Penca_uy2026.Data;
 using Penca_uy2026.Services;
 using Penca_uy2026.Interfaces;
 using Penca_uy2026.Middleware;
-using Penca_uy2026.Interfaces;
-using Penca_uy2026.Services;
 using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,6 +32,7 @@ builder.Services.AddDataProtection()
     .SetApplicationName("PencaUy2026")
     .PersistKeysToFileSystem(new DirectoryInfo(@"/home/app/.aspnet/DataProtection-Keys"));
 builder.Services.AddScoped<ApiFootballService>();
+builder.Services.AddScoped<ParametrosSistemaService>();
 builder.Services.AddScoped<ActualizarResultadosService>();
 builder.Services.AddHostedService<ActualizarResultadosBackgroundService>();
 builder.Services.AddSignalR();
@@ -169,7 +168,6 @@ app.UseCors("AllowReactApp"); // No mover de lugar, el orden es importante.
 
 
 
-app.UseCors("AllowReact");
 // El orden aquí es vital: Autenticación antes que Autorización
 app.UseAuthentication();
 app.UseMiddleware<TenantMiddleware>();
@@ -193,7 +191,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var db = services.GetRequiredService<MyDbContext>();
-        db.Database.Migrate();
+        // db.Database.Migrate();
     }
     catch (Exception ex)
     {
