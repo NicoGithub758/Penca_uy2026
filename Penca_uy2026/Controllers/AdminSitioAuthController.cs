@@ -1,4 +1,4 @@
-﻿using Azure;
+using Azure;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -109,7 +109,8 @@ public class AdminSitioAuthController : Controller
         {
             PencaId = model.PencaId,
             SitioId = int.Parse(sitioId),
-            PorcentajeComision = model.PorcentajeComision
+            PorcentajeComision = model.PorcentajeComision,
+            Costo = model.Costo
         };
 
         _context.PencaInstancias.Add(nuevaInstancia);
@@ -186,6 +187,7 @@ public class AdminSitioAuthController : Controller
         if (instancia == null) return NotFound();
 
         instancia.PorcentajeComision = model.PorcentajeComision;
+        instancia.Costo = model.Costo;
 
         await _context.SaveChangesAsync();
         return RedirectToAction("Index");
