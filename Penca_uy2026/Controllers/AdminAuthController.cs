@@ -141,8 +141,8 @@ namespace Penca_uy2026.Controllers
                 {
                     Nombre = model.NombreAdmin.Trim(),
                     Email = model.EmailAdmin.Trim().ToLower(),
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"), // [TEMPORAL FIX] Para pruebas locales
-                    //PasswordHash = null,
+                    //PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"), // [TEMPORAL FIX] Para pruebas locales
+                    PasswordHash = null,
                     SitioId = nuevoSitio.Id,
                     Rol = RolUsuarioSitio.AdminSitio,
                     Activo = true,
