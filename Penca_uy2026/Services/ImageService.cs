@@ -19,7 +19,7 @@ namespace Penca_uy2026.Services
         /// <param name="fileName">Nombre del archivo original.</param>
         /// <param name="folderPath">Carpeta destino en Cloudinary (opcional).</param>
         /// <returns>URL segura (HTTPS) de la imagen subida.</returns>
-        public async Task<string?> UploadImageAsync(Stream fileStream, string fileName, string folderPath = "tupenca")
+        public async Task<string?> UploadImageAsync(Stream fileStream, string fileName, string folderPath = "tupenca", bool cropToSquare = true)
         {
             if (fileStream == null || fileStream.Length == 0)
                 return null;
@@ -28,11 +28,18 @@ namespace Penca_uy2026.Services
             {
                 File = new FileDescription(fileName, fileStream),
                 Folder = folderPath,
-                // Transformación: 500x500 píxeles, recorta rellenando ("fill"), 
-                // y "auto" le dice a la IA de Cloudinary que busque la cara, 
-                // o si no hay cara (ej. un escudo o mascota), centre en lo más relevante.
-                Transformation = new Transformation().Width(500).Height(500).Crop("fill").Gravity("auto")
             };
+
+            if (cropToSquare)
+            {
+                // Transformación para foto de perfil: 500x500 recorta rellenando ("fill"), centrando la cara
+                uploadParams.Transformation = new Transformation().Width(500).Height(500).Crop("fill").Gravity("auto");
+            }
+            else
+            {
+                // Transformación para logos: redimensiona el ancho a 500 max y mantiene proporción ("limit")
+                uploadParams.Transformation = new Transformation().Width(500).Crop("limit");
+            }
 
             var uploadResult = await _cloudinary.UploadAsync(uploadParams);
 
