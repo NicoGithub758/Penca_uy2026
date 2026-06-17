@@ -1,0 +1,165 @@
+@model Penca_uy2026.Models.Sitio
+@using Penca_uy2026.Models
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Configuración del Sitio</h1>
+        <a asp-action="Index" class="btn btn-outline-secondary shadow-sm">
+            <i class="bi bi-arrow-left"></i> Volver al Panel
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-check-circle me-2"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 text-secondary">Editar Datos de la Instancia</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Configuracion" enctype="multipart/form-data" method="post" id="formConfiguracion">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+                        
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Nombre" class="form-label fw-bold">Nombre del Sitio</label>
+                            <input asp-for="Nombre" class="form-control" placeholder="Ej: Penca Oficina 2026" />
+                            <span asp-validation-for="Nombre" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Descripcion" class="form-label fw-bold">Descripción</label>
+                            <textarea asp-for="Descripcion" class="form-control" rows="3" placeholder="Breve descripción del sitio..."></textarea>
+                            <span asp-validation-for="Descripcion" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="logoFile" class="form-label fw-bold">Logo del Sitio</label>
+                            <div class="d-flex align-items-center gap-3">
+                                @if (!string.IsNullOrEmpty(Model.LogoUrl))
+                                {
+                                    <img src="@Model.LogoUrl" id="logoPreview" alt="Logo actual" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: contain; border-radius: 10px; background-color: #f8f9fa;" />
+                                }
+                                else
+                                {
+                                    <img src="" id="logoPreview" alt="Logo actual" class="img-thumbnail d-none" style="width: 80px; height: 80px; object-fit: contain; border-radius: 10px; background-color: #f8f9fa;" />
+                                }
+                                <input type="file" name="logoFile" id="logoFile" class="form-control" accept="image/*" />
+                            </div>
+                            <small class="text-muted">Formatos recomendados: PNG, JPG. Se redimensionará automáticamente.</small>
+                        </div>
+
+                        <div class="mb-3 row">
+                            <div class="col-md-6">
+                                <label asp-for="ColorPrincipal" class="form-label fw-bold">Color Principal (Tema)</label>
+                                <div class="d-flex align-items-center gap-2">
+                                    <input asp-for="ColorPrincipal" type="color" class="form-control form-control-color" title="Elige un color" />
+                                    <small class="text-muted">Se usará en la interfaz web de los jugadores.</small>
+                                </div>
+                                <span asp-validation-for="ColorPrincipal" class="text-danger"></span>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label asp-for="TipoRegistro" class="form-label fw-bold">Privacidad del Registro</label>
+                                <select asp-for="TipoRegistro" class="form-select" asp-items="Html.GetEnumSelectList<TipoRegistro>()"></select>
+                                <span asp-validation-for="TipoRegistro" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Slug" class="form-label fw-bold">Identificador de URL (Slug)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">tupenca.uy/</span>
+                                <input asp-for="Slug" class="form-control" id="slugInput" readonly style="cursor: pointer; background-color: #f8f9fa;" />
+                            </div>
+                            <small class="text-muted">Haz clic en el campo si necesitas modificarlo.</small>
+                            <span asp-validation-for="Slug" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-primary shadow-sm px-4">
+                                <i class="bi bi-save"></i> Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Warning Slug -->
+<div class="modal fade" id="slugWarningModal" tabindex="-1" aria-labelledby="slugWarningModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="slugWarningModalLabel"><i class="bi bi-exclamation-triangle-fill me-2"></i> Advertencia de Seguridad</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">
+                    Estás a punto de habilitar la edición de la URL del sitio.
+                </p>
+                <p class="fw-bold mt-2 text-danger">
+                    Modificar el identificador en la URL (slug) cerrará las sesiones activas de tus usuarios y hará que cualquier enlace previo compartido deje de funcionar.
+                </p>
+                <p>¿Estás completamente seguro de que deseas proceder?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning" id="btnEnableSlug">Sí, quiero modificarlo</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const slugInput = document.getElementById('slugInput');
+            const btnEnableSlug = document.getElementById('btnEnableSlug');
+            const slugWarningModal = new bootstrap.Modal(document.getElementById('slugWarningModal'));
+            const logoFile = document.getElementById('logoFile');
+            const logoPreview = document.getElementById('logoPreview');
+
+            // Vista previa de la imagen subida localmente
+            logoFile.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        logoPreview.src = e.target.result;
+                        logoPreview.classList.remove('d-none');
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Al hacer click en el slug readonly, mostramos el modal
+            slugInput.addEventListener('click', function (e) {
+                if (this.hasAttribute('readonly')) {
+                    slugWarningModal.show();
+                }
+            });
+
+            // Si confirma, quitamos el readonly y cambiamos estilos
+            btnEnableSlug.addEventListener('click', function () {
+                slugInput.removeAttribute('readonly');
+                slugInput.style.backgroundColor = '#ffffff';
+                slugInput.style.cursor = 'text';
+                slugInput.focus();
+                slugWarningModal.hide();
+            });
+        });
+    </script>
+}
