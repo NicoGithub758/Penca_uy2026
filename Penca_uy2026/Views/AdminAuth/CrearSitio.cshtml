@@ -1,4 +1,4 @@
-﻿@model Penca_uy2026.Models.ViewModels.CrearSitioViewModel
+@model Penca_uy2026.Models.ViewModels.CrearSitioViewModel
 
 @{
     ViewData["Title"] = "Nuevo Sitio";
@@ -20,7 +20,7 @@
                         </div>
                     }
 
-                    <form asp-controller="AdminAuth" asp-action="CrearSitio" method="post">
+                    <form asp-controller="AdminAuth" asp-action="CrearSitio" method="post" enctype="multipart/form-data">
                         @Html.AntiForgeryToken()
 
                         <h5 class="text-primary border-bottom pb-2 mb-3">Configuración del Sitio</h5>
@@ -29,17 +29,26 @@
                             <label class="form-label fw-bold">Nombre del Sitio</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-tag"></i></span>
-                                <input asp-for="NombreSitio" class="form-control" placeholder="Ej: Mi Penca Pro" required />
+                                <input asp-for="NombreSitio" id="NombreSitio" class="form-control" placeholder="Ej: Mi Penca Pro" required />
                             </div>
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label fw-bold">URL de Vercel</label>
+                            <label class="form-label fw-bold">Slug (Identificador URL)</label>
                             <div class="input-group">
-                                <span class="input-group-text">https://</span>
-                                <input asp-for="UrlVercel" class="form-control" placeholder="mipenca.vercel.app" required />
+                                <span class="input-group-text"><i class="bi bi-link-45deg"></i></span>
+                                <input asp-for="Slug" id="Slug" class="form-control" placeholder="ej-mi-penca" required />
                             </div>
-                            <div class="form-text text-muted">Introduce la URL sin el protocolo http/https.</div>
+                            <div class="form-text text-muted">Será la URL única de tu penca: tupenca.uy/<strong>ej-mi-penca</strong></div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Logo del Sitio (Opcional)</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-image"></i></span>
+                                <input asp-for="Logo" type="file" class="form-control" accept="image/png, image/jpeg, image/webp" />
+                            </div>
+                            <div class="form-text text-muted">Formatos soportados: JPG, PNG, WEBP.</div>
                         </div>
 
                         <div class="mb-4">
@@ -84,3 +93,26 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const nombreInput = document.getElementById('NombreSitio');
+            const slugInput = document.getElementById('Slug');
+
+            nombreInput.addEventListener('input', function () {
+                // Solo auto-completar si el usuario no ha editado manualmente el slug
+                // (Para una versión más robusta se podría usar una flag "isEdited")
+                const text = nombreInput.value;
+                const slug = text
+                    .toLowerCase()
+                    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Quitar tildes
+                    .replace(/[^a-z0-9 ]/g, "") // Quitar caracteres especiales
+                    .trim()
+                    .replace(/\s+/g, "-"); // Reemplazar espacios por guiones
+                
+                slugInput.value = slug;
+            });
+        });
+    </script>
+}
