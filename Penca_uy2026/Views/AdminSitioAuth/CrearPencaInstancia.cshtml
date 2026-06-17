@@ -1,13 +1,25 @@
 @model Penca_uy2026.Models.ViewModels.CrearInstanciaViewModel
+@{
+    var pencasDisponibles = ViewBag.Pencas as IEnumerable<Penca_uy2026.Models.Penca> ?? Enumerable.Empty<Penca_uy2026.Models.Penca>();
+    var hayPencasDisponibles = pencasDisponibles.Any();
+}
+
 <div class="container mt-4">
     <div class="card shadow-sm border-0 p-4">
         <h2><i class="bi bi-trophy"></i> Configurar nueva Penca</h2>
         <hr />
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger">
+                <div asp-validation-summary="All"></div>
+            </div>
+        }
+
         <form asp-action="CrearPencaInstancia" method="post">
             <div class="mb-3">
                 <label class="form-label">Seleccionar Penca Global</label>
                 <select asp-for="PencaId" class="form-select form-select-lg">
-                    @foreach (var penca in ViewBag.Pencas)
+                    @foreach (var penca in pencasDisponibles)
                     {
                         <option value="@penca.Id">@penca.Nombre (@penca.Modo)</option>
                     }
@@ -29,9 +41,23 @@
             </div>
 
             <div class="d-grid gap-2 d-md-block">
-                <button type="submit" class="btn btn-success btn-lg">Guardar Instancia</button>
+                @if (hayPencasDisponibles)
+                {
+                    <button type="submit" class="btn btn-success btn-lg">Guardar Instancia</button>
+                }
+                else
+                {
+                    <button type="submit" class="btn btn-success btn-lg" disabled>Guardar Instancia</button>
+                }
                 <a asp-action="Index" class="btn btn-link">Cancelar</a>
             </div>
         </form>
+
+        @if (!hayPencasDisponibles)
+        {
+            <div class="alert alert-info mt-3 mb-0">
+                No hay pencas activas disponibles para agregar al sitio.
+            </div>
+        }
     </div>
 </div>
