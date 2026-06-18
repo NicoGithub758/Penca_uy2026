@@ -31,6 +31,9 @@ namespace Penca_uy2026.Services
                 ActualizacionAutomaticaResultadosActiva = true,
                 MinutosDespuesInicioParaConsultarResultado = 110,
                 IntervaloMinutosConsultaResultados = 10,
+                PuntosResultadoExacto = 8,
+                PuntosGanadorDiferenciaGoles = 5,
+                PuntosGanadorEmpate = 3,
                 FechaActualizacion = DateTime.UtcNow
             };
 
@@ -45,15 +48,45 @@ namespace Penca_uy2026.Services
             if (!EsTimeZoneValido(parametrosActualizados.TimeZoneId))
                 throw new ArgumentException("El huso horario seleccionado no es valido.");
 
+            var erroresPuntajes = ValidarPuntajes(parametrosActualizados);
+            if (erroresPuntajes.Any())
+                throw new ArgumentException(string.Join(" ", erroresPuntajes.Select(e => e.Mensaje)));
+
             var parametros = await ObtenerAsync(cancellationToken);
 
             parametros.TimeZoneId = parametrosActualizados.TimeZoneId;
             parametros.ActualizacionAutomaticaResultadosActiva = parametrosActualizados.ActualizacionAutomaticaResultadosActiva;
             parametros.MinutosDespuesInicioParaConsultarResultado = parametrosActualizados.MinutosDespuesInicioParaConsultarResultado;
             parametros.IntervaloMinutosConsultaResultados = parametrosActualizados.IntervaloMinutosConsultaResultados;
+            parametros.PuntosResultadoExacto = parametrosActualizados.PuntosResultadoExacto;
+            parametros.PuntosGanadorDiferenciaGoles = parametrosActualizados.PuntosGanadorDiferenciaGoles;
+            parametros.PuntosGanadorEmpate = parametrosActualizados.PuntosGanadorEmpate;
             parametros.FechaActualizacion = DateTime.UtcNow;
 
             await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        public static List<(string Campo, string Mensaje)> ValidarPuntajes(ParametrosSistema parametros)
+        {
+            var errores = new List<(string Campo, string Mensaje)>();
+
+            if (parametros.PuntosGanadorDiferenciaGoles > parametros.PuntosResultadoExacto)
+            {
+                errores.Add((
+                    nameof(ParametrosSistema.PuntosGanadorDiferenciaGoles),
+                    "El puntaje por ganador y diferencia de goles no puede ser mayor que el puntaje por resultado exacto."
+                ));
+            }
+
+            if (parametros.PuntosGanadorEmpate > parametros.PuntosGanadorDiferenciaGoles)
+            {
+                errores.Add((
+                    nameof(ParametrosSistema.PuntosGanadorEmpate),
+                    "El puntaje por ganador/empate no puede ser mayor que el puntaje por ganador y diferencia de goles."
+                ));
+            }
+
+            return errores;
         }
 
         public async Task<TimeZoneInfo> ObtenerTimeZoneInfoAsync(CancellationToken cancellationToken = default)

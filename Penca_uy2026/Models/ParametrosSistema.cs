@@ -18,6 +18,15 @@ namespace Penca_uy2026.Models
         [Range(1, 1440)]
         public int IntervaloMinutosConsultaResultados { get; set; } = 10;
 
+        [Range(0, 100)]
+        public int PuntosResultadoExacto { get; set; } = 8;
+
+        [Range(0, 100)]
+        public int PuntosGanadorDiferenciaGoles { get; set; } = 5;
+
+        [Range(0, 100)]
+        public int PuntosGanadorEmpate { get; set; } = 3;
+
         public DateTime FechaActualizacion { get; set; } = DateTime.UtcNow;
     }
 }
