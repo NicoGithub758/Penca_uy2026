@@ -34,6 +34,7 @@ namespace Penca_uy2026.Services
                 PuntosResultadoExacto = 8,
                 PuntosGanadorDiferenciaGoles = 5,
                 PuntosGanadorEmpate = 3,
+                PorcentajeComisionPenca = 5,
                 FechaActualizacion = DateTime.UtcNow
             };
 
@@ -52,6 +53,10 @@ namespace Penca_uy2026.Services
             if (erroresPuntajes.Any())
                 throw new ArgumentException(string.Join(" ", erroresPuntajes.Select(e => e.Mensaje)));
 
+            var erroresComision = ValidarComision(parametrosActualizados);
+            if (erroresComision.Any())
+                throw new ArgumentException(string.Join(" ", erroresComision.Select(e => e.Mensaje)));
+
             var parametros = await ObtenerAsync(cancellationToken);
 
             parametros.TimeZoneId = parametrosActualizados.TimeZoneId;
@@ -61,6 +66,7 @@ namespace Penca_uy2026.Services
             parametros.PuntosResultadoExacto = parametrosActualizados.PuntosResultadoExacto;
             parametros.PuntosGanadorDiferenciaGoles = parametrosActualizados.PuntosGanadorDiferenciaGoles;
             parametros.PuntosGanadorEmpate = parametrosActualizados.PuntosGanadorEmpate;
+            parametros.PorcentajeComisionPenca = parametrosActualizados.PorcentajeComisionPenca;
             parametros.FechaActualizacion = DateTime.UtcNow;
 
             await _context.SaveChangesAsync(cancellationToken);
@@ -83,6 +89,21 @@ namespace Penca_uy2026.Services
                 errores.Add((
                     nameof(ParametrosSistema.PuntosGanadorEmpate),
                     "El puntaje por ganador/empate no puede ser mayor que el puntaje por ganador y diferencia de goles."
+                ));
+            }
+
+            return errores;
+        }
+
+        public static List<(string Campo, string Mensaje)> ValidarComision(ParametrosSistema parametros)
+        {
+            var errores = new List<(string Campo, string Mensaje)>();
+
+            if (parametros.PorcentajeComisionPenca < 0 || parametros.PorcentajeComisionPenca > 100)
+            {
+                errores.Add((
+                    nameof(ParametrosSistema.PorcentajeComisionPenca),
+                    "El porcentaje de comision debe estar entre 0 y 100."
                 ));
             }
 

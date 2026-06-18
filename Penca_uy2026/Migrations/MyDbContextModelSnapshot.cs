@@ -282,6 +282,9 @@ namespace Penca_uy2026.Migrations
                     b.Property<int>("PuntosResultadoExacto")
                         .HasColumnType("int");
 
+                    b.Property<decimal>("PorcentajeComisionPenca")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("TimeZoneId")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -302,6 +305,7 @@ namespace Penca_uy2026.Migrations
                             PuntosGanadorDiferenciaGoles = 5,
                             PuntosGanadorEmpate = 3,
                             PuntosResultadoExacto = 8,
+                            PorcentajeComisionPenca = 5m,
                             TimeZoneId = "America/Montevideo"
                         });
                 });
