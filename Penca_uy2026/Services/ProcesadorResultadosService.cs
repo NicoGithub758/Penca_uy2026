@@ -2,9 +2,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Penca_uy2026.Data;
 using Penca_uy2026.Hubs;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
+using Penca_uy2026.Models;
 
 namespace Penca_uy2026.Services
 {
@@ -12,50 +10,60 @@ namespace Penca_uy2026.Services
     {
         private readonly MyDbContext _context;
         private readonly IHubContext<PencaHub> _hubContext;
+        private readonly ParametrosSistemaService _parametrosSistemaService;
 
-        public ProcesadorResultadosService(MyDbContext context, IHubContext<PencaHub> hubContext)
+        public ProcesadorResultadosService(
+            MyDbContext context,
+            IHubContext<PencaHub> hubContext,
+            ParametrosSistemaService parametrosSistemaService)
         {
             _context = context;
             _hubContext = hubContext;
+            _parametrosSistemaService = parametrosSistemaService;
         }
 
         public async Task ProcesarPartidoAsync(int partidoId)
         {
-            // 1. Obtener el partido ya actualizado (ignora filtros de tenant porque esto corre como un proceso global a veces)
-            var partido = await _context.Partidos.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == partidoId);
-            if (partido == null || !partido.Jugado) return; // Si no existe o no se ha jugado, no hacemos nada
+            var partido = await _context.Partidos
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(p => p.Id == partidoId);
 
-            // 2. Traer todas las predicciones asociadas a este partido
+            if (partido == null || !partido.Jugado)
+                return;
+
             var predicciones = await _context.Predicciones
                 .IgnoreQueryFilters()
                 .Include(p => p.Participacion)
                 .Where(p => p.PartidoId == partidoId)
                 .ToListAsync();
 
-            if (!predicciones.Any()) return;
+            if (!predicciones.Any())
+                return;
 
-            // 3. PASO IDEMPOTENTE 1: Calcular/Sobreescribir Puntos Obtenidos de la predicción
+            var parametros = await _parametrosSistemaService.ObtenerAsync();
+
             foreach (var prediccion in predicciones)
             {
-                int puntos = CalcularPuntos(
+                var puntos = CalcularPuntos(
                     golesLocalReal: partido.GolesLocal ?? 0,
                     golesVisitanteReal: partido.GolesVisitante ?? 0,
                     golesLocalPredichos: prediccion.GolesEquipoLocal,
-                    golesVisitantePredichos: prediccion.GolesEquipoVisitante
+                    golesVisitantePredichos: prediccion.GolesEquipoVisitante,
+                    parametros: parametros
                 );
 
                 prediccion.PuntosObtenidos = puntos;
             }
 
-            // Guardamos los puntos de las predicciones primero
             await _context.SaveChangesAsync();
 
-            // 4. PASO IDEMPOTENTE 2: Recalcular PuntajeTotal de todas las participaciones afectadas
-            var participacionesAfectadas = predicciones.Select(p => p.Participacion).Distinct().ToList();
+            var participacionesAfectadas = predicciones
+                .Select(p => p.Participacion)
+                .Distinct()
+                .ToList();
 
             foreach (var participacion in participacionesAfectadas)
             {
-                // Sumar desde cero todas las predicciones de esta participación
                 var sumaTotal = await _context.Predicciones
                     .IgnoreQueryFilters()
                     .Where(p => p.ParticipacionId == participacion.Id)
@@ -64,46 +72,52 @@ namespace Penca_uy2026.Services
                 participacion.PuntajeTotal = sumaTotal;
             }
 
-            // Guardamos el puntaje total recalculado
             await _context.SaveChangesAsync();
 
-            // 5. NOTIFICAR VÍA SIGNALR
-            // Notificamos a las salas específicas de las Instancias afectadas para que React actualice
-            var instanciasIds = participacionesAfectadas.Select(p => p.PencaInstanciaId).Distinct();
+            var instanciasIds = participacionesAfectadas
+                .Select(p => p.PencaInstanciaId)
+                .Distinct();
+
             foreach (var instanciaId in instanciasIds)
             {
                 await _hubContext.Clients.Group($"penca-{instanciaId}").SendAsync("PencaUpdated");
             }
         }
 
-        private int CalcularPuntos(int golesLocalReal, int golesVisitanteReal, int golesLocalPredichos, int golesVisitantePredichos)
+        private int CalcularPuntos(
+            int golesLocalReal,
+            int golesVisitanteReal,
+            int golesLocalPredichos,
+            int golesVisitantePredichos,
+            ParametrosSistema parametros)
         {
-            // Exacto: Acertó exactamente los goles
             if (golesLocalReal == golesLocalPredichos && golesVisitanteReal == golesVisitantePredichos)
             {
-                return 10;
+                return parametros.PuntosResultadoExacto;
             }
 
-            // Determinar ganadores reales
-            bool ganoLocalReal = golesLocalReal > golesVisitanteReal;
-            bool ganoVisitanteReal = golesVisitanteReal > golesLocalReal;
-            bool empateReal = golesLocalReal == golesVisitanteReal;
+            var diferenciaReal = golesLocalReal - golesVisitanteReal;
+            var diferenciaPredicha = golesLocalPredichos - golesVisitantePredichos;
 
-            // Determinar ganadores predichos
-            bool ganoLocalPredicho = golesLocalPredichos > golesVisitantePredichos;
-            bool ganoVisitantePredicho = golesVisitantePredichos > golesLocalPredichos;
-            bool empatePredicho = golesLocalPredichos == golesVisitantePredichos;
+            var empateReal = diferenciaReal == 0;
+            var empatePredicho = diferenciaPredicha == 0;
 
-            // Tendencia: Acertó quién ganaba o si empataban, pero erró en los goles exactos
-            if ((ganoLocalReal && ganoLocalPredicho) ||
-                (ganoVisitanteReal && ganoVisitantePredicho) ||
-                (empateReal && empatePredicho))
+            var acertoGanadorOEmpate =
+                (diferenciaReal > 0 && diferenciaPredicha > 0) ||
+                (diferenciaReal < 0 && diferenciaPredicha < 0) ||
+                (empateReal && empatePredicho);
+
+            if (!acertoGanadorOEmpate)
             {
-                return 5;
+                return 0;
             }
 
-            // Error: No le pegó ni al resultado ni a la tendencia
-            return 0;
+            if (!empateReal && diferenciaReal == diferenciaPredicha)
+            {
+                return parametros.PuntosGanadorDiferenciaGoles;
+            }
+
+            return parametros.PuntosGanadorEmpate;
         }
     }
 }

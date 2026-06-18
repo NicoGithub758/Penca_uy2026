@@ -10,9 +10,6 @@
 *.userosscache
 *.sln.docstates
 
-appsettings.Development.json
-appsettings.json
-
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
@@ -364,4 +361,4 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-./Penca_uy2026/Models/Sitio.cs
+/Penca_uy2026/Models/Sitio.cs

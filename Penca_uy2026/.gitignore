@@ -29,6 +29,8 @@ ui-debug.log
 # NUNCA subas tus llaves JSON de Firebase
 *.json
 !bundleconfig.json
+!appsettings.json
+!appsettings.Development.example.json
 # Si tus llaves tienen nombres específicos, agrégalas aquí:
 firebase-adminsdk.json
 credentials.json

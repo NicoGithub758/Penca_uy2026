@@ -92,6 +92,9 @@ namespace Penca_uy2026.Data
                 ActualizacionAutomaticaResultadosActiva = true,
                 MinutosDespuesInicioParaConsultarResultado = 110,
                 IntervaloMinutosConsultaResultados = 10,
+                PuntosResultadoExacto = 8,
+                PuntosGanadorDiferenciaGoles = 5,
+                PuntosGanadorEmpate = 3,
                 FechaActualizacion = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             });
         }

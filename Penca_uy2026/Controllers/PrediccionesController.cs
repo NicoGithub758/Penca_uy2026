@@ -1,14 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Identity.Client.AppConfig;
 using Penca_uy2026.Data;
 using Penca_uy2026.DTOs;
 using Penca_uy2026.Models;
-using Penca_uy2026.Models.ViewModels;
-using Penca_uy2026.Services;
 using System.Security.Claims;
 
 namespace Penca_uy2026.Controllers
@@ -24,91 +19,94 @@ namespace Penca_uy2026.Controllers
             _context = context;
         }
 
-        // Listado de partidos de una penca con las predicciones del usuario
-        
         [Authorize]
         [HttpGet("partidos")]
         public async Task<IActionResult> Partidos([FromQuery] int idParticipacion)
         {
-            
             var usuarioId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             var sitioId = int.Parse(User.FindFirstValue("sitioId"));
 
-            if(! await ValidarParticipacion(usuarioId, sitioId, idParticipacion))
-                return BadRequest("Error participacion inválida.");
- 
+            if (!await ValidarParticipacion(usuarioId, sitioId, idParticipacion))
+                return BadRequest("Error participacion invalida.");
 
             var partidos = await _context.Partidos
                 .Include(p => p.Local)
                 .Include(p => p.Visitante)
-                .Where(pe => pe.PencaId ==  _context.Participaciones
-                                    .Where(p => p.Id == idParticipacion)
-                                    .Select(p => p.PencaInstancia.PencaId)
-                .FirstOrDefault()).OrderBy(partido => partido.Jugado)
+                .Where(pe => pe.PencaId == _context.Participaciones
+                    .Where(p => p.Id == idParticipacion)
+                    .Select(p => p.PencaInstancia.PencaId)
+                    .FirstOrDefault())
+                .OrderBy(partido => partido.Jugado)
                 .Select(partido => new
-                    {
-                        partido.Id,
-                        partido.Local,
-                        partido.Visitante,
-                        partido.Fecha,
-                        partido.GolesLocal,
-                        partido.GolesVisitante,
-                        partido.Jugado,
+                {
+                    partido.Id,
+                    partido.Local,
+                    partido.Visitante,
+                    partido.Fecha,
+                    partido.GolesLocal,
+                    partido.GolesVisitante,
+                    partido.Jugado,
 
-                        Prediccion = _context.Predicciones
-                            .Where(p => p.ParticipacionId == idParticipacion)
-                            .Where(p => p.PartidoId == partido.Id)                            
-                            .Select(p => new
-                            {
-                                p.Id,
-                                p.GolesEquipoLocal,
-                                p.GolesEquipoVisitante,
-                                p.PuntosObtenidos
-                            })
-                            .FirstOrDefault()}).ToListAsync();
+                    Prediccion = _context.Predicciones
+                        .Where(p => p.ParticipacionId == idParticipacion)
+                        .Where(p => p.PartidoId == partido.Id)
+                        .Select(p => new
+                        {
+                            p.Id,
+                            p.GolesEquipoLocal,
+                            p.GolesEquipoVisitante,
+                            p.PuntosObtenidos
+                        })
+                        .FirstOrDefault()
+                })
+                .ToListAsync();
 
             return Ok(partidos);
         }
 
-        // Valida y persiste predicción realizada por el usuario en una penca que participa
         [Authorize]
         [HttpPost("create")]
-        public async Task<IActionResult> RealizarPrediccion([FromBody] PrediccionDTO prediccionDTO){
-            
+        public async Task<IActionResult> RealizarPrediccion([FromBody] PrediccionDTO prediccionDTO)
+        {
             var usuarioId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             var sitioId = int.Parse(User.FindFirstValue("sitioId"));
-            
-            if(_context.Partidos.Where(p=> p.Id == prediccionDTO.PartidoId)
-            .Select(p => p.Fecha).FirstOrDefault() <= DateTime.UtcNow){
+
+            if (_context.Partidos.Where(p => p.Id == prediccionDTO.PartidoId)
+                .Select(p => p.Fecha).FirstOrDefault() <= DateTime.UtcNow)
+            {
                 return BadRequest("Partido ya empezado");
             }
 
-            if(!await ValidarParticipacion(usuarioId, sitioId, prediccionDTO.ParticipacionId))
-                return BadRequest("Error participacion inválida.");
-            
-            if(await PartidoYaJugado(prediccionDTO.PartidoId))
-                return BadRequest("No se puede predecir un partido ya jugado.");
-            
-            if(!ValidarFormatoResultado(prediccionDTO)){
-                return BadRequest("Error en el formato de resultados.");
-            }
+            if (!await ValidarParticipacion(usuarioId, sitioId, prediccionDTO.ParticipacionId))
+                return BadRequest("Error participacion invalida.");
 
-                        // Buscamos si este usuario/participación ya tiene una predicción asignada a este partido específico
+            if (await PartidoYaJugado(prediccionDTO.PartidoId))
+                return BadRequest("No se puede predecir un partido ya jugado.");
+
+            if (!ValidarFormatoResultado(prediccionDTO))
+                return BadRequest("Error en el formato de resultados.");
+
             var prediccionExistente = await _context.Predicciones
-                .FirstOrDefaultAsync(p => p.PartidoId == prediccionDTO.PartidoId 
-                                    && p.ParticipacionId == prediccionDTO.ParticipacionId 
-                                    && p.SitioId == sitioId);
-            
-            if(prediccionExistente != null){        // Existe prediccion
-                if(await ValidarPrediccionExistente(usuarioId, prediccionDTO)){
+                .FirstOrDefaultAsync(p => p.PartidoId == prediccionDTO.PartidoId
+                    && p.ParticipacionId == prediccionDTO.ParticipacionId
+                    && p.SitioId == sitioId);
+
+            if (prediccionExistente != null)
+            {
+                if (await ValidarPrediccionExistente(usuarioId, prediccionDTO))
+                {
                     prediccionExistente.GolesEquipoLocal = prediccionDTO.GolesEquipoLocal;
                     prediccionExistente.GolesEquipoVisitante = prediccionDTO.GolesEquipoVisitante;
                 }
-                else{
-                    return BadRequest("Error: datos invalidos.");        
+                else
+                {
+                    return BadRequest("Error: datos invalidos.");
                 }
-            }else{          // Nueva prediccion
-                if(await ValidarNuevaPrediccion(prediccionDTO)){
+            }
+            else
+            {
+                if (await ValidarNuevaPrediccion(prediccionDTO))
+                {
                     var nuevaPrediccion = new Prediccion
                     {
                         GolesEquipoLocal = prediccionDTO.GolesEquipoLocal,
@@ -119,77 +117,109 @@ namespace Penca_uy2026.Controllers
                         SitioId = sitioId
                     };
                     _context.Predicciones.Add(nuevaPrediccion);
-                }else{
-                    return BadRequest("Error: datos invalidos.");        
+                }
+                else
+                {
+                    return BadRequest("Error: datos invalidos.");
                 }
             }
 
             await _context.SaveChangesAsync();
             return Ok();
-            
         }
 
         [Authorize]
         [HttpGet("resultados")]
-        public async Task<IActionResult> ResultadosPredicciones([FromQuery] int partidoId){
-            
-           var prediccionesPartido = _context.Predicciones
-        .Where(p => p.PartidoId == partidoId)
-        .ToList();
+        public async Task<IActionResult> ResultadosPredicciones([FromQuery] int partidoId)
+        {
+            var partido = await _context.Partidos.FirstOrDefaultAsync(p => p.Id == partidoId);
 
-    int totalGeneral = prediccionesPartido.Count;
+            if (partido == null)
+                return NotFound();
 
-    // 2. Si no hay trys todavía, devolvemos un objeto limpio para que no rompa
-    if (totalGeneral == 0)
-    {
-        return Ok(new {
-            TotalPredicciones = 0,
-            CantidadExacto = 0, PorcentajeExacto = 0,
-            CantidadTendencia = 0, PorcentajeTendencia = 0,
-            CantidadPerdedores = 0, PorcentajePerdedores = 0
-        });
-    }
+            var prediccionesPartido = await _context.Predicciones
+                .Where(p => p.PartidoId == partidoId)
+                .ToListAsync();
 
-    // 3. Armamos el objeto final mapeando directamente por el puntaje
-    var resultado = new
-    {
-        TotalPredicciones = totalGeneral,
+            var totalGeneral = prediccionesPartido.Count;
 
-        // Contamos cuántos sacaron 10 puntos y calculamos su %
-        CantidadExacto = prediccionesPartido.Count(p => p.PuntosObtenidos == 10),
-        PorcentajeExacto = Math.Round(prediccionesPartido.Count(p => p.PuntosObtenidos == 10) * 100.0 / totalGeneral, 1),
+            if (totalGeneral == 0)
+            {
+                return Ok(new
+                {
+                    TotalPredicciones = 0,
+                    CantidadExacto = 0,
+                    PorcentajeExacto = 0,
+                    CantidadGanadorDiferencia = 0,
+                    PorcentajeGanadorDiferencia = 0,
+                    CantidadTendencia = 0,
+                    PorcentajeTendencia = 0,
+                    CantidadPerdedores = 0,
+                    PorcentajePerdedores = 0
+                });
+            }
 
-        // Contamos cuántos sacaron 5 puntos y calculamos su %
-        CantidadTendencia = prediccionesPartido.Count(p => p.PuntosObtenidos == 5),
-        PorcentajeTendencia = Math.Round(prediccionesPartido.Count(p => p.PuntosObtenidos == 5) * 100.0 / totalGeneral, 1),
+            if (!partido.Jugado || !partido.GolesLocal.HasValue || !partido.GolesVisitante.HasValue)
+            {
+                return Ok(new
+                {
+                    TotalPredicciones = totalGeneral,
+                    CantidadExacto = 0,
+                    PorcentajeExacto = 0,
+                    CantidadGanadorDiferencia = 0,
+                    PorcentajeGanadorDiferencia = 0,
+                    CantidadTendencia = 0,
+                    PorcentajeTendencia = 0,
+                    CantidadPerdedores = totalGeneral,
+                    PorcentajePerdedores = 100
+                });
+            }
 
-        // Contamos cuántos sacaron 0 puntos y calculamos su %
-        CantidadPerdedores = prediccionesPartido.Count(p => p.PuntosObtenidos == 0),
-        PorcentajePerdedores = Math.Round(prediccionesPartido.Count(p => p.PuntosObtenidos == 0) * 100.0 / totalGeneral, 1)
-    };
+            var cantidadExacto = prediccionesPartido.Count(p => EsResultadoExacto(partido, p));
+            var cantidadGanadorDiferencia = prediccionesPartido.Count(p => AcertoGanadorDiferencia(partido, p));
+            var cantidadTendencia = prediccionesPartido.Count(p =>
+                !EsResultadoExacto(partido, p) &&
+                !AcertoGanadorDiferencia(partido, p) &&
+                AcertoGanadorOEmpate(partido, p));
+            var cantidadPerdedores = totalGeneral - cantidadExacto - cantidadGanadorDiferencia - cantidadTendencia;
 
-    return Ok(resultado);
-}       
+            var resultado = new
+            {
+                TotalPredicciones = totalGeneral,
+
+                CantidadExacto = cantidadExacto,
+                PorcentajeExacto = Math.Round(cantidadExacto * 100.0 / totalGeneral, 1),
+
+                CantidadGanadorDiferencia = cantidadGanadorDiferencia,
+                PorcentajeGanadorDiferencia = Math.Round(cantidadGanadorDiferencia * 100.0 / totalGeneral, 1),
+
+                CantidadTendencia = cantidadTendencia,
+                PorcentajeTendencia = Math.Round(cantidadTendencia * 100.0 / totalGeneral, 1),
+
+                CantidadPerdedores = cantidadPerdedores,
+                PorcentajePerdedores = Math.Round(cantidadPerdedores * 100.0 / totalGeneral, 1)
+            };
+
+            return Ok(resultado);
+        }
+
         [Authorize]
         [HttpGet("tendencia")]
         public async Task<IActionResult> GetTendenciaPartido([FromQuery] int partidoId)
         {
-            var id = partidoId;
             try
             {
-                // 1. Traemos las predicciones de este partido desde la base de datos
                 var predicciones = await _context.Predicciones
-                    .Where(p => p.PartidoId == id)
-                    .Select(p => new 
+                    .Where(p => p.PartidoId == partidoId)
+                    .Select(p => new
                     {
                         GolesL = p.GolesEquipoLocal,
                         GolesV = p.GolesEquipoVisitante
                     })
                     .ToListAsync();
 
-                int total = predicciones.Count;
+                var total = predicciones.Count;
 
-                // 2. Si nadie apostó todavía, devolvemos una tendencia inicial neutra
                 if (total == 0)
                 {
                     return Ok(new
@@ -199,12 +229,10 @@ namespace Penca_uy2026.Controllers
                     });
                 }
 
-                // 3. Contamos los resultados según los goles arriesgados
-                int cantidadLocal = predicciones.Count(p => p.GolesL > p.GolesV);
-                int cantidadVisitante = predicciones.Count(p => p.GolesV > p.GolesL);
-                int cantidadEmpate = predicciones.Count(p => p.GolesL == p.GolesV);
+                var cantidadLocal = predicciones.Count(p => p.GolesL > p.GolesV);
+                var cantidadVisitante = predicciones.Count(p => p.GolesV > p.GolesL);
+                var cantidadEmpate = predicciones.Count(p => p.GolesL == p.GolesV);
 
-                // 4. Armamos la respuesta con la estructura exacta que espera tu JS/TS
                 var resultado = new
                 {
                     totalPredicciones = total,
@@ -220,42 +248,70 @@ namespace Penca_uy2026.Controllers
             }
             catch (Exception ex)
             {
-                // Podés cambiar el Console por un ILogger si tenés configurado
                 Console.WriteLine($"Error al calcular tendencia: {ex.Message}");
                 return StatusCode(500, new { mensaje = "Error interno al calcular las tendencias." });
             }
         }
 
-        // --------------- Funciones Auxiliares -------------------
-
-        // Valida que la participación obtenida coinicida con [userId|sitioId]
-        private async Task<bool> ValidarParticipacion(int userId, int sitioId, int participacionId){
+        private async Task<bool> ValidarParticipacion(int userId, int sitioId, int participacionId)
+        {
             return await _context.Participaciones
-            .AnyAsync(p => p.UsuarioSitioId == userId && p.SitioId == sitioId && p.Id == participacionId);
+                .AnyAsync(p => p.UsuarioSitioId == userId && p.SitioId == sitioId && p.Id == participacionId);
         }
 
-        // Funcion auxiliar valida que la prediccion pertenezca al usuario id
-        private async Task<bool> ValidarPrediccionExistente(int idUsuario, PrediccionDTO dto){
+        private async Task<bool> ValidarPrediccionExistente(int idUsuario, PrediccionDTO dto)
+        {
             return await _context.Predicciones
-            .AnyAsync(p => p.Id == dto.Id && p.Participacion.UsuarioSitioId == idUsuario);
+                .AnyAsync(p => p.Id == dto.Id && p.Participacion.UsuarioSitioId == idUsuario);
         }
-        
-        private async Task<bool> ValidarNuevaPrediccion(PrediccionDTO dto){
+
+        private async Task<bool> ValidarNuevaPrediccion(PrediccionDTO dto)
+        {
             return await _context.Participaciones
-            .AnyAsync(p => p.Id == dto.ParticipacionId
-                && p.PencaInstancia.Penca.Partidos.Any(partido => partido.Id == dto.PartidoId));
+                .AnyAsync(p => p.Id == dto.ParticipacionId
+                    && p.PencaInstancia.Penca.Partidos.Any(partido => partido.Id == dto.PartidoId));
         }
-        private bool ValidarFormatoResultado(PrediccionDTO dto){
-            if(dto.GolesEquipoLocal < 0 || dto.GolesEquipoVisitante < 0){
-                return false;
-            }
-            return true;
+
+        private bool ValidarFormatoResultado(PrediccionDTO dto)
+        {
+            return dto.GolesEquipoLocal >= 0 && dto.GolesEquipoVisitante >= 0;
         }
-        
-        // Funcion auxiliar para comprobar estado del partido
-        private async Task<bool> PartidoYaJugado(int partidoId){
+
+        private async Task<bool> PartidoYaJugado(int partidoId)
+        {
             var partido = await _context.Partidos.FindAsync(partidoId);
             return partido?.Jugado == true;
+        }
+
+        private static bool EsResultadoExacto(Partido partido, Prediccion prediccion)
+        {
+            return prediccion.GolesEquipoLocal == (partido.GolesLocal ?? 0) &&
+                prediccion.GolesEquipoVisitante == (partido.GolesVisitante ?? 0);
+        }
+
+        private static bool AcertoGanadorDiferencia(Partido partido, Prediccion prediccion)
+        {
+            var diferenciaReal = DiferenciaGoles(partido.GolesLocal ?? 0, partido.GolesVisitante ?? 0);
+            var diferenciaPredicha = DiferenciaGoles(prediccion.GolesEquipoLocal, prediccion.GolesEquipoVisitante);
+
+            return !EsResultadoExacto(partido, prediccion) &&
+                diferenciaReal != 0 &&
+                diferenciaReal == diferenciaPredicha;
+        }
+
+        private static bool AcertoGanadorOEmpate(Partido partido, Prediccion prediccion)
+        {
+            var diferenciaReal = DiferenciaGoles(partido.GolesLocal ?? 0, partido.GolesVisitante ?? 0);
+            var diferenciaPredicha = DiferenciaGoles(prediccion.GolesEquipoLocal, prediccion.GolesEquipoVisitante);
+
+            return (diferenciaReal > 0 && diferenciaPredicha > 0) ||
+                (diferenciaReal < 0 && diferenciaPredicha < 0) ||
+                (diferenciaReal == 0 && diferenciaPredicha == 0);
+        }
+
+        private static int DiferenciaGoles(int golesLocal, int golesVisitante)
+        {
+            return golesLocal - golesVisitante;
         }
     }
 }
