@@ -39,6 +39,11 @@ namespace Penca_uy2026.Controllers
                 ModelState.AddModelError(error.Campo, error.Mensaje);
             }
 
+            foreach (var error in ParametrosSistemaService.ValidarComision(model))
+            {
+                ModelState.AddModelError(error.Campo, error.Mensaje);
+            }
+
             if (!ModelState.IsValid)
             {
                 CargarTimeZones(model.TimeZoneId);

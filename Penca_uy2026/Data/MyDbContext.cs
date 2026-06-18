@@ -95,6 +95,7 @@ namespace Penca_uy2026.Data
                 PuntosResultadoExacto = 8,
                 PuntosGanadorDiferenciaGoles = 5,
                 PuntosGanadorEmpate = 3,
+                PorcentajeComisionPenca = 5,
                 FechaActualizacion = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             });
         }

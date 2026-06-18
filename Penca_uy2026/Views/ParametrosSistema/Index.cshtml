@@ -26,6 +26,10 @@
             <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
             <div class="row g-3">
+                <div class="col-12">
+                    <h2 class="h5 fw-semibold mb-0">Actualizacion de resultados</h2>
+                </div>
+
                 <div class="col-12 col-lg-6">
                     <label asp-for="TimeZoneId" class="form-label">Huso horario del sistema</label>
                     <select asp-for="TimeZoneId" asp-items="ViewBag.TimeZones" class="form-select"></select>
@@ -77,6 +81,17 @@
                     <label asp-for="PuntosGanadorEmpate" class="form-label">Ganador / empate</label>
                     <input asp-for="PuntosGanadorEmpate" class="form-control" type="number" min="0" max="100" />
                     <span asp-validation-for="PuntosGanadorEmpate" class="text-danger"></span>
+                </div>
+
+                <div class="col-12">
+                    <hr class="my-2" />
+                    <h2 class="h5 fw-semibold mb-0">Comision de pencas</h2>
+                </div>
+
+                <div class="col-12 col-lg-6">
+                    <label asp-for="PorcentajeComisionPenca" class="form-label">Porcentaje de comision por penca</label>
+                    <input asp-for="PorcentajeComisionPenca" class="form-control" type="number" min="0" max="100" step="0.1" />
+                    <span asp-validation-for="PorcentajeComisionPenca" class="text-danger"></span>
                 </div>
             </div>
         </div>
