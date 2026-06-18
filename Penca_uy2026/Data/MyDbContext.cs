@@ -38,6 +38,8 @@ namespace Penca_uy2026.Data
         public DbSet<Invitacion> Invitaciones { get; set; }
         public DbSet<SolicitudIngreso> SolicitudesIngreso { get; set; }
         public DbSet<PreferenciaNotificacion> PreferenciasNotificacion { get; set; }
+        public DbSet<ConfiguracionSitio> ConfiguracionesSitio { get; set; }
+        public DbSet<RecordatorioPartidoSitio> RecordatoriosPartidoSitio { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

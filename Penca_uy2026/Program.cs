@@ -35,6 +35,7 @@ builder.Services.AddScoped<ApiFootballService>();
 builder.Services.AddScoped<ParametrosSistemaService>();
 builder.Services.AddScoped<ActualizarResultadosService>();
 builder.Services.AddHostedService<ActualizarResultadosBackgroundService>();
+builder.Services.AddHostedService<RecordatoriosBackgroundService>();
 builder.Services.AddSignalR();
 
 // -----------------------------------------------------------

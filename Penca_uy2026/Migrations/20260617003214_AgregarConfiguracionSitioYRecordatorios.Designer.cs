@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Penca_uy2026.Data;
 
@@ -11,9 +12,11 @@ using Penca_uy2026.Data;
 namespace Penca_uy2026.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    partial class MyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260617003214_AgregarConfiguracionSitioYRecordatorios")]
+    partial class AgregarConfiguracionSitioYRecordatorios
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -275,63 +278,6 @@ namespace Penca_uy2026.Migrations
                     b.HasIndex("ParticipacionId");
 
                     b.ToTable("Pagos");
-                });
-
-            modelBuilder.Entity("Penca_uy2026.Models.ParametrosSistema", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("ActualizacionAutomaticaResultadosActiva")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("FechaActualizacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("IntervaloMinutosConsultaResultados")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MinutosDespuesInicioParaConsultarResultado")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PuntosGanadorDiferenciaGoles")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PuntosGanadorEmpate")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PuntosResultadoExacto")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("PorcentajeComisionPenca")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("TimeZoneId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ParametrosSistema");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            ActualizacionAutomaticaResultadosActiva = true,
-                            FechaActualizacion = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IntervaloMinutosConsultaResultados = 10,
-                            MinutosDespuesInicioParaConsultarResultado = 110,
-                            PuntosGanadorDiferenciaGoles = 5,
-                            PuntosGanadorEmpate = 3,
-                            PuntosResultadoExacto = 8,
-                            PorcentajeComisionPenca = 5m,
-                            TimeZoneId = "America/Montevideo"
-                        });
                 });
 
             modelBuilder.Entity("Penca_uy2026.Models.Participacion", b =>
