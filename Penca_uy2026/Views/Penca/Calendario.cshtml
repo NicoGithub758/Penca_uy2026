@@ -124,16 +124,6 @@
                                 <td class="text-end pe-3">
                                     @if (!Model.Finalizada)
                                     {
-                                        <form asp-action="ActualizarResultadoDesdeApi"
-                                            asp-route-id="@partido.Id"
-                                            method="post"
-                                            class="d-inline">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-sm btn-outline-primary">
-                                                API
-                                            </button>
-                                        </form>
-
                                         <a asp-action="CargarResultado"
                                         asp-route-id="@partido.Id"
                                         class="btn btn-sm @(partido.Jugado ? "btn-outline-secondary" : "btn-success")">

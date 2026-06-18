@@ -34,6 +34,16 @@ namespace Penca_uy2026.Controllers
                 ModelState.AddModelError(nameof(model.TimeZoneId), "El huso horario seleccionado no es valido.");
             }
 
+            foreach (var error in ParametrosSistemaService.ValidarPuntajes(model))
+            {
+                ModelState.AddModelError(error.Campo, error.Mensaje);
+            }
+
+            foreach (var error in ParametrosSistemaService.ValidarComision(model))
+            {
+                ModelState.AddModelError(error.Campo, error.Mensaje);
+            }
+
             if (!ModelState.IsValid)
             {
                 CargarTimeZones(model.TimeZoneId);

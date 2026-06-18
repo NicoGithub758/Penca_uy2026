@@ -21,11 +21,16 @@ namespace Penca_uy2026.Controllers
     {
         private readonly MyDbContext _context;
         private readonly SitioService _sitioService;
+        private readonly ParametrosSistemaService _parametrosSistemaService;
 
-        public SitiosController(MyDbContext context, SitioService sitioService)
+        public SitiosController(
+            MyDbContext context,
+            SitioService sitioService,
+            ParametrosSistemaService parametrosSistemaService)
         {
             _context = context;
             _sitioService = sitioService;
+            _parametrosSistemaService = parametrosSistemaService;
         }
 
         // --- ACCIONES DE BACKOFFICE (Razor Views) ---
@@ -56,6 +61,28 @@ namespace Penca_uy2026.Controllers
 
             return Ok(sitio);
         }
+
+        /// <summary>
+        /// Obtiene la lista de sitios públicos y activos para la Landing Page.
+        /// </summary>
+        [HttpGet("api/sitios/publicos")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetSitiosPublicos()
+        {
+            var sitios = await _context.Sitios
+                .Where(s => s.Activo && (s.TipoRegistro == TipoRegistro.Abierta || s.TipoRegistro == TipoRegistro.AbiertaConAutorizacion))
+                .Select(s => new { 
+                    name = s.Nombre, 
+                    slug = s.Slug, 
+                    active = s.Activo,
+                    tipoRegistro = s.TipoRegistro,
+                    logoUrl = s.LogoUrl,
+                    colorPrincipal = s.ColorPrincipal
+                })
+                .ToListAsync();
+
+            return Ok(sitios);
+        }
         
 
         //Asocia una penca creada en el backoffice a un sitio, creando nueva penca instancia.
@@ -69,17 +96,27 @@ namespace Penca_uy2026.Controllers
 
             if(usuarioRol != "AdminSitio")
                 return BadRequest("Usuario no es administrador.");
+
+            var penca = await _context.Pencas.FindAsync(pencaId);
+
+            if (penca == null)
+                return NotFound("La penca no existe.");
+
+            if (penca.Finalizada)
+                return BadRequest("No se puede agregar una penca finalizada a un sitio.");
+
+            var parametros = await _parametrosSistemaService.ObtenerAsync();
             
             var nuevaPencaInstancia = new PencaInstancia
             {
                 Costo = costo,
-                PorcentajeComision = 5,
+                PorcentajeComision = parametros.PorcentajeComisionPenca,
                 PencaId = pencaId, 
                 SitioId = sitioId
             };
 
             _context.Add(nuevaPencaInstancia);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return Ok();
         }
@@ -98,7 +135,7 @@ namespace Penca_uy2026.Controllers
             return BadRequest("Usuario no es administrador.");*/
 
         var pencas = await _context.Pencas
-            .Where(p => !_context.PencaInstancias
+            .Where(p => !p.Finalizada && !_context.PencaInstancias
                 .Any(pi => pi.PencaId == p.Id && pi.SitioId == sitioId))
             .Select(p => new
             {

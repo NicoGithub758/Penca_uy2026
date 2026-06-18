@@ -19,13 +19,15 @@ public class AdminSitioAuthController : Controller
     private readonly AuthService _authService;
     private readonly ImageService _imageService;
     private readonly IConfiguration _configuration;
+    private readonly ParametrosSistemaService _parametrosSistemaService;
 
-    public AdminSitioAuthController(MyDbContext context, AuthService authService, ImageService imageService, IConfiguration configuration)
+    public AdminSitioAuthController(MyDbContext context, AuthService authService, ImageService imageService, IConfiguration configuration, ParametrosSistemaService parametrosSistemaService)
     {
         _context = context;
         _authService = authService;
         _imageService = imageService;
         _configuration = configuration;
+        _parametrosSistemaService = parametrosSistemaService;
     }
 
     // URL: /AdminSitioAuth/Login
@@ -128,11 +130,13 @@ public class AdminSitioAuthController : Controller
             return View(model);
         }
 
+        var parametros = await _parametrosSistemaService.ObtenerAsync();
+
         var nuevaInstancia = new PencaInstancia
         {
             PencaId = model.PencaId,
             SitioId = int.Parse(sitioId),
-            PorcentajeComision = model.PorcentajeComision,
+            PorcentajeComision = parametros.PorcentajeComisionPenca,
             Costo = model.Costo
         };
 
@@ -209,7 +213,6 @@ public class AdminSitioAuthController : Controller
         var instancia = await _context.PencaInstancias.FindAsync(id);
         if (instancia == null) return NotFound();
 
-        instancia.PorcentajeComision = model.PorcentajeComision;
         instancia.Costo = model.Costo;
 
         await _context.SaveChangesAsync();

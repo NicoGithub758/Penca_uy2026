@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Penca_uy2026.Models
 {
@@ -17,6 +18,19 @@ namespace Penca_uy2026.Models
 
         [Range(1, 1440)]
         public int IntervaloMinutosConsultaResultados { get; set; } = 10;
+
+        [Range(0, 100)]
+        public int PuntosResultadoExacto { get; set; } = 8;
+
+        [Range(0, 100)]
+        public int PuntosGanadorDiferenciaGoles { get; set; } = 5;
+
+        [Range(0, 100)]
+        public int PuntosGanadorEmpate { get; set; } = 3;
+
+        [Range(0, 100)]
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal PorcentajeComisionPenca { get; set; } = 5;
 
         public DateTime FechaActualizacion { get; set; } = DateTime.UtcNow;
     }

@@ -273,6 +273,18 @@ namespace Penca_uy2026.Migrations
                     b.Property<int>("MinutosDespuesInicioParaConsultarResultado")
                         .HasColumnType("int");
 
+                    b.Property<int>("PuntosGanadorDiferenciaGoles")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PuntosGanadorEmpate")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PuntosResultadoExacto")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("PorcentajeComisionPenca")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("TimeZoneId")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -290,6 +302,10 @@ namespace Penca_uy2026.Migrations
                             FechaActualizacion = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IntervaloMinutosConsultaResultados = 10,
                             MinutosDespuesInicioParaConsultarResultado = 110,
+                            PuntosGanadorDiferenciaGoles = 5,
+                            PuntosGanadorEmpate = 3,
+                            PuntosResultadoExacto = 8,
+                            PorcentajeComisionPenca = 5m,
                             TimeZoneId = "America/Montevideo"
                         });
                 });
