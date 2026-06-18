@@ -6,31 +6,65 @@ using Penca_uy2026.Interfaces;
 using Penca_uy2026.Models;
 using Penca_uy2026.Models.ViewModels;
 using Penca_uy2026.Services;
+using Microsoft.Extensions.Configuration;
 
 namespace Penca_uy2026.Controllers
 {
     [Route("AdminAuth")]
-    [Authorize] 
+    [Authorize(Roles = "PlataformaAdmin")] 
     public class AdminAuthController : Controller
     {
         private readonly AuthService _authService;
         private readonly MyDbContext _context;
         private readonly IEmailServicio _emailServicio;
+        private readonly ImageService _imageService;
+        private readonly IConfiguration _configuration;
 
-        public AdminAuthController(AuthService authService, MyDbContext context, IEmailServicio emailServicio)
+        public AdminAuthController(AuthService authService, MyDbContext context, IEmailServicio emailServicio, ImageService imageService, IConfiguration configuration)
         {
             _authService = authService;
             _context = context;
             _emailServicio = emailServicio;
+            _imageService = imageService;
+            _configuration = configuration;
         }
+
+        [AllowAnonymous]
+        [HttpGet("~/")]
+        public async Task<IActionResult> Root()
+        {
+            if (Request.Cookies.TryGetValue("SitioId_Admin", out var sitioIdCookie) &&
+                int.TryParse(sitioIdCookie, out var sitioId))
+            {
+                var sitioExiste = await _context.Sitios
+                    .IgnoreQueryFilters()
+                    .AnyAsync(s => s.Id == sitioId && s.Activo);
+
+                if (sitioExiste)
+                {
+                    return RedirectToAction("Index", "AdminSitioAuth");
+                }
+
+                Response.Cookies.Delete("SitioId_Admin");
+            }
+
+            return RedirectToAction("Login", "AdminSitioAuth");
+        }
+
+        [HttpGet("Index")]
+        public IActionResult Index()
+        {
+            return View();
+        }
+
 
         [AllowAnonymous] // Acceso público para ver el login
         [HttpGet("Login")]
         public IActionResult Login()
         {
-            if (Request.Cookies.ContainsKey("AuthToken"))
+            if (User.Identity?.IsAuthenticated == true && User.IsInRole("PlataformaAdmin"))
             {
-                return RedirectToAction("Index", "Penca");
+                return RedirectToAction("Index", "AdminAuth");
             }
             return View(new LoginViewModel());
         }
@@ -56,7 +90,8 @@ namespace Penca_uy2026.Controllers
                 Expires = DateTime.UtcNow.AddHours(8)
             });
 
-            return RedirectToAction("Index", "Penca");
+            // Redirigir al panel principal del admin
+            return RedirectToAction("Index", "AdminAuth");
         }
 
         [AllowAnonymous] // Permitir logout incluso si la sesión expiró
@@ -79,16 +114,24 @@ namespace Penca_uy2026.Controllers
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
+                string logoUrlResult = "";
+                if (model.Logo != null)
+                {
+                    using var stream = model.Logo.OpenReadStream();
+                    logoUrlResult = await _imageService.UploadImageAsync(stream, model.Logo.FileName, cropToSquare: false);
+                }
+
+                var frontendDomain = _configuration["Cors:AllowedOrigins"] ?? "http://localhost:5173";
                 var nuevoSitio = new Sitio
                 {
                     Nombre = model.NombreSitio,
-                    Url = model.UrlVercel.Trim().ToLower(),
+                    Url = $"{frontendDomain}/{model.Slug}", // URL dinámica en base al frontend
                     Activo = true,
                     TipoRegistro = model.TipoRegistro,
-                    Slug = model.NombreSitio.ToLower().Trim().Replace(" ", "-"),
+                    Slug = model.Slug.ToLower().Trim(),
                     ColorPrincipal = "#000000",
                     Descripcion = "",
-                    LogoUrl = ""
+                    LogoUrl = logoUrlResult
                 };
 
                 _context.Sitios.Add(nuevoSitio);
@@ -154,25 +197,39 @@ namespace Penca_uy2026.Controllers
 
         [HttpPost("EditarSitio/{id}")]
         [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> EditarSitio(int id, Sitio sitioActualizado)
+        public async Task<IActionResult> EditarSitio(int id, Sitio sitioActualizado, IFormFile? logoFile)
         {
             var sitioOriginal = await _context.Sitios.IgnoreQueryFilters().FirstOrDefaultAsync(s => s.Id == id);
             if (sitioOriginal == null) return NotFound();
 
-            sitioActualizado.Slug = sitioOriginal.Slug;
-            sitioActualizado.ColorPrincipal = sitioOriginal.ColorPrincipal;
-            sitioActualizado.Descripcion = sitioOriginal.Descripcion;
-            sitioActualizado.LogoUrl = sitioOriginal.LogoUrl;
-            sitioActualizado.TipoRegistro = sitioOriginal.TipoRegistro;
+            sitioActualizado.LogoUrl = sitioOriginal.LogoUrl; // Lo mantenemos por defecto para la validación
 
             ModelState.Clear();
             TryValidateModel(sitioActualizado);
 
             if (!ModelState.IsValid) return View(sitioActualizado);
 
+            // Subimos el logo si se envió uno nuevo
+            if (logoFile != null && logoFile.Length > 0)
+            {
+                using var stream = logoFile.OpenReadStream();
+                var newLogoUrl = await _imageService.UploadImageAsync(stream, logoFile.FileName, cropToSquare: false);
+                if (!string.IsNullOrEmpty(newLogoUrl))
+                {
+                    sitioOriginal.LogoUrl = newLogoUrl;
+                }
+            }
+
             sitioOriginal.Nombre = sitioActualizado.Nombre;
-            sitioOriginal.Url = sitioActualizado.Url;
             sitioOriginal.Activo = sitioActualizado.Activo;
+            sitioOriginal.Slug = sitioActualizado.Slug?.ToLower().Trim() ?? sitioOriginal.Slug;
+            
+            var frontendDomain = _configuration["Cors:AllowedOrigins"] ?? "http://localhost:5173";
+            sitioOriginal.Url = $"{frontendDomain}/{sitioOriginal.Slug}";
+            
+            sitioOriginal.TipoRegistro = sitioActualizado.TipoRegistro;
+            sitioOriginal.ColorPrincipal = sitioActualizado.ColorPrincipal;
+            sitioOriginal.Descripcion = sitioActualizado.Descripcion;
 
             _context.Sitios.Update(sitioOriginal);
             await _context.SaveChangesAsync();
@@ -181,6 +238,7 @@ namespace Penca_uy2026.Controllers
         }
 
         [HttpPost("EliminarSitio/{id}")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EliminarSitio(int id)
         {
             var sitio = await _context.Sitios.FindAsync(id);
@@ -193,8 +251,21 @@ namespace Penca_uy2026.Controllers
             var solicitudes = await _context.SolicitudesIngreso.IgnoreQueryFilters().Where(s => s.SitioId == id).ToListAsync();
             var instancias = await _context.PencaInstancias.IgnoreQueryFilters().Where(pi => pi.SitioId == id).ToListAsync();
             var usuarios = await _context.UsuariosSitio.IgnoreQueryFilters().Where(u => u.SitioId == id).ToListAsync();
+            var usuarioIds = usuarios.Select(u => u.Id).ToList();
+            var predicciones = await _context.Predicciones.IgnoreQueryFilters().Where(p => p.SitioId == id).ToListAsync();
+            var mensajesChat = await _context.MensajesChat.IgnoreQueryFilters().Where(m => m.SitioId == id).ToListAsync();
+            var notificaciones = await _context.Notificaciones.IgnoreQueryFilters().Where(n => n.SitioId == id).ToListAsync();
+            var preferencias = await _context.PreferenciasNotificacion.IgnoreQueryFilters().Where(p => p.SitioId == id).ToListAsync();
+            var invitacionesAdmin = await _context.InvitacionesAdmin.Where(i => usuarioIds.Contains(i.UsuarioSitioId)).ToListAsync();
+            var reglasPremios = await _context.ReglasPremios.IgnoreQueryFilters().Where(r => r.SitioId == id).ToListAsync();
 
             _context.Pagos.RemoveRange(pagos);
+            _context.Predicciones.RemoveRange(predicciones);
+            _context.MensajesChat.RemoveRange(mensajesChat);
+            _context.Notificaciones.RemoveRange(notificaciones);
+            _context.PreferenciasNotificacion.RemoveRange(preferencias);
+            _context.InvitacionesAdmin.RemoveRange(invitacionesAdmin);
+            _context.ReglasPremios.RemoveRange(reglasPremios);
             _context.Participaciones.RemoveRange(participaciones);
             _context.Invitaciones.RemoveRange(invitaciones);
             _context.SolicitudesIngreso.RemoveRange(solicitudes);

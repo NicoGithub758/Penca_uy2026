@@ -372,7 +372,7 @@ namespace Penca_uy2026.Controllers
                 PencaId = model.PencaId,
                 LocalEquipoId = model.LocalId,
                 VisitanteEquipoId = model.VisitanteId,
-                Fecha = DateTime.SpecifyKind(model.Fecha, DateTimeKind.Utc),
+                Fecha = model.Fecha,
                 Fase = model.Fase,
                 Jugado = false
             };
@@ -383,6 +383,39 @@ namespace Penca_uy2026.Controllers
             return RedirectToAction(nameof(Calendario), new { id = model.PencaId });
         }
 
-        
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> FinalizarPenca(int id)
+        {
+            var penca = await _context.Pencas
+                .Include(p => p.Partidos)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (penca == null)
+            {
+                return NotFound();
+            }
+
+            if (penca.Finalizada)
+            {
+                TempData["Info"] = "La penca ya estaba finalizada.";
+                return RedirectToAction("Calendario", new { id });
+            }
+
+            var tienePartidosPendientes = penca.Partidos.Any(p => !p.Jugado);
+
+            if (tienePartidosPendientes)
+            {
+                TempData["Error"] = "No se puede finalizar la penca porque todavía hay partidos pendientes.";
+                return RedirectToAction("Calendario", new { id });
+            }
+
+            penca.Finalizada = true;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "La penca fue finalizada correctamente.";
+            return RedirectToAction("Calendario", new { id });
+        }
     }
 }

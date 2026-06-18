@@ -1,4 +1,4 @@
-﻿using Azure;
+using Azure;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,11 +17,17 @@ public class AdminSitioAuthController : Controller
 {
     private readonly MyDbContext _context;
     private readonly AuthService _authService;
+    private readonly ImageService _imageService;
+    private readonly IConfiguration _configuration;
+    private readonly ParametrosSistemaService _parametrosSistemaService;
 
-    public AdminSitioAuthController(MyDbContext context, AuthService authService)
+    public AdminSitioAuthController(MyDbContext context, AuthService authService, ImageService imageService, IConfiguration configuration, ParametrosSistemaService parametrosSistemaService)
     {
         _context = context;
         _authService = authService;
+        _imageService = imageService;
+        _configuration = configuration;
+        _parametrosSistemaService = parametrosSistemaService;
     }
 
     // URL: /AdminSitioAuth/Login
@@ -86,8 +92,11 @@ public class AdminSitioAuthController : Controller
     [HttpGet("CrearPencaInstancia")]
     public async Task<IActionResult> CrearPencaInstancia()
     {
-        // Listamos todas las pencas globales disponibles
-        var pencasDisponibles = await _context.Pencas.ToListAsync();
+        // Listamos solo las pencas globales disponibles para ser agregadas a sitios.
+        var pencasDisponibles = await _context.Pencas
+            .Where(p => !p.Finalizada)
+            .ToListAsync();
+
         ViewBag.Pencas = pencasDisponibles;
         return View(new CrearInstanciaViewModel());
     }
@@ -97,7 +106,10 @@ public class AdminSitioAuthController : Controller
     {
         if (!ModelState.IsValid)
         {
-            ViewBag.Pencas = await _context.Pencas.ToListAsync();
+            ViewBag.Pencas = await _context.Pencas
+                .Where(p => !p.Finalizada)
+                .ToListAsync();
+
             return View(model);
         }
 
@@ -105,11 +117,27 @@ public class AdminSitioAuthController : Controller
         if (!Request.Cookies.TryGetValue("SitioId_Admin", out string? sitioId))
             return RedirectToAction("Login");
 
+        var penca = await _context.Pencas.FindAsync(model.PencaId);
+
+        if (penca == null || penca.Finalizada)
+        {
+            ModelState.AddModelError("", "No se puede agregar una penca finalizada a un sitio.");
+
+            ViewBag.Pencas = await _context.Pencas
+                .Where(p => !p.Finalizada)
+                .ToListAsync();
+
+            return View(model);
+        }
+
+        var parametros = await _parametrosSistemaService.ObtenerAsync();
+
         var nuevaInstancia = new PencaInstancia
         {
             PencaId = model.PencaId,
             SitioId = int.Parse(sitioId),
-            PorcentajeComision = model.PorcentajeComision
+            PorcentajeComision = parametros.PorcentajeComisionPenca,
+            Costo = model.Costo
         };
 
         _context.PencaInstancias.Add(nuevaInstancia);
@@ -185,7 +213,7 @@ public class AdminSitioAuthController : Controller
         var instancia = await _context.PencaInstancias.FindAsync(id);
         if (instancia == null) return NotFound();
 
-        instancia.PorcentajeComision = model.PorcentajeComision;
+        instancia.Costo = model.Costo;
 
         await _context.SaveChangesAsync();
         return RedirectToAction("Index");
@@ -273,5 +301,72 @@ public class AdminSitioAuthController : Controller
             return RedirectToAction("ConfigurarPremios", new { pencaInstanciaId = instanciaId });
         }
         return NotFound();
+    }
+
+    [HttpGet("Configuracion")]
+    public async Task<IActionResult> Configuracion()
+    {
+        if (!Request.Cookies.TryGetValue("SitioId_Admin", out string? sitioId))
+            return RedirectToAction("Login", "AdminSitioAuth");
+
+        var sitio = await _context.Sitios
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(s => s.Id == int.Parse(sitioId));
+
+        if (sitio == null) return NotFound();
+
+        return View(sitio);
+    }
+
+    [HttpPost("Configuracion")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Configuracion(Sitio modelo, IFormFile? logoFile)
+    {
+        if (!Request.Cookies.TryGetValue("SitioId_Admin", out string? sitioIdStr) || !int.TryParse(sitioIdStr, out int sitioId))
+            return RedirectToAction("Login", "AdminSitioAuth");
+
+        var sitioOriginal = await _context.Sitios
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(s => s.Id == sitioId);
+
+        if (sitioOriginal == null) return NotFound();
+
+        // Limpiamos los errores del modelo que no nos importan (ej: campos que el admin no toca)
+        ModelState.Remove("Url");
+        
+        if (!ModelState.IsValid)
+        {
+            return View(modelo);
+        }
+
+        // Subir nuevo logo si se proporciona uno
+        if (logoFile != null && logoFile.Length > 0)
+        {
+            using var stream = logoFile.OpenReadStream();
+            var newLogoUrl = await _imageService.UploadImageAsync(stream, logoFile.FileName, cropToSquare: false);
+            if (!string.IsNullOrEmpty(newLogoUrl))
+            {
+                sitioOriginal.LogoUrl = newLogoUrl;
+            }
+        }
+
+        sitioOriginal.Nombre = modelo.Nombre;
+        sitioOriginal.Descripcion = modelo.Descripcion;
+        sitioOriginal.ColorPrincipal = modelo.ColorPrincipal;
+        sitioOriginal.TipoRegistro = modelo.TipoRegistro;
+
+        // Recalcular URL basada en el Slug si este cambió
+        if (!string.IsNullOrWhiteSpace(modelo.Slug) && modelo.Slug.Trim().ToLower() != sitioOriginal.Slug)
+        {
+            sitioOriginal.Slug = modelo.Slug.Trim().ToLower();
+            var frontendDomain = _configuration["Cors:AllowedOrigins"] ?? "http://localhost:5173";
+            sitioOriginal.Url = $"{frontendDomain}/{sitioOriginal.Slug}";
+        }
+
+        _context.Sitios.Update(sitioOriginal);
+        await _context.SaveChangesAsync();
+
+        TempData["Success"] = "Configuración del sitio actualizada correctamente.";
+        return RedirectToAction("Configuracion");
     }
 }

@@ -1,14 +1,29 @@
-﻿@model Penca_uy2026.Models.Sitio
+@model Penca_uy2026.Models.Sitio
 
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Panel de Administración: @Model.Nombre</h1>
-        <a asp-action="CrearPencaInstancia" class="btn btn-primary shadow-sm">
-            <i class="bi bi-plus-circle"></i> Agregar nueva Penca
-        </a>
-        <a asp-controller="Recordatorios" asp-action="Index" class="btn btn-primary">
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="mb-1">Panel de Administración: @Model.Nombre</h1>
+            <div class="d-flex align-items-center gap-2">
+                <a href="@Model.Url" target="_blank" class="text-decoration-none text-primary fw-medium" id="siteUrl">
+                    <i class="bi bi-box-arrow-up-right me-1"></i> @Model.Url
+                </a>
+                <button type="button" class="btn btn-sm btn-light border shadow-sm rounded-circle p-1 d-flex align-items-center justify-content-center" onclick="copyUrl(this)" title="Copiar URL" style="width: 28px; height: 28px;">
+                    <i class="bi bi-clipboard text-secondary" style="font-size: 0.85rem;"></i>
+                </button>
+            </div>
+        </div>
+        <div class="d-flex gap-2 mt-2">
+            <a asp-action="Configuracion" class="btn btn-outline-secondary shadow-sm">
+                <i class="bi bi-gear"></i> Configuración
+            </a>
+            <a asp-action="CrearPencaInstancia" class="btn btn-primary shadow-sm">
+                <i class="bi bi-plus-circle"></i> Agregar nueva Penca
+            </a>
+            <a asp-controller="Recordatorios" asp-action="Index" class="btn btn-primary">
             🔔 Gestión de Recordatorios
         </a>
+        </div>
     </div>
 
     <div class="card shadow-sm border-0">
@@ -51,3 +66,21 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function copyUrl(btn) {
+            const url = document.getElementById('siteUrl').href;
+            navigator.clipboard.writeText(url).then(() => {
+                // feedback visual
+                const icon = btn.querySelector('i');
+                icon.classList.remove('bi-clipboard');
+                icon.classList.add('bi-check-lg', 'text-success');
+                setTimeout(() => {
+                    icon.classList.remove('bi-check-lg', 'text-success');
+                    icon.classList.add('bi-clipboard');
+                }, 2000);
+            });
+        }
+    </script>
+}

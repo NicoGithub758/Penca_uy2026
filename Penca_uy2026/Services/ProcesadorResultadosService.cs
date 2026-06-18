@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Penca_uy2026.Models;
 
 namespace Penca_uy2026.Services
 {
@@ -15,17 +16,20 @@ namespace Penca_uy2026.Services
         private readonly IHubContext<PencaHub> _hubContext;
         private readonly FirebaseNotificationService _firebaseService;
         private readonly ILogger<ProcesadorResultadosService> _logger;
+        private readonly ParametrosSistemaService _parametrosSistemaService;
 
         public ProcesadorResultadosService(
             MyDbContext context,
             IHubContext<PencaHub> hubContext,
             FirebaseNotificationService firebaseService,
-            ILogger<ProcesadorResultadosService> logger)
+            ILogger<ProcesadorResultadosService> logger,
+            ParametrosSistemaService parametrosSistemaService)
         {
             _context = context;
             _hubContext = hubContext;
             _firebaseService = firebaseService;
             _logger = logger;
+            _parametrosSistemaService = parametrosSistemaService;
         }
 
         public async Task ProcesarPartidoAsync(int partidoId)
@@ -46,19 +50,23 @@ namespace Penca_uy2026.Services
                 .Where(p => p.PartidoId == partidoId)
                 .ToListAsync();
 
-            if (!predicciones.Any()) return;
+            if (!predicciones.Any())
+                return;
 
-            // 3. PASO IDEMPOTENTE 1: Calcular/Sobreescribir Puntos Obtenidos
+            var parametros = await _parametrosSistemaService.ObtenerAsync();
+
             foreach (var prediccion in predicciones)
             {
-                int puntos = CalcularPuntos(
+                var puntos = CalcularPuntos(
                     golesLocalReal: partido.GolesLocal ?? 0,
                     golesVisitanteReal: partido.GolesVisitante ?? 0,
                     golesLocalPredichos: prediccion.GolesEquipoLocal,
-                    golesVisitantePredichos: prediccion.GolesEquipoVisitante
+                    golesVisitantePredichos: prediccion.GolesEquipoVisitante,
+                    parametros: parametros
                 );
                 prediccion.PuntosObtenidos = puntos;
             }
+
             await _context.SaveChangesAsync();
 
             // 4. CALCULAR POSICIONES ANTES de actualizar PuntajeTotal
@@ -78,8 +86,14 @@ namespace Penca_uy2026.Services
                     .SumAsync(p => p.PuntosObtenidos);
                 participacion.PuntajeTotal = sumaTotal;
             }
+
             await _context.SaveChangesAsync();
 
+            var instanciasIds = participacionesAfectadas
+                .Select(p => p.PencaInstanciaId)
+                .Distinct();
+
+            foreach (var instanciaId in instanciasIds)
             // 6. CALCULAR POSICIONES DESPUES del recalculo
             var rankingDespues = await CalcularRankingPorInstanciaAsync(instanciasAfectadas);
 
@@ -235,25 +249,31 @@ namespace Penca_uy2026.Services
         {
             if (golesLocalReal == golesLocalPredichos && golesVisitanteReal == golesVisitantePredichos)
             {
-                return 10;
+                return parametros.PuntosResultadoExacto;
             }
 
-            bool ganoLocalReal = golesLocalReal > golesVisitanteReal;
-            bool ganoVisitanteReal = golesVisitanteReal > golesLocalReal;
-            bool empateReal = golesLocalReal == golesVisitanteReal;
+            var diferenciaReal = golesLocalReal - golesVisitanteReal;
+            var diferenciaPredicha = golesLocalPredichos - golesVisitantePredichos;
 
-            bool ganoLocalPredicho = golesLocalPredichos > golesVisitantePredichos;
-            bool ganoVisitantePredicho = golesVisitantePredichos > golesLocalPredichos;
-            bool empatePredicho = golesLocalPredichos == golesVisitantePredichos;
+            var empateReal = diferenciaReal == 0;
+            var empatePredicho = diferenciaPredicha == 0;
 
-            if ((ganoLocalReal && ganoLocalPredicho) ||
-                (ganoVisitanteReal && ganoVisitantePredicho) ||
-                (empateReal && empatePredicho))
+            var acertoGanadorOEmpate =
+                (diferenciaReal > 0 && diferenciaPredicha > 0) ||
+                (diferenciaReal < 0 && diferenciaPredicha < 0) ||
+                (empateReal && empatePredicho);
+
+            if (!acertoGanadorOEmpate)
             {
-                return 5;
+                return 0;
             }
 
-            return 0;
+            if (!empateReal && diferenciaReal == diferenciaPredicha)
+            {
+                return parametros.PuntosGanadorDiferenciaGoles;
+            }
+
+            return parametros.PuntosGanadorEmpate;
         }
     }
 }

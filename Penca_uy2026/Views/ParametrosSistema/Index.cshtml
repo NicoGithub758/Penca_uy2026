@@ -1,0 +1,177 @@
+@model Penca_uy2026.Models.ParametrosSistema
+
+@{
+    ViewData["Title"] = "Gestion de parametros del sistema";
+}
+
+<div class="d-flex flex-column gap-4">
+    <section class="py-4">
+        <div>
+            <h1 class="h2 fw-bold mb-2">Gestion de parametros del sistema</h1>
+            <p class="text-muted mb-0">Configura los parametros generales de la plataforma.</p>
+        </div>
+    </section>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success mb-0">
+            @TempData["Success"]
+        </div>
+    }
+
+    <form asp-action="Index" method="post" class="card shadow-sm">
+        @Html.AntiForgeryToken()
+
+        <div class="card-body">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="row g-3">
+                <div class="col-12">
+                    <h2 class="h5 fw-semibold mb-0">Actualizacion de resultados</h2>
+                </div>
+
+                <div class="col-12 col-lg-6">
+                    <label asp-for="TimeZoneId" class="form-label">Huso horario del sistema</label>
+                    <select asp-for="TimeZoneId" asp-items="ViewBag.TimeZones" class="form-select"></select>
+                    <span asp-validation-for="TimeZoneId" class="text-danger"></span>
+                    <div class="form-text">
+                        Este valor se envia a API-Football en el parametro timezone.
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-6">
+                    <label asp-for="MinutosDespuesInicioParaConsultarResultado" class="form-label">Minutos despues del inicio para consultar resultado</label>
+                    <input asp-for="MinutosDespuesInicioParaConsultarResultado" class="form-control" type="number" min="1" max="300" />
+                    <span asp-validation-for="MinutosDespuesInicioParaConsultarResultado" class="text-danger"></span>
+                </div>
+
+                <div class="col-12 col-lg-6">
+                    <label asp-for="IntervaloMinutosConsultaResultados" class="form-label">Intervalo de consulta de resultados</label>
+                    <input asp-for="IntervaloMinutosConsultaResultados" class="form-control" type="number" min="1" max="1440" />
+                    <span asp-validation-for="IntervaloMinutosConsultaResultados" class="text-danger"></span>
+                </div>
+
+                <div class="col-12 col-lg-6 d-flex align-items-end">
+                    <div class="form-check form-switch">
+                        <input asp-for="ActualizacionAutomaticaResultadosActiva" class="form-check-input" type="checkbox" role="switch" />
+                        <label asp-for="ActualizacionAutomaticaResultadosActiva" class="form-check-label">
+                            Actualizacion automatica de resultados activa
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <hr class="my-2" />
+                    <h2 class="h5 fw-semibold mb-0">Puntajes de predicciones</h2>
+                </div>
+
+                <div class="col-12 col-lg-4">
+                    <label asp-for="PuntosResultadoExacto" class="form-label">Resultado exacto</label>
+                    <input asp-for="PuntosResultadoExacto" class="form-control" type="number" min="0" max="100" />
+                    <span asp-validation-for="PuntosResultadoExacto" class="text-danger"></span>
+                </div>
+
+                <div class="col-12 col-lg-4">
+                    <label asp-for="PuntosGanadorDiferenciaGoles" class="form-label">Ganador + diferencia de goles</label>
+                    <input asp-for="PuntosGanadorDiferenciaGoles" class="form-control" type="number" min="0" max="100" />
+                    <span asp-validation-for="PuntosGanadorDiferenciaGoles" class="text-danger"></span>
+                </div>
+
+                <div class="col-12 col-lg-4">
+                    <label asp-for="PuntosGanadorEmpate" class="form-label">Ganador / empate</label>
+                    <input asp-for="PuntosGanadorEmpate" class="form-control" type="number" min="0" max="100" />
+                    <span asp-validation-for="PuntosGanadorEmpate" class="text-danger"></span>
+                </div>
+
+                <div class="col-12">
+                    <hr class="my-2" />
+                    <h2 class="h5 fw-semibold mb-0">Comision de pencas</h2>
+                </div>
+
+                <div class="col-12 col-lg-6">
+                    <label asp-for="PorcentajeComisionPenca" class="form-label">Porcentaje de comision por penca</label>
+                    <input asp-for="PorcentajeComisionPenca" class="form-control" type="number" min="0" max="100" step="0.1" />
+                    <span asp-validation-for="PorcentajeComisionPenca" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer bg-white d-flex justify-content-end gap-2">
+            <a class="btn btn-outline-secondary" asp-controller="AdminAuth" asp-action="Index">Cancelar</a>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> Guardar parametros
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        (() => {
+            const exactoInput = document.getElementById("PuntosResultadoExacto");
+            const diferenciaInput = document.getElementById("PuntosGanadorDiferenciaGoles");
+            const ganadorInput = document.getElementById("PuntosGanadorEmpate");
+            const form = exactoInput?.closest("form");
+
+            const diferenciaError = document.querySelector("[data-valmsg-for='PuntosGanadorDiferenciaGoles']");
+            const ganadorError = document.querySelector("[data-valmsg-for='PuntosGanadorEmpate']");
+
+            if (!exactoInput || !diferenciaInput || !ganadorInput || !form || !diferenciaError || !ganadorError) {
+                return;
+            }
+
+            const setError = (input, errorElement, message) => {
+                errorElement.textContent = message;
+                input.classList.toggle("input-validation-error", Boolean(message));
+            };
+
+            const validarPuntajes = () => {
+                const exacto = Number(exactoInput.value);
+                const diferencia = Number(diferenciaInput.value);
+                const ganador = Number(ganadorInput.value);
+
+                let valido = true;
+
+                if (diferencia > exacto) {
+                    setError(
+                        diferenciaInput,
+                        diferenciaError,
+                        "El puntaje por ganador y diferencia de goles no puede ser mayor que el puntaje por resultado exacto."
+                    );
+                    valido = false;
+                } else {
+                    setError(diferenciaInput, diferenciaError, "");
+                }
+
+                if (ganador > diferencia) {
+                    setError(
+                        ganadorInput,
+                        ganadorError,
+                        "El puntaje por ganador/empate no puede ser mayor que el puntaje por ganador y diferencia de goles."
+                    );
+                    valido = false;
+                } else {
+                    setError(ganadorInput, ganadorError, "");
+                }
+
+                return valido;
+            };
+
+            [exactoInput, diferenciaInput, ganadorInput].forEach(input => {
+                input.addEventListener("input", validarPuntajes);
+                input.addEventListener("change", validarPuntajes);
+            });
+
+            form.addEventListener("submit", event => {
+                if (!validarPuntajes()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+            });
+
+            validarPuntajes();
+        })();
+    </script>
+}

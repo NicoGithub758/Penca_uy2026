@@ -1,7 +1,7 @@
-﻿@model Penca_uy2026.Models.PencaInstancia
+@model Penca_uy2026.Models.PencaInstancia
 
 @{
-    ViewData["Title"] = "Editar Comisión";
+    ViewData["Title"] = "Editar Penca";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
@@ -11,22 +11,23 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-white py-3">
                     <h4 class="mb-0 text-primary">
-                        <i class="bi bi-pencil-square"></i> Editar Comisión
+                        <i class="bi bi-pencil-square"></i> Editar Penca
                     </h4>
                 </div>
                 <div class="card-body p-4">
-                    <h5 class="card-title mb-4">@Model.Penca.Nombre</h5>
-                    
+                    <h5 class="card-title mb-2">@Model.Penca.Nombre</h5>
+                    <p class="text-muted mb-4">Comision aplicada: @Model.PorcentajeComision%</p>
+
                     <form asp-action="EditarInstancia" method="post">
                         <input type="hidden" asp-for="Id" />
-                        
+
                         <div class="mb-4">
-                            <label asp-for="PorcentajeComision" class="form-label fw-bold">Porcentaje de Comisión (%)</label>
+                            <label asp-for="Costo" class="form-label fw-bold">Costo de Entrada</label>
                             <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-percent"></i></span>
-                                <input asp-for="PorcentajeComision" type="number" step="0.1" class="form-control form-control-lg" placeholder="Ej: 10.5" />
+                                <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                                <input asp-for="Costo" type="number" step="0.01" class="form-control form-control-lg" placeholder="Ej: 500" />
                             </div>
-                            <div class="form-text">Define el porcentaje que se quedará el sitio por esta penca.</div>
+                            <div class="form-text">Define el costo para participar en esta penca.</div>
                         </div>
 
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">

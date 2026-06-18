@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Penca_uy2026.Models.Sitio>
+@model IEnumerable<Penca_uy2026.Models.Sitio>
 
 @{
     ViewData["Title"] = "Sitios Disponibles";
@@ -60,7 +60,7 @@
                                     <span class="fw-bold text-dark fs-6">@sitio.Nombre</span>
                                 </td>
                                 <td>
-                                    <a href="https://@sitio.Url" target="_blank" class="text-decoration-none text-primary fw-medium d-inline-flex align-items-center gap-1 hover-link">
+                                    <a href="@sitio.Url" target="_blank" class="text-decoration-none text-primary fw-medium d-inline-flex align-items-center gap-1 hover-link">
                                         @sitio.Url <i class="bi bi-box-arrow-up-right fs-7"></i>
                                     </a>
                                 </td>

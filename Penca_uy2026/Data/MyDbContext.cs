@@ -25,6 +25,7 @@ namespace Penca_uy2026.Data
         public DbSet<Equipo> Equipos { get; set; }
         public DbSet<Partido> Partidos { get; set; }
         public DbSet<Sitio> Sitios { get; set; } // Sitio suele ser global para poder buscarlo
+        public DbSet<ParametrosSistema> ParametrosSistema { get; set; }
 
         // --- Tablas Multi-tenant (Aisladas por Sitio) ---
         public DbSet<PencaInstancia> PencaInstancias { get; set; }
@@ -85,6 +86,20 @@ namespace Penca_uy2026.Data
                 new Deporte { Id = 3, Nombre = "Tenis" },
                 new Deporte { Id = 4, Nombre = "Vóleibol" }
             );
+
+            modelBuilder.Entity<ParametrosSistema>().HasData(new ParametrosSistema
+            {
+                Id = 1,
+                TimeZoneId = "America/Montevideo",
+                ActualizacionAutomaticaResultadosActiva = true,
+                MinutosDespuesInicioParaConsultarResultado = 110,
+                IntervaloMinutosConsultaResultados = 10,
+                PuntosResultadoExacto = 8,
+                PuntosGanadorDiferenciaGoles = 5,
+                PuntosGanadorEmpate = 3,
+                PorcentajeComisionPenca = 5,
+                FechaActualizacion = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            });
         }
 
         // Método auxiliar para aplicar el filtro de forma segura

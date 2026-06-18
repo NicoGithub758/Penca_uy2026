@@ -28,9 +28,9 @@ ui-debug.log
 # ¡IMPORTANTE! Credenciales de Firebase (Service Accounts)
 # NUNCA subas tus llaves JSON de Firebase
 *.json
-!appsettings.json
-!appsettings.Development.json
 !bundleconfig.json
+!appsettings.json
+!appsettings.Development.example.json
 # Si tus llaves tienen nombres específicos, agrégalas aquí:
 firebase-adminsdk.json
 credentials.json
