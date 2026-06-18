@@ -326,7 +326,7 @@ namespace Penca_uy2026.Controllers
                         DineroRecaudado = s.PencaInstancias
                             .SelectMany(pi => pi.Participaciones)
                             .SelectMany(part => part.Pagos)
-                            .Where(p => p.Estado == "Completado")
+                            .Where(p => p.Estado == "COMPLETED")
                             .Sum(p => (decimal?)p.Monto) ?? 0m,
                         CantidadAdmins = s.Usuarios.Count(u => u.Rol == RolUsuarioSitio.AdminSitio),
                         CantidadUsuarios = s.Usuarios.Count(u => u.Rol == RolUsuarioSitio.Jugador)
@@ -335,7 +335,7 @@ namespace Penca_uy2026.Controllers
 
                 IngresosMensuales = await _context.Pagos
                     .IgnoreQueryFilters()
-                    .Where(p => p.Estado == "Completado")
+                    .Where(p => p.Estado == "COMPLETED")
                     .Select(p => new {
                         NombreSitio = p.Participacion.PencaInstancia.Sitio.Nombre,
                         Mes = p.FechaPago.Month,
