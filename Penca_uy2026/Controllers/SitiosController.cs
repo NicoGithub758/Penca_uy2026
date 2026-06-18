@@ -61,6 +61,28 @@ namespace Penca_uy2026.Controllers
 
             return Ok(sitio);
         }
+
+        /// <summary>
+        /// Obtiene la lista de sitios públicos y activos para la Landing Page.
+        /// </summary>
+        [HttpGet("api/sitios/publicos")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetSitiosPublicos()
+        {
+            var sitios = await _context.Sitios
+                .Where(s => s.Activo && (s.TipoRegistro == TipoRegistro.Abierta || s.TipoRegistro == TipoRegistro.AbiertaConAutorizacion))
+                .Select(s => new { 
+                    name = s.Nombre, 
+                    slug = s.Slug, 
+                    active = s.Activo,
+                    tipoRegistro = s.TipoRegistro,
+                    logoUrl = s.LogoUrl,
+                    colorPrincipal = s.ColorPrincipal
+                })
+                .ToListAsync();
+
+            return Ok(sitios);
+        }
         
 
         //Asocia una penca creada en el backoffice a un sitio, creando nueva penca instancia.
