@@ -301,18 +301,84 @@ namespace Penca_uy2026.Controllers
             var model = new EstadisticasViewModel
             {
                 TotalPencas = await _context.Pencas.IgnoreQueryFilters().CountAsync(),
-                TotalUsuarios = await _context.UsuariosSitio.IgnoreQueryFilters().CountAsync(),
-                DineroTotalIngresado = await _context.Pagos.IgnoreQueryFilters().SumAsync(p => (decimal?)p.Monto) ?? 0m,
-                DeporteMasPopular = await _context.Pencas.IgnoreQueryFilters().GroupBy(p => p.Deporte.Nombre).OrderByDescending(g => g.Count()).Select(g => g.Key).FirstOrDefaultAsync() ?? "Sin datos",
-                EstadisticasPorSitio = await _context.Sitios.IgnoreQueryFilters().Select(s => new EstadisticaSitioDTO
-                {
-                    NombreSitio = s.Nombre,
-                    CantidadPencas = s.PencaInstancias.Count,
-                    DineroRecaudado = s.PencaInstancias.SelectMany(pi => pi.Participaciones).SelectMany(part => part.Pagos).Sum(p => (decimal?)p.Monto) ?? 0m,
-                    CantidadAdmins = s.Usuarios.Count(u => u.Rol == RolUsuarioSitio.AdminSitio),
-                    CantidadUsuarios = s.Usuarios.Count(u => u.Rol == RolUsuarioSitio.Jugador)
-                }).ToListAsync()
+
+                TotalUsuarios = await _context.UsuariosSitio.IgnoreQueryFilters()
+                    .CountAsync(u => u.Rol == RolUsuarioSitio.Jugador),
+
+                TotalAdmins = await _context.UsuariosSitio.IgnoreQueryFilters()
+                    .CountAsync(u => u.Rol == RolUsuarioSitio.AdminSitio),
+
+                DineroTotalIngresado = await _context.Pagos.IgnoreQueryFilters()
+                    .Where(p => p.Estado == "COMPLETED")
+                    .SumAsync(p => (decimal?)p.Monto) ?? 0m,
+
+                DeporteMasPopular = await _context.Pencas.IgnoreQueryFilters()
+                    .GroupBy(p => p.Deporte.Nombre)
+                    .OrderByDescending(g => g.Count())
+                    .Select(g => g.Key)
+                    .FirstOrDefaultAsync() ?? "Sin datos",
+
+                EstadisticasPorSitio = await _context.Sitios.IgnoreQueryFilters()
+                    .Select(s => new EstadisticaSitioDTO
+                    {
+                        NombreSitio = s.Nombre,
+                        CantidadPencas = s.PencaInstancias.Count,
+                        DineroRecaudado = s.PencaInstancias
+                            .SelectMany(pi => pi.Participaciones)
+                            .SelectMany(part => part.Pagos)
+                            .Where(p => p.Estado == "Completado")
+                            .Sum(p => (decimal?)p.Monto) ?? 0m,
+                        CantidadAdmins = s.Usuarios.Count(u => u.Rol == RolUsuarioSitio.AdminSitio),
+                        CantidadUsuarios = s.Usuarios.Count(u => u.Rol == RolUsuarioSitio.Jugador)
+                    })
+                    .ToListAsync(),
+
+                IngresosMensuales = await _context.Pagos
+                    .IgnoreQueryFilters()
+                    .Where(p => p.Estado == "Completado")
+                    .Select(p => new {
+                        NombreSitio = p.Participacion.PencaInstancia.Sitio.Nombre,
+                        Mes = p.FechaPago.Month,
+                        Anio = p.FechaPago.Year,
+                        Monto = p.Monto
+                    })
+                    .GroupBy(x => new { x.NombreSitio, x.Mes, x.Anio })
+                    .Select(g => new IngresoMensualDTO
+                    {
+                        NombreSitio = g.Key.NombreSitio,
+                        Mes = g.Key.Mes,
+                        Anio = g.Key.Anio,
+                        Monto = g.Sum(x => x.Monto)
+                    })
+                    .OrderByDescending(x => x.Anio).ThenByDescending(x => x.Mes)
+                    .ToListAsync(),
+
+                EvolucionUsuarios = await _context.UsuariosSitio
+                    .IgnoreQueryFilters()
+                    .GroupBy(u => new { Sitio = u.Sitio.Nombre, Anio = u.FechaRegistro.Year, Mes = u.FechaRegistro.Month })
+                    .Select(g => new EvolucionUsuarioDTO
+                    {
+                        NombreSitio = g.Key.Sitio,
+                        Anio = g.Key.Anio,
+                        Mes = g.Key.Mes,
+                        CantidadUsuarios = g.Count()
+                    })
+                    .OrderByDescending(x => x.Anio).ThenByDescending(x => x.Mes)
+                    .ToListAsync(),
+
+                PencasMasPopulares = await _context.Pencas
+                    .IgnoreQueryFilters()
+                    .Select(p => new PencaPopularDTO
+                    {
+                        NombrePenca = p.Nombre,
+                        Deporte = p.Deporte.Nombre,
+                        CantidadInstancias = p.Instancias.Count
+                    })
+                    .OrderByDescending(p => p.CantidadInstancias)
+                    .Take(10)
+                    .ToListAsync()
             };
+
             return View(model);
         }
     }
