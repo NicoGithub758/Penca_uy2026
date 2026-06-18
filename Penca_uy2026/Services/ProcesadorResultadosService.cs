@@ -2,10 +2,6 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Penca_uy2026.Data;
 using Penca_uy2026.Hubs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Penca_uy2026.Models;
 
 namespace Penca_uy2026.Services
@@ -15,26 +11,26 @@ namespace Penca_uy2026.Services
         private readonly MyDbContext _context;
         private readonly IHubContext<PencaHub> _hubContext;
         private readonly FirebaseNotificationService _firebaseService;
-        private readonly ILogger<ProcesadorResultadosService> _logger;
         private readonly ParametrosSistemaService _parametrosSistemaService;
+        private readonly ILogger<ProcesadorResultadosService> _logger;
 
         public ProcesadorResultadosService(
             MyDbContext context,
             IHubContext<PencaHub> hubContext,
             FirebaseNotificationService firebaseService,
-            ILogger<ProcesadorResultadosService> logger,
-            ParametrosSistemaService parametrosSistemaService)
+            ParametrosSistemaService parametrosSistemaService,
+            ILogger<ProcesadorResultadosService> logger)
         {
             _context = context;
             _hubContext = hubContext;
             _firebaseService = firebaseService;
-            _logger = logger;
             _parametrosSistemaService = parametrosSistemaService;
+            _logger = logger;
         }
 
         public async Task ProcesarPartidoAsync(int partidoId)
         {
-            // 1. Obtener el partido ya actualizado
+            // 1. Obtener el partido (con equipos para el mensaje de push)
             var partido = await _context.Partidos
                 .IgnoreQueryFilters()
                 .Include(p => p.Local)
@@ -50,11 +46,12 @@ namespace Penca_uy2026.Services
                 .Where(p => p.PartidoId == partidoId)
                 .ToListAsync();
 
-            if (!predicciones.Any())
-                return;
+            if (!predicciones.Any()) return;
 
+            // 3. Obtener parametros configurables de puntuacion
             var parametros = await _parametrosSistemaService.ObtenerAsync();
 
+            // 4. PASO IDEMPOTENTE 1: Calcular/Sobreescribir Puntos Obtenidos
             foreach (var prediccion in predicciones)
             {
                 var puntos = CalcularPuntos(
@@ -66,18 +63,16 @@ namespace Penca_uy2026.Services
                 );
                 prediccion.PuntosObtenidos = puntos;
             }
-
             await _context.SaveChangesAsync();
 
-            // 4. CALCULAR POSICIONES ANTES de actualizar PuntajeTotal
-            // Tomamos foto de la tabla por cada PencaInstancia afectada, ANTES del recalculo
+            // 5. CALCULAR POSICIONES ANTES de actualizar PuntajeTotal
+            // Tomamos foto del ranking por cada PencaInstancia afectada
             var participacionesAfectadas = predicciones.Select(p => p.Participacion).Distinct().ToList();
             var instanciasAfectadas = participacionesAfectadas.Select(p => p.PencaInstanciaId).Distinct().ToList();
 
-            // Para cada instancia, sacamos el ranking ANTES del recalculo
             var rankingAntes = await CalcularRankingPorInstanciaAsync(instanciasAfectadas);
 
-            // 5. PASO IDEMPOTENTE 2: Recalcular PuntajeTotal
+            // 6. PASO IDEMPOTENTE 2: Recalcular PuntajeTotal de cada participacion
             foreach (var participacion in participacionesAfectadas)
             {
                 var sumaTotal = await _context.Predicciones
@@ -86,33 +81,27 @@ namespace Penca_uy2026.Services
                     .SumAsync(p => p.PuntosObtenidos);
                 participacion.PuntajeTotal = sumaTotal;
             }
-
             await _context.SaveChangesAsync();
 
-            var instanciasIds = participacionesAfectadas
-                .Select(p => p.PencaInstanciaId)
-                .Distinct();
-
-            foreach (var instanciaId in instanciasIds)
-            // 6. CALCULAR POSICIONES DESPUES del recalculo
+            // 7. CALCULAR POSICIONES DESPUES del recalculo
             var rankingDespues = await CalcularRankingPorInstanciaAsync(instanciasAfectadas);
 
-            // 7. NOTIFICAR VÍA SIGNALR
+            // 8. NOTIFICAR VÍA SIGNALR (para el web React en tiempo real)
             foreach (var instanciaId in instanciasAfectadas)
             {
                 await _hubContext.Clients.Group($"penca-{instanciaId}").SendAsync("PencaUpdated");
             }
 
-            // 8. NOTIFICAR PUSH: resultado del partido
+            // 9. NOTIFICAR PUSH: resultado del partido a todos los predictores
             await EnviarNotificacionResultadoAsync(partido, participacionesAfectadas);
 
-            // 9. NOTIFICAR PUSH: cambios de ranking (a los que bajaron de posicion)
+            // 10. NOTIFICAR PUSH: cambios de ranking (a los que BAJARON de posicion)
             await EnviarNotificacionRankingAsync(rankingAntes, rankingDespues);
         }
 
         /// <summary>
         /// Calcula el ranking actual de cada PencaInstancia.
-        /// Devuelve diccionario: { instanciaId: [ (usuarioSitioId, posicion), ... ] }
+        /// Devuelve diccionario: { instanciaId: { usuarioSitioId: posicion } }
         /// </summary>
         private async Task<Dictionary<int, Dictionary<int, int>>> CalcularRankingPorInstanciaAsync(List<int> instanciaIds)
         {
@@ -245,8 +234,23 @@ namespace Penca_uy2026.Services
             }
         }
 
-        private int CalcularPuntos(int golesLocalReal, int golesVisitanteReal, int golesLocalPredichos, int golesVisitantePredichos)
+        /// <summary>
+        /// Calcula los puntos de una prediccion segun los parametros configurables del sistema.
+        /// 
+        /// Esquema:
+        ///  - Resultado exacto (ej: predijo 2-1, fue 2-1)           → PuntosResultadoExacto
+        ///  - Acerto ganador + diferencia exacta (ej: predijo 2-0, fue 3-1)  → PuntosGanadorDiferenciaGoles
+        ///  - Acerto solo el ganador o empate (sin diferencia exacta)        → PuntosGanadorEmpate
+        ///  - No acerto nada                                                 → 0
+        /// </summary>
+        private int CalcularPuntos(
+            int golesLocalReal,
+            int golesVisitanteReal,
+            int golesLocalPredichos,
+            int golesVisitantePredichos,
+            ParametrosSistema parametros)
         {
+            // Resultado exacto: acertó exactamente los goles
             if (golesLocalReal == golesLocalPredichos && golesVisitanteReal == golesVisitantePredichos)
             {
                 return parametros.PuntosResultadoExacto;
@@ -258,6 +262,7 @@ namespace Penca_uy2026.Services
             var empateReal = diferenciaReal == 0;
             var empatePredicho = diferenciaPredicha == 0;
 
+            // ¿Acertó al menos quién ganaba (o el empate)?
             var acertoGanadorOEmpate =
                 (diferenciaReal > 0 && diferenciaPredicha > 0) ||
                 (diferenciaReal < 0 && diferenciaPredicha < 0) ||
@@ -268,11 +273,13 @@ namespace Penca_uy2026.Services
                 return 0;
             }
 
+            // Si acertó al ganador Y la diferencia exacta, puntaje intermedio
             if (!empateReal && diferenciaReal == diferenciaPredicha)
             {
                 return parametros.PuntosGanadorDiferenciaGoles;
             }
 
+            // Solo acertó al ganador o empate, sin diferencia exacta
             return parametros.PuntosGanadorEmpate;
         }
     }
