@@ -369,4 +369,106 @@ public class AdminSitioAuthController : Controller
         TempData["Success"] = "Configuración del sitio actualizada correctamente.";
         return RedirectToAction("Configuracion");
     }
+    [HttpGet("Estadisticas")]
+    public async Task<IActionResult> Estadisticas()
+    {
+        if (!Request.Cookies.TryGetValue("SitioId_Admin", out string? sitioIdStr) || !int.TryParse(sitioIdStr, out int sitioId))
+            return RedirectToAction("Login", "AdminSitioAuth");
+
+        var model = new EstadisticasAdminSitioViewModel
+        {
+            // ── KPIs ─────────────────────────────────────────────────────
+
+            TotalUsuarios = await _context.UsuariosSitio
+                .CountAsync(u => u.SitioId == sitioId
+                              && u.Rol == RolUsuarioSitio.Jugador),
+
+            DineroRecaudado = await _context.Pagos
+                .Where(p => p.SitioId == sitioId && p.Estado == "COMPLETED")
+                .SumAsync(p => (decimal?)p.Monto) ?? 0m,
+
+            TotalPencasActivas = await _context.PencaInstancias
+                .CountAsync(pi => pi.SitioId == sitioId),
+
+            // ── Gráfico 1 — Ingresos mensuales ───────────────────────────
+
+            IngresosMensuales = await _context.Pagos
+                .Where(p => p.SitioId == sitioId && p.Estado == "COMPLETED")
+                .GroupBy(p => new { p.FechaPago.Year, p.FechaPago.Month })
+                .Select(g => new IngresoMensualSitioDTO
+                {
+                    Anio = g.Key.Year,
+                    Mes = g.Key.Month,
+                    Monto = g.Sum(x => x.Monto)
+                })
+                .OrderBy(x => x.Anio).ThenBy(x => x.Mes)
+                .ToListAsync(),
+
+            // ── Gráfico 2 — Pencas con más jugadores ─────────────────────
+            // Nombre viene de Penca.Nombre a través de PencaInstancia.Penca
+
+            PencasPorJugadores = await _context.Participaciones
+                .Where(p => p.PencaInstancia.SitioId == sitioId)
+                .GroupBy(p => p.PencaInstancia.Penca.Nombre)
+                .Select(g => new PencaJugadoresDTO
+                {
+                    NombrePenca = g.Key,
+                    CantidadJugadores = g.Count()
+                })
+                .OrderByDescending(x => x.CantidadJugadores)
+                .Take(10)
+                .ToListAsync(),
+
+            // ── Gráfico 3 — Pencas que más recaudaron ────────────────────
+            // MontoRecaudado = cantidad de participantes × Costo de la PencaInstancia
+
+            PencasPorRecaudacion = await _context.Participaciones
+                .Where(p => p.PencaInstancia.SitioId == sitioId)
+                .GroupBy(p => new
+                {
+                    Nombre = p.PencaInstancia.Penca.Nombre,
+                    Costo = p.PencaInstancia.Costo
+                })
+                .Select(g => new PencaRecaudacionDTO
+                {
+                    NombrePenca = g.Key.Nombre,
+                    MontoRecaudado = g.Count() * g.Key.Costo
+                })
+                .OrderByDescending(x => x.MontoRecaudado)
+                .Take(10)
+                .ToListAsync(),
+
+            // ── Gráfico 4 — Usuarios con / sin cuenta mobile ─────────────
+            // Se considera "con mobile" si tiene FcmToken registrado
+
+            UsuariosConMobile = await _context.UsuariosSitio
+                .CountAsync(u => u.SitioId == sitioId
+                              && u.Rol == RolUsuarioSitio.Jugador
+                              && u.FcmToken != null),
+
+            UsuariosSinMobile = await _context.UsuariosSitio
+                .CountAsync(u => u.SitioId == sitioId
+                              && u.Rol == RolUsuarioSitio.Jugador
+                              && u.FcmToken == null),
+
+            // ── Gráfico 5 — Pencas con más predicciones ──────────────────
+            // Prediccion → Participacion → PencaInstancia → Penca.Nombre
+
+            PencasPorPredicciones = await _context.Predicciones
+                .Where(p => p.Participacion.PencaInstancia.SitioId == sitioId)
+                .GroupBy(p => p.Participacion.PencaInstancia.Penca.Nombre)
+                .Select(g => new PencaPrediccionesDTO
+                {
+                    NombrePenca = g.Key,
+                    CantidadPredicciones = g.Count()
+                })
+                .OrderByDescending(x => x.CantidadPredicciones)
+                .Take(10)
+                .ToListAsync(),
+        };
+
+        return View(model);
+    }
+
+
 }
