@@ -9,12 +9,14 @@
     }
 
     /// <summary>
-    /// Response con el ID de la orden de PayPal para aprobar en el frontend.
+    /// Response con el ID de la orden de PayPal y la URL de aprobación.
+    /// El mobile usa ApprovalUrl para abrir el WebView.
     /// </summary>
     public class CrearPagoResponse
     {
         public string OrderId { get; set; } = string.Empty;
         public int PagoId { get; set; }
+        public string ApprovalUrl { get; set; } = string.Empty;
     }
 
     /// <summary>

@@ -1,6 +1,7 @@
 ﻿using PayPalCheckoutSdk.Core;
 using PayPalCheckoutSdk.Orders;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Penca_uy2026.Services
 {
@@ -35,8 +36,9 @@ namespace Penca_uy2026.Services
 
         /// <summary>
         /// Crea una orden de pago en PayPal.
+        /// Devuelve el OrderId y la URL de aprobación que el usuario debe visitar.
         /// </summary>
-        public async Task<string> CrearOrdenAsync(decimal monto, string currency = "USD")
+        public async Task<(string OrderId, string ApprovalUrl)> CrearOrdenAsync(decimal monto, string currency = "USD")
         {
             var order = new OrderRequest
             {
@@ -55,8 +57,10 @@ namespace Penca_uy2026.Services
                 },
                 ApplicationContext = new ApplicationContext
                 {
-                    ReturnUrl = "https://localhost:5173",
-                    CancelUrl = "https://localhost:5173"
+                    // Estas URLs son las que PayPal usa para redirigir despues del pago.
+                    // El mobile detecta estas URLs en el WebView y maneja el resultado.
+                    ReturnUrl = "https://pencauy.com/pago-exitoso",
+                    CancelUrl = "https://pencauy.com/pago-cancelado"
                 }
             };
 
@@ -67,7 +71,11 @@ namespace Penca_uy2026.Services
             var response = await _client.Execute(request);
             var result = response.Result<Order>();
 
-            return result.Id;
+            // Buscar la URL de aprobacion en los links que devuelve PayPal
+            var approvalLink = result.Links?.FirstOrDefault(l => l.Rel == "approve");
+            var approvalUrl = approvalLink?.Href ?? "";
+
+            return (result.Id, approvalUrl);
         }
 
         /// <summary>
