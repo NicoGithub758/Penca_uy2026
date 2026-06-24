@@ -6,16 +6,18 @@
 
 <style>
     :root {
-        --brand:       #e05c2a;
+        --brand: #e05c2a;
         --brand-light: #fff5f0;
-        --border:      #e5e7eb;
-        --text-main:   #111827;
-        --text-muted:  #6b7280;
-        --bg-page:     #f9fafb;
-        --radius:      12px;
+        --border: #e5e7eb;
+        --text-main: #111827;
+        --text-muted: #6b7280;
+        --bg-page: #f9fafb;
+        --radius: 12px;
     }
 
-    body { background: var(--bg-page); }
+    body {
+        background: var(--bg-page);
+    }
 
     .s-header {
         background: #e05c2a;
@@ -24,8 +26,18 @@
         border-radius: var(--radius);
         margin-bottom: 1.5rem;
     }
-    .s-header h2 { margin: 0 0 .2rem; font-size: 1.4rem; font-weight: 700; }
-    .s-header p  { margin: 0; opacity: .75; font-size: .875rem; }
+
+        .s-header h2 {
+            margin: 0 0 .2rem;
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .s-header p {
+            margin: 0;
+            opacity: .75;
+            font-size: .875rem;
+        }
 
     .kpi-grid {
         display: grid;
@@ -33,15 +45,34 @@
         gap: 10px;
         margin-bottom: 1.5rem;
     }
+
     .kpi {
         background: #fff;
         border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: 1rem 1.1rem;
     }
-    .kpi-lbl { font-size: .72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: .3rem; }
-    .kpi-val { font-size: 1.5rem; font-weight: 700; color: var(--text-main); line-height: 1; }
-    .kpi-sub { font-size: .75rem; color: var(--text-muted); margin-top: .3rem; }
+
+    .kpi-lbl {
+        font-size: .72rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        margin-bottom: .3rem;
+    }
+
+    .kpi-val {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-main);
+        line-height: 1;
+    }
+
+    .kpi-sub {
+        font-size: .75rem;
+        color: var(--text-muted);
+        margin-top: .3rem;
+    }
 
     .card {
         background: #fff;
@@ -50,6 +81,7 @@
         margin-bottom: 1.25rem;
         overflow: hidden;
     }
+
     .card-hdr {
         padding: .85rem 1.25rem;
         border-bottom: 1px solid var(--border);
@@ -57,38 +89,94 @@
         align-items: center;
         gap: .65rem;
     }
-    .card-hdr .icon {
-        width: 34px; height: 34px;
-        border-radius: 8px;
-        background: var(--brand-light);
-        color: var(--brand);
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1rem; flex-shrink: 0;
-    }
-    .card-hdr h5 { margin: 0; font-size: .9rem; font-weight: 700; color: var(--text-main); }
-    .card-hdr p  { margin: 0; font-size: .78rem; color: var(--text-muted); }
-    .card-body   { padding: 1.25rem; }
 
-    .chart-wrap { position: relative; width: 100%; height: 260px; }
-    .chart-wrap-lg { position: relative; width: 100%; height: 360px; }
+        .card-hdr .icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: var(--brand-light);
+            color: var(--brand);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .card-hdr h5 {
+            margin: 0;
+            font-size: .9rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .card-hdr p {
+            margin: 0;
+            font-size: .78rem;
+            color: var(--text-muted);
+        }
+
+        .card-hdr .actions {
+            margin-left: auto;
+            display: flex;
+            gap: .4rem;
+        }
+
+    .card-body {
+        padding: 1.25rem;
+    }
+
+    .chart-wrap {
+        position: relative;
+        width: 100%;
+        height: 260px;
+    }
 
     .filters {
         padding: .6rem 1.25rem;
         border-bottom: 1px solid var(--border);
-        display: flex; gap: .4rem; flex-wrap: wrap;
+        display: flex;
+        gap: .4rem;
+        flex-wrap: wrap;
         background: var(--brand-light);
     }
+
     .fbtn {
         padding: .25rem .75rem;
         border-radius: 20px;
         border: 1px solid var(--brand);
         background: transparent;
         color: var(--brand);
-        font-size: .74rem; font-weight: 600;
+        font-size: .74rem;
+        font-weight: 600;
         cursor: pointer;
         transition: background .15s, color .15s;
     }
-    .fbtn.active, .fbtn:hover { background: var(--brand); color: #fff; }
+
+        .fbtn.active, .fbtn:hover {
+            background: var(--brand);
+            color: #fff;
+        }
+
+    .export-btn {
+        padding: .25rem .65rem;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--text-muted);
+        font-size: .72rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+        transition: border-color .15s, color .15s;
+    }
+
+        .export-btn:hover {
+            border-color: var(--brand);
+            color: var(--brand);
+        }
 
     .two-col {
         display: grid;
@@ -96,19 +184,62 @@
         gap: 1.25rem;
         margin-bottom: 1.25rem;
     }
-    @@media (max-width: 680px) { .two-col { grid-template-columns: 1fr; } }
 
-    .site-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
-    .site-table th {
-        text-align: left; font-weight: 600; font-size: .72rem;
-        color: var(--text-muted); padding: .55rem .85rem;
-        border-bottom: 1px solid var(--border);
-        text-transform: uppercase; letter-spacing: .04em;
-        background: #fafafa;
+    @@media (max-width: 680px) {
+        .two-col {
+            grid-template-columns: 1fr;
+        }
     }
-    .site-table td { padding: .6rem .85rem; border-bottom: 1px solid var(--border); color: var(--text-main); }
-    .site-table tr:last-child td { border-bottom: none; }
-    .site-table tr:hover td { background: var(--brand-light); }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: .82rem;
+    }
+
+        .data-table th {
+            text-align: left;
+            font-weight: 600;
+            font-size: .72rem;
+            color: var(--text-muted);
+            padding: .55rem .85rem;
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            background: #fafafa;
+        }
+
+        .data-table td {
+            padding: .6rem .85rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tr:hover td {
+            background: var(--brand-light);
+        }
+
+    .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: .7rem;
+        font-weight: 600;
+    }
+
+    .badge-green {
+        background: #def7ec;
+        color: #065f46;
+    }
+
+    .badge-orange {
+        background: var(--brand-light);
+        color: var(--brand);
+    }
 </style>
 
 <div class="container-fluid px-4 py-4">
@@ -138,11 +269,17 @@
             <div class="kpi-lbl">⚽ Deporte popular</div>
             <div class="kpi-val" style="font-size:1.05rem">@Model.DeporteMasPopular</div>
         </div>
+        <div class="kpi">
+            <div class="kpi-lbl">⚡ Activos 48h</div>
+            <div class="kpi-val">@Model.UsuariosActivosUltimas48h.Count</div>
+            <div class="kpi-sub">usuarios con predicciones</div>
+        </div>
     </div>
 
     <!-- Fila: pencas populares + tabla por sitio -->
     <div class="two-col">
 
+        <!-- Tarjeta 1: Pencas más populares -->
         <div class="card">
             <div class="card-hdr">
                 <div class="icon">🏅</div>
@@ -150,13 +287,17 @@
                     <h5>Pencas más populares</h5>
                     <p>Por cantidad de sitios donde están activas</p>
                 </div>
+                <div class="actions">
+                    <button class="export-btn" onclick="exportarGraficoExcel('pencas')">📥 Excel</button>
+                    <button class="export-btn" onclick="exportarGraficoPDF('chartPencas', 'Pencas más populares')">📄 PDF</button>
+                </div>
             </div>
-            <div class="filters" id="filtrosPencas"></div>
             <div class="card-body">
-                <div class="chart-wrap"><canvas id="chartPencas"></canvas></div>
+                <!-- Aquí iría tu gráfico -->
             </div>
         </div>
 
+        <!-- Tarjeta 2: Resumen por sitio -->
         <div class="card">
             <div class="card-hdr">
                 <div class="icon">🏢</div>
@@ -164,9 +305,13 @@
                     <h5>Resumen por sitio</h5>
                     <p>Pencas, usuarios y recaudación</p>
                 </div>
+                <div class="actions">
+                    <button class="export-btn" onclick="exportarExcel('tablaSitios', 'resumen_por_sitio')">📥 Excel</button>
+                    <button class="export-btn" onclick="exportarPDF('tablaSitios', 'Resumen por sitio')">📄 PDF</button>
+                </div>
             </div>
             <div class="card-body" style="padding:0;">
-                <table class="site-table">
+                <table class="data-table" id="tablaSitios">
                     <thead>
                         <tr>
                             <th>Sitio</th>
@@ -192,41 +337,148 @@
 
     </div>
 
-<!-- Gráfico: Recaudación Mensual -->
-<div class="card">
-    <div class="card-hdr">
-        <div class="icon">💵</div>
-        <div>
-            <h5>Recaudación mensual</h5>
-            <p>Ingresos por mes · filtrá por sitio y período</p>
+    <!-- Tabla: pencas con más usuarios -->
+    <div class="card">
+        <div class="card-hdr">
+            <div class="icon">👥</div>
+            <div>
+                <h5>Pencas con más usuarios</h5>
+                <p>Top 10 instancias por participantes</p>
+            </div>
+            <div class="actions">
+                <button class="export-btn" onclick="exportarExcel('tablaPencasUsuarios', 'pencas_usuarios')">📥 Excel</button>
+                <button class="export-btn" onclick="exportarPDF('tablaPencasUsuarios', 'Pencas con más usuarios')">📄 PDF</button>
+            </div>
+        </div>
+        <div class="card-body" style="padding:0;">
+            <table class="data-table" id="tablaPencasUsuarios">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Penca</th>
+                        <th>Sitio</th>
+                        <th>Deporte</th>
+                        <th>Usuarios</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int rank = 1;
+                    }
+                    @foreach (var p in Model.PencasConMasUsuarios)
+                    {
+                        <tr>
+                            <td style="color:var(--text-muted); font-weight:600;">@rank</td>
+                            <td><strong>@p.NombrePenca</strong></td>
+                            <td>@p.NombreSitio</td>
+                            <td><span class="badge badge-orange">@p.Deporte</span></td>
+                            <td><strong>@p.CantidadUsuarios</strong></td>
+                        </tr>
+                        rank++;
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
-    <div class="filters" style="flex-direction:column; gap:.75rem;">
-        <div style="display:flex; gap:.4rem; flex-wrap:wrap;" id="filtrosRec"></div>
-        <div style="display:flex; align-items:center; gap:.75rem; flex-wrap:wrap;">
-            <div style="display:flex; align-items:center; gap:.4rem;">
-                <label style="font-size:.75rem; font-weight:600; color:var(--brand);">Desde</label>
-                <input type="month" id="recDesde" style="font-size:.78rem; padding:.2rem .5rem; border:1px solid var(--brand); border-radius:8px; color:var(--text-main); background:#fff; cursor:pointer;" />
+
+    <!-- Tabla: usuarios activos últimas 48h -->
+    <div class="card">
+        <div class="card-hdr">
+            <div class="icon">⚡</div>
+            <div>
+                <h5>Usuarios activos — últimas 48 h</h5>
+                <p>Predicciones en partidos jugados recientemente</p>
             </div>
-            <div style="display:flex; align-items:center; gap:.4rem;">
-                <label style="font-size:.75rem; font-weight:600; color:var(--brand);">Hasta</label>
-                <input type="month" id="recHasta" style="font-size:.78rem; padding:.2rem .5rem; border:1px solid var(--brand); border-radius:8px; color:var(--text-main); background:#fff; cursor:pointer;" />
+            <div class="actions">
+                <button class="export-btn" onclick="exportarExcel('tablaActivos', 'usuarios_activos_48h')">📥 Excel</button>
+                <button class="export-btn" onclick="exportarPDF('tablaActivos', 'Usuarios activos últimas 48h')">📄 PDF</button>
             </div>
-            <button class="fbtn" id="recLimpiar">Limpiar filtro</button>
+        </div>
+
+        <!-- Filtro por penca -->
+        <div class="filters" id="filtrosActivos"></div>
+
+        <div class="card-body" style="padding:0;">
+            @if (!Model.UsuariosActivosUltimas48h.Any())
+            {
+                <div style="padding:2rem;text-align:center;color:var(--text-muted);font-size:.875rem;">
+                    Sin actividad en las últimas 48 horas
+                </div>
+            }
+            else
+            {
+                <table class="data-table" id="tablaActivos">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Email</th>
+                            <th>Sitio</th>
+                            <th>Penca</th>
+                            <th>Predicciones</th>
+                            <th>Último partido</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyActivos">
+                        @foreach (var u in Model.UsuariosActivosUltimas48h)
+                        {
+                            <tr data-penca="@u.NombrePenca">
+                                <td><strong>@u.NombreUsuario</strong></td>
+                                <td style="color:var(--text-muted);">@u.Email</td>
+                                <td>@u.NombreSitio</td>
+                                <td><span class="badge badge-orange">@u.NombrePenca</span></td>
+                                <td><span class="badge badge-green">@u.CantidadPredicciones pred.</span></td>
+                                <td style="color:var(--text-muted);font-size:.78rem;">@u.UltimaPrediccion.ToString("dd/MM/yyyy HH:mm")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
         </div>
     </div>
-    <div class="card-body">
-        <div class="chart-wrap"><canvas id="chartRec"></canvas></div>
+
+    <!-- Gráfico: Recaudación Mensual -->
+    <div class="card" id="cardRecaudacion">
+        <div class="card-hdr">
+            <div class="icon">💵</div>
+            <div>
+                <h5>Recaudación mensual</h5>
+                <p>Ingresos por mes · filtrá por sitio y período</p>
+            </div>
+            <div class="actions">
+                <button class="export-btn" onclick="exportarGraficoExcel('recaudacion')">📥 Excel</button>
+                <button class="export-btn" onclick="exportarGraficoPDF('chartRec', 'Recaudación mensual')">📄 PDF</button>
+            </div>
+        </div>
+        <div class="filters" style="flex-direction:column; gap:.75rem;">
+            <div style="display:flex; gap:.4rem; flex-wrap:wrap;" id="filtrosRec"></div>
+            <div style="display:flex; align-items:center; gap:.75rem; flex-wrap:wrap;">
+                <div style="display:flex; align-items:center; gap:.4rem;">
+                    <label style="font-size:.75rem; font-weight:600; color:var(--brand);">Desde</label>
+                    <input type="month" id="recDesde" style="font-size:.78rem; padding:.2rem .5rem; border:1px solid var(--brand); border-radius:8px; color:var(--text-main); background:#fff; cursor:pointer;" />
+                </div>
+                <div style="display:flex; align-items:center; gap:.4rem;">
+                    <label style="font-size:.75rem; font-weight:600; color:var(--brand);">Hasta</label>
+                    <input type="month" id="recHasta" style="font-size:.78rem; padding:.2rem .5rem; border:1px solid var(--brand); border-radius:8px; color:var(--text-main); background:#fff; cursor:pointer;" />
+                </div>
+                <button class="fbtn" id="recLimpiar">Limpiar filtro</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="chart-wrap"><canvas id="chartRec"></canvas></div>
+        </div>
     </div>
-</div>
 
     <!-- Gráfico: Evolución Usuarios -->
-    <div class="card">
+    <div class="card" id="cardUsuarios">
         <div class="card-hdr">
             <div class="icon">📈</div>
             <div>
                 <h5>Evolución de usuarios</h5>
                 <p>Registros por mes · filtrá por sitio</p>
+            </div>
+            <div class="actions">
+                <button class="export-btn" onclick="exportarGraficoExcel('usuarios')">📥 Excel</button>
+                <button class="export-btn" onclick="exportarGraficoPDF('chartUsr', 'Evolución de usuarios')">📄 PDF</button>
             </div>
         </div>
         <div class="filters" id="filtrosUsr"></div>
@@ -240,260 +492,348 @@
 <!-- Datos del servidor -->
 <script>
     const datosRec = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-        Model.IngresosMensuales.Select(i => new {
-            sitio = i.NombreSitio,
-            anio  = i.Anio,
-            mes   = i.Mes,
-            monto = i.Monto
-        })
-    ));
+                Model.IngresosMensuales.Select(i => new
+                {
+                        sitio = i.NombreSitio,
+                        anio = i.Anio,
+                        mes = i.Mes,
+                        monto = i.Monto
+                })
+        ));
 
     const datosUsr = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-        Model.EvolucionUsuarios.Select(u => new {
-            sitio    = u.NombreSitio,
-            anio     = u.Anio,
-            mes      = u.Mes,
-            cantidad = u.CantidadUsuarios
-        })
-    ));
+                Model.EvolucionUsuarios.Select(u => new
+                {
+                        sitio = u.NombreSitio,
+                        anio = u.Anio,
+                        mes = u.Mes,
+                        cantidad = u.CantidadUsuarios
+                })
+        ));
 
     const datosPencas = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-        Model.PencasMasPopulares.Select(p => new {
-            nombre     = p.NombrePenca,
-            deporte    = p.Deporte,
-            instancias = p.CantidadInstancias
-        })
-    ));
+                Model.PencasMasPopulares.Select(p => new
+                {
+                        nombre = p.NombrePenca,
+                        deporte = p.Deporte,
+                        instancias = p.CantidadInstancias
+                })
+        ));
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
 <script>
-const MESES  = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
-const PALETA = ["#e05c2a","#2ab5e0","#7c3aed","#0e9f6e","#d97706","#e02a6e","#1a56db","#b84318"];
+    const MESES  = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+    const PALETA = ["#e05c2a","#2ab5e0","#7c3aed","#0e9f6e","#d97706","#e02a6e","#1a56db","#b84318"];
 
-function periodos(d) {
+    /* Referencias globales a los charts para exportar */
+    let _chartRec = null;
+    let _chartUsr = null;
+    let _recDatosFiltrados = () => datosRec;
+
+    function periodos(d) {
     const set = new Set(d.map(x => `${x.anio}-${String(x.mes).padStart(2,"0")}`));
     return [...set].sort().map(k => {
-        const [a, m] = k.split("-");
-        return { key: k, label: `${MESES[+m - 1]} ${a}` };
+    const [a, m] = k.split("-");
+    return { key: k, label: `${MESES[+m - 1]} ${a}` };
     });
-}
+    }
+    function sitios(d) { return [...new Set(d.map(x => x.sitio))]; }
 
-function sitios(d) {
-    return [...new Set(d.map(x => x.sitio))];
-}
-
-function buildDs(datos, ps, activo, campo) {
+    function buildDs(datos, ps, activo, campo) {
     const lista = activo === "Todos" ? sitios(datos) : [activo];
     return lista.map((s, i) => {
-        const color = PALETA[i % PALETA.length];
-        return {
-            label: s,
-            data: ps.map(p => {
-                const [a, m] = p.key.split("-");
-                const f = datos.find(d => d.sitio === s && d.anio === +a && d.mes === +m);
-                return f ? f[campo] : 0;
-            }),
-            backgroundColor: color + "cc",
-            borderColor: color,
-            borderWidth: 1.5,
-            borderRadius: 4,
-        };
-    });
-}
-
-function baseOpts(prefix) {
+    const color = PALETA[i % PALETA.length];
     return {
-        responsive: true, maintainAspectRatio: false,
-        plugins: {
-            legend: { display: false },
-            tooltip: { callbacks: { label: c => {
-                const v = c.parsed.y;
-                return prefix === "$"
-                    ? ` ${c.dataset.label}: $${v.toLocaleString("es-UY", { minimumFractionDigits: 2 })}`
-                    : ` ${c.dataset.label}: ${v} usuarios`;
-            }}}
-        },
-        scales: {
-            x: { grid: { display: false }, ticks: { color: "#6b7280", font: { size: 11 } } },
-            y: { grid: { color: "#f3f4f6" }, ticks: { color: "#6b7280", font: { size: 11 },
-                callback: v => prefix === "$" ? `$${v.toLocaleString("es-UY")}` : v
-            }}
-        }
+    label: s,
+    data: ps.map(p => {
+    const [a, m] = p.key.split("-");
+    const f = datos.find(d => d.sitio === s && d.anio === +a && d.mes === +m);
+    return f ? f[campo] : 0;
+    }),
+    backgroundColor: color + "cc",
+    borderColor: color,
+    borderWidth: 1.5,
+    borderRadius: 4,
     };
-}
-
-function makeFilters(containerId, datos, chart, campo) {
-    const cont = document.getElementById(containerId);
-    const ss = sitios(datos);
-    const ps = periodos(datos);
-    let activo = "Todos";
-    ["Todos", ...ss].forEach(s => {
-        const b = document.createElement("button");
-        b.className = "fbtn" + (s === "Todos" ? " active" : "");
-        b.textContent = s;
-        b.onclick = () => {
-            activo = s;
-            cont.querySelectorAll(".fbtn").forEach(x => x.classList.remove("active"));
-            b.classList.add("active");
-            chart.data.datasets = buildDs(datos, ps, activo, campo);
-            chart.update();
-        };
-        cont.appendChild(b);
     });
-}
+    }
 
-/* Recaudación */
-(function () {
+    function baseOpts(prefix) {
+    return {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+    legend: { display: false },
+    tooltip: { callbacks: { label: c => {
+    const v = c.parsed.y;
+    return prefix === "$"
+    ? ` ${c.dataset.label}: $${v.toLocaleString("es-UY", { minimumFractionDigits: 2 })}`
+    : ` ${c.dataset.label}: ${v} usuarios`;
+    }}}
+    },
+    scales: {
+    x: { grid: { display: false }, ticks: { color: "#6b7280", font: { size: 11 }, autoSkip: false, maxRotation: 45 } },
+    y: { grid: { color: "#f3f4f6" }, ticks: { color: "#6b7280", font: { size: 11 },
+    callback: v => prefix === "$" ? `$${v.toLocaleString("es-UY")}` : v
+    }}
+    }
+    };
+    }
+
+    /* ── EXPORTAR EXCEL (tabla HTML) ── */
+    function exportarExcel(tablaId, nombreArchivo) {
+    const tabla = document.getElementById(tablaId);
+    const wb    = XLSX.utils.table_to_book(tabla, { sheet: "Datos" });
+    XLSX.writeFile(wb, `${nombreArchivo}.xlsx`);
+    }
+
+    /* ── EXPORTAR PDF (tabla HTML) ── */
+    function exportarPDF(tablaId, titulo) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(13);
+    doc.text(titulo, 14, 16);
+
+    const tabla = document.getElementById(tablaId);
+    const headers = [...tabla.querySelectorAll("thead th")].map(th => th.innerText);
+    const rows    = [...tabla.querySelectorAll("tbody tr")].map(tr =>
+    [...tr.querySelectorAll("td")].map(td => td.innerText)
+    );
+
+    doc.autoTable({ head: [headers], body: rows, startY: 22, styles: { fontSize: 9 }, headStyles: { fillColor: [224, 92, 42] } });
+    doc.save(`${tablaId}.pdf`);
+    }
+
+    /* ── EXPORTAR EXCEL (gráfico → datos) ── */
+    function exportarGraficoExcel(tipo) {
+    let filas = [];
+    let nombre = "";
+
+    if (tipo === "recaudacion") {
+    nombre = "recaudacion_mensual";
+    const datos = _recDatosFiltrados();
+    filas = datos.map(d => ({
+    Sitio: d.sitio,
+    Año: d.anio,
+    Mes: MESES[d.mes - 1],
+    Monto: d.monto
+    }));
+    } else if (tipo === "usuarios") {
+    nombre = "evolucion_usuarios";
+    filas = datosUsr.map(d => ({
+    Sitio: d.sitio,
+    Año: d.anio,
+    Mes: MESES[d.mes - 1],
+    Usuarios: d.cantidad
+    }));
+    } else if (tipo === "pencas") {                  // <-- nuevo caso
+    nombre = "pencas_populares";
+    filas = datosPencas.map(d => ({
+    Penca: d.nombre,
+    Deporte: d.deporte,
+    Instancias: d.instancias
+    }));
+    }
+
+    const ws = XLSX.utils.json_to_sheet(filas);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Datos");
+    XLSX.writeFile(wb, `${nombre}.xlsx`);
+    }
+
+    /* ── EXPORTAR PDF (gráfico → imagen) ── */
+    function exportarGraficoPDF(canvasId, titulo) {
+    const { jsPDF } = window.jspdf;
+    const doc    = new jsPDF({ orientation: "landscape" });
+    const canvas = document.getElementById(canvasId);
+    const img    = canvas.toDataURL("image/png");
+
+    doc.setFontSize(13);
+    doc.text(titulo, 14, 16);
+    doc.addImage(img, "PNG", 14, 22, 265, 100);
+    doc.save(`${canvasId}.pdf`);
+    }
+
+    /* ── RECAUDACIÓN ── */
+    (function () {
     let activoSitio = "Todos";
-    let desdeKey = null;
-    let hastaKey = null;
+    let desdeKey    = null;
+    let hastaKey    = null;
 
     function toKey(anio, mes) {
-        return `${anio}-${String(mes).padStart(2, "0")}`;
+    return `${anio}-${String(mes).padStart(2, "0")}`;
     }
 
     function datosFiltrados() {
-        return datosRec.filter(d => {
-            const key = toKey(d.anio, d.mes);
-            if (activoSitio !== "Todos" && d.sitio !== activoSitio) return false;
-            if (desdeKey && key < desdeKey) return false;
-            if (hastaKey && key > hastaKey) return false;
-            return true;
-        });
+    return datosRec.filter(d => {
+    const key = toKey(d.anio, d.mes);
+    if (activoSitio !== "Todos" && d.sitio !== activoSitio) return false;
+    if (desdeKey && key < desdeKey) return false;
+    if (hastaKey && key > hastaKey) return false;
+    return true;
+    });
     }
 
-    function periodosFiltrados() {
-        return periodos(datosFiltrados());
-    }
+    _recDatosFiltrados = datosFiltrados;
 
     function render() {
-        const datos = datosFiltrados();
-        const ps    = periodosFiltrados();
-        const ss    = activoSitio === "Todos" ? sitios(datos) : [activoSitio];
-
-        ch.data.labels   = ps.map(p => p.label);
-        ch.data.datasets = buildDs(datos, ps, activoSitio, "monto");
-        ch.update();
+    const datos = datosFiltrados();
+    const ps    = periodos(datos);
+    _chartRec.data.labels   = ps.map(p => p.label);
+    _chartRec.data.datasets = buildDs(datos, ps, activoSitio, "monto");
+    _chartRec.update();
     }
 
     const ps = periodos(datosRec);
-    const ch = new Chart(document.getElementById("chartRec"), {
-        type: "bar",
-        data: { labels: ps.map(p => p.label), datasets: buildDs(datosRec, ps, "Todos", "monto") },
-        options: baseOpts("$")
+    _chartRec = new Chart(document.getElementById("chartRec"), {
+    type: "bar",
+    data: { labels: ps.map(p => p.label), datasets: buildDs(datosRec, ps, "Todos", "monto") },
+    options: baseOpts("$")
     });
 
-    /* Filtros por sitio */
     const cont = document.getElementById("filtrosRec");
     const ss   = sitios(datosRec);
     ["Todos", ...ss].forEach(s => {
-        const b = document.createElement("button");
-        b.className = "fbtn" + (s === "Todos" ? " active" : "");
-        b.textContent = s;
-        b.onclick = () => {
-            activoSitio = s;
-            cont.querySelectorAll(".fbtn").forEach(x => x.classList.remove("active"));
-            b.classList.add("active");
-            render();
-        };
-        cont.appendChild(b);
+    const b = document.createElement("button");
+    b.className = "fbtn" + (s === "Todos" ? " active" : "");
+    b.textContent = s;
+    b.onclick = () => {
+    activoSitio = s;
+    cont.querySelectorAll(".fbtn").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    render();
+    };
+    cont.appendChild(b);
     });
 
-    /* Filtros por fecha */
-    document.getElementById("recDesde").addEventListener("change", e => {
-        desdeKey = e.target.value || null;
-        render();
-    });
-    document.getElementById("recHasta").addEventListener("change", e => {
-        hastaKey = e.target.value || null;
-        render();
-    });
+    document.getElementById("recDesde").addEventListener("change", e => { desdeKey = e.target.value || null; render(); });
+    document.getElementById("recHasta").addEventListener("change", e => { hastaKey = e.target.value || null; render(); });
     document.getElementById("recLimpiar").addEventListener("click", () => {
-        desdeKey = null;
-        hastaKey = null;
-        document.getElementById("recDesde").value = "";
-        document.getElementById("recHasta").value = "";
-        render();
+    desdeKey = hastaKey = null;
+    document.getElementById("recDesde").value = "";
+    document.getElementById("recHasta").value = "";
+    render();
     });
-})();
+    })();
 
-/* Usuarios */
-(function () {
+    /* ── USUARIOS ── */
+    (function () {
     const ps = periodos(datosUsr);
-    const ch = new Chart(document.getElementById("chartUsr"), {
-        type: "bar",
-        data: { labels: ps.map(p => p.label), datasets: buildDs(datosUsr, ps, "Todos", "cantidad") },
-        options: baseOpts("")
+    _chartUsr = new Chart(document.getElementById("chartUsr"), {
+    type: "bar",
+    data: { labels: ps.map(p => p.label), datasets: buildDs(datosUsr, ps, "Todos", "cantidad") },
+    options: baseOpts("")
     });
-    makeFilters("filtrosUsr", datosUsr, ch, "cantidad");
-})();
 
-/* Pencas más populares */
-(function () {
+    const cont = document.getElementById("filtrosUsr");
+    const ss   = sitios(datosUsr);
+    let activo = "Todos";
+    ["Todos", ...ss].forEach(s => {
+    const b = document.createElement("button");
+    b.className = "fbtn" + (s === "Todos" ? " active" : "");
+    b.textContent = s;
+    b.onclick = () => {
+    activo = s;
+    cont.querySelectorAll(".fbtn").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    _chartUsr.data.datasets = buildDs(datosUsr, ps, activo, "cantidad");
+    _chartUsr.update();
+    };
+    cont.appendChild(b);
+    });
+    })();
+
+    /* ── PENCAS MÁS POPULARES ── */
+    (function () {
     const deportes = [...new Set(datosPencas.map(p => p.deporte))];
     let activo = "Todos";
 
     function renderChart() {
-        const datos = (activo === "Todos" ? datosPencas : datosPencas.filter(p => p.deporte === activo))
-            .slice().sort((a, b) => b.instancias - a.instancias);
+    const datos = (activo === "Todos" ? datosPencas : datosPencas.filter(p => p.deporte === activo))
+    .slice().sort((a, b) => b.instancias - a.instancias);
 
-        const labels = datos.map(p => p.nombre);
-        const values = datos.map(p => p.instancias);
-        const colors = labels.map((_, i) => PALETA[i % PALETA.length]);
+    const labels = datos.map(p => p.nombre);
+    const values = datos.map(p => p.instancias);
+    const colors = labels.map((_, i) => PALETA[i % PALETA.length]);
 
-        if (window._chartPencas) window._chartPencas.destroy();
+    if (window._chartPencas) window._chartPencas.destroy();
 
-        window._chartPencas = new Chart(document.getElementById("chartPencas"), {
-            type: "bar",
-            data: {
-                labels,
-                datasets: [{
-                    label: "Instancias",
-                    data: values,
-                    backgroundColor: colors.map(c => c + "cc"),
-                    borderColor: colors,
-                    borderWidth: 1.5,
-                    borderRadius: 4,
-                }]
-            },
-            options: {
-                indexAxis: "y",
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { callbacks: { label: c => ` ${c.parsed.x} instancias` } }
-                },
-                scales: {
-                    x: {
-                        grid: { color: "#f3f4f6" },
-                        ticks: { color: "#6b7280", font: { size: 11 }, stepSize: 1 }
-                    },
-                    y: {
-                        grid: { display: false },
-                        ticks: { color: "#6b7280", font: { size: 11 } }
-                    }
-                }
-            }
-        });
+    window._chartPencas = new Chart(document.getElementById("chartPencas"), {
+    type: "bar",
+    data: {
+    labels,
+    datasets: [{
+    label: "Instancias",
+    data: values,
+    backgroundColor: colors.map(c => c + "cc"),
+    borderColor: colors,
+    borderWidth: 1.5,
+    borderRadius: 4,
+    }]
+    },
+    options: {
+    indexAxis: "y",
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+    legend: { display: false },
+    tooltip: { callbacks: { label: c => ` ${c.parsed.x} instancias` } }
+    },
+    scales: {
+    x: { grid: { color: "#f3f4f6" }, ticks: { color: "#6b7280", font: { size: 11 }, stepSize: 1 } },
+    y: { grid: { display: false }, ticks: { color: "#6b7280", font: { size: 11 } } }
+    }
+    }
+    });
     }
 
     const cont = document.getElementById("filtrosPencas");
     ["Todos", ...deportes].forEach(d => {
-        const b = document.createElement("button");
-        b.className = "fbtn" + (d === "Todos" ? " active" : "");
-        b.textContent = d;
-        b.onclick = () => {
-            activo = d;
-            cont.querySelectorAll(".fbtn").forEach(x => x.classList.remove("active"));
-            b.classList.add("active");
-            renderChart();
-        };
-        cont.appendChild(b);
+    const b = document.createElement("button");
+    b.className = "fbtn" + (d === "Todos" ? " active" : "");
+    b.textContent = d;
+    b.onclick = () => {
+    activo = d;
+    cont.querySelectorAll(".fbtn").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    renderChart();
+    };
+    cont.appendChild(b);
     });
 
     renderChart();
-})();
+    })();
+
+
+    /* Filtro por penca — tabla activos 48h */
+    (function () {
+    const filas   = [...document.querySelectorAll("#tbodyActivos tr")];
+    if (!filas.length) return;
+
+    const pencas  = [...new Set(filas.map(f => f.dataset.penca))].sort();
+    const cont    = document.getElementById("filtrosActivos");
+    let activo    = "Todas";
+
+    function filtrar() {
+    filas.forEach(f => {
+    f.style.display = (activo === "Todas" || f.dataset.penca === activo) ? "" : "none";
+    });
+    }
+
+    ["Todas", ...pencas].forEach(p => {
+    const b = document.createElement("button");
+    b.className = "fbtn" + (p === "Todas" ? " active" : "");
+    b.textContent = p;
+    b.onclick = () => {
+    activo = p;
+    cont.querySelectorAll(".fbtn").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    filtrar();
+    };
+    cont.appendChild(b);
+    });
+    })();
 </script>

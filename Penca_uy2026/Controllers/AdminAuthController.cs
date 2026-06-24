@@ -376,7 +376,41 @@ namespace Penca_uy2026.Controllers
                     })
                     .OrderByDescending(p => p.CantidadInstancias)
                     .Take(10)
-                    .ToListAsync()
+                    .ToListAsync(),
+
+               PencasConMasUsuarios = await _context.PencaInstancias
+                    .IgnoreQueryFilters()
+                    .Select(pi => new PencaConUsuariosDTO
+                    {
+                        NombrePenca = pi.Penca.Nombre,
+                        NombreSitio = pi.Sitio.Nombre,
+                        Deporte = pi.Penca.Deporte.Nombre,
+                        CantidadUsuarios = pi.Participaciones.Count
+                    })
+                    .OrderByDescending(p => p.CantidadUsuarios)
+                    .Take(10)
+                    .ToListAsync(),
+
+              UsuariosActivosUltimas48h = await _context.Predicciones
+                    .IgnoreQueryFilters()
+                    .Where(p => p.Partido.Jugado && p.Partido.Fecha >= DateTime.UtcNow.AddHours(-48))
+                    .GroupBy(p => new {
+                        Nombre = p.Participacion.UsuarioSitio.Nombre,
+                        Email = p.Participacion.UsuarioSitio.Email,
+                        Sitio = p.Participacion.UsuarioSitio.Sitio.Nombre,
+                        Penca = p.Participacion.PencaInstancia.Penca.Nombre
+                    })
+                    .Select(g => new UsuarioActivoDTO
+                    {
+                        NombreUsuario = g.Key.Nombre,
+                        Email = g.Key.Email,
+                        NombreSitio = g.Key.Sitio,
+                        NombrePenca = g.Key.Penca,
+                        CantidadPredicciones = g.Count(),
+                        UltimaPrediccion = g.Max(p => p.Partido.Fecha)
+                    })
+                    .OrderByDescending(u => u.CantidadPredicciones)
+                    .ToListAsync(),
             };
 
             return View(model);
