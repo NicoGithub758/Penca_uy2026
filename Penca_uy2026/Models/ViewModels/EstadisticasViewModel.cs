@@ -17,6 +17,9 @@
         public int TotalAdmins { get; set; }
 
         public List<PencaPopularDTO> PencasMasPopulares { get; set; } = new();
+        public List<PencaConUsuariosDTO> PencasConMasUsuarios { get; set; } = new();
+        public List<UsuarioActivoDTO> UsuariosActivosUltimas48h { get; set; } = new();
+
 
     }
 
@@ -43,4 +46,21 @@
         public string Deporte { get; set; } = string.Empty;
         public int CantidadInstancias { get; set; }
     }
+    public class PencaConUsuariosDTO
+    {
+        public string NombrePenca { get; set; } = string.Empty;
+        public string NombreSitio { get; set; } = string.Empty;
+        public string Deporte { get; set; } = string.Empty;
+        public int CantidadUsuarios { get; set; }
+    }
+    public class UsuarioActivoDTO
+    {
+        public string NombreUsuario { get; set; } = string.Empty;
+        public string NombreSitio { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string NombrePenca { get; set; } = string.Empty;
+        public int CantidadPredicciones { get; set; }
+        public DateTime UltimaPrediccion { get; set; }
+    }
+
 }

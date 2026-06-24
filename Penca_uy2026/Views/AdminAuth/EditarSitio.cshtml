@@ -34,7 +34,8 @@
                         <div class="mb-4">
                             <label class="form-label fw-semibold d-block">Estado del Tenant</label>
                             <div class="form-check form-switch form-check-inline bg-light p-2 rounded-3 border px-4">
-                                <input class="form-check-input ms-0 me-2" type="checkbox" asp-for="Activo" id="switchActivo">
+                                <!-- Se agregó el evento onchange -->
+                                <input class="form-check-input ms-0 me-2" type="checkbox" asp-for="Activo" id="switchActivo" onchange="verificarEstado(this)">
                                 <label class="form-check-label fw-medium" for="switchActivo">Sitio Activo / Operacional</label>
                             </div>
                         </div>
@@ -82,3 +83,16 @@
         </div>
     </div>
 </div>
+
+<script>
+    function verificarEstado(checkbox) {
+        if (!checkbox.checked) {
+            const confirmado = confirm("⚠️ ATENCIÓN: Al desactivar este sitio, quedará suspendido y los usuarios no podrán acceder. ¿Estás seguro de que deseas continuar?");
+
+            if (!confirmado) {
+                // Si el usuario cancela, devolvemos el checkbox a su estado original (checked)
+                checkbox.checked = true;
+            }
+        }
+    }
+</script>

@@ -8,21 +8,25 @@
     @@import url('https://fonts.googleapis.com/css2?family=Inter:wght@@400;500;600;700;800&family=DM+Mono:wght@@400;500&display=swap');
 
     :root {
-        --brand:       #e05c2a;
-        --brand-dim:   rgba(224,92,42,.10);
-        --bg:          #f4f5f7;
-        --bg-card:     #ffffff;
+        --brand: #e05c2a;
+        --brand-dim: rgba(224,92,42,.10);
+        --bg: #f4f5f7;
+        --bg-card: #ffffff;
         --bg-card-alt: #f9fafb;
-        --border:      #e5e7eb;
-        --border-lit:  #d1d5db;
-        --text:        #111827;
-        --text-muted:  #6b7280;
-        --text-dim:    #9ca3af;
-        --radius:      14px;
-        --radius-sm:   8px;
+        --border: #e5e7eb;
+        --border-lit: #d1d5db;
+        --text: #111827;
+        --text-muted: #6b7280;
+        --text-dim: #9ca3af;
+        --radius: 14px;
+        --radius-sm: 8px;
     }
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
 
     body {
         background: var(--bg);
@@ -30,144 +34,343 @@
         color: var(--text);
     }
 
-    .dash { max-width: 1280px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    .dash {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4rem;
+    }
 
     /* HEADER */
     .dash-header {
-        display: flex; align-items: flex-start;
-        justify-content: space-between; gap: 1rem;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
         margin-bottom: 2rem;
     }
+
     .dash-eyebrow {
-        font-size: .7rem; font-weight: 600;
-        letter-spacing: .12em; text-transform: uppercase;
-        color: var(--brand); margin-bottom: .35rem;
+        font-size: .7rem;
+        font-weight: 600;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--brand);
+        margin-bottom: .35rem;
     }
-    .dash-title { font-size: 1.65rem; font-weight: 800; line-height: 1.15; }
-    .dash-sub   { font-size: .82rem; color: var(--text-muted); margin-top: .3rem; }
+
+    .dash-title {
+        font-size: 1.65rem;
+        font-weight: 800;
+        line-height: 1.15;
+    }
+
+    .dash-sub {
+        font-size: .82rem;
+        color: var(--text-muted);
+        margin-top: .3rem;
+    }
+
     .dash-ts {
-        font-family: 'DM Mono', monospace; font-size: .72rem;
-        color: var(--text-dim); background: var(--bg-card);
-        border: 1px solid var(--border); border-radius: var(--radius-sm);
-        padding: .45rem .85rem; white-space: nowrap; align-self: center;
+        font-family: 'DM Mono', monospace;
+        font-size: .72rem;
+        color: var(--text-dim);
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: .45rem .85rem;
+        white-space: nowrap;
+        align-self: center;
     }
 
     /* KPIs */
     .kpi-row {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 1rem; margin-bottom: 1.75rem;
+        gap: 1rem;
+        margin-bottom: 1.75rem;
     }
-    @@media (max-width: 700px) { .kpi-row { grid-template-columns: 1fr; } }
+
+    @@media (max-width: 700px) {
+        .kpi-row {
+            grid-template-columns: 1fr;
+        }
+    }
 
     .kpi {
-        background: var(--bg-card); border: 1px solid var(--border);
-        border-radius: var(--radius); padding: 1.25rem 1.4rem;
-        position: relative; overflow: hidden;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.25rem 1.4rem;
+        position: relative;
+        overflow: hidden;
     }
-    .kpi::before {
-        content: ''; position: absolute; top: 0; left: 0; right: 0;
-        height: 3px; border-radius: var(--radius) var(--radius) 0 0;
+
+        .kpi::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+
+    .kpi--orange::before {
+        background: linear-gradient(90deg,#e05c2a,#f4845c);
     }
-    .kpi--orange::before { background: linear-gradient(90deg,#e05c2a,#f4845c); }
-    .kpi--green::before  { background: linear-gradient(90deg,#059669,#34d399); }
-    .kpi--blue::before   { background: linear-gradient(90deg,#2563eb,#60a5fa); }
+
+    .kpi--green::before {
+        background: linear-gradient(90deg,#059669,#34d399);
+    }
+
+    .kpi--blue::before {
+        background: linear-gradient(90deg,#2563eb,#60a5fa);
+    }
+
     .kpi-icon {
-        width: 36px; height: 36px; border-radius: 9px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.1rem; margin-bottom: .85rem;
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        margin-bottom: .85rem;
     }
-    .kpi--orange .kpi-icon { background: var(--brand-dim); }
-    .kpi--green  .kpi-icon { background: rgba(5,150,105,.12); }
-    .kpi--blue   .kpi-icon { background: rgba(37,99,235,.10); }
+
+    .kpi--orange .kpi-icon {
+        background: var(--brand-dim);
+    }
+
+    .kpi--green .kpi-icon {
+        background: rgba(5,150,105,.12);
+    }
+
+    .kpi--blue .kpi-icon {
+        background: rgba(37,99,235,.10);
+    }
+
     .kpi-val {
-        font-size: 2rem; font-weight: 800;
-        font-family: 'DM Mono', monospace; letter-spacing: -.02em; line-height: 1;
+        font-size: 2rem;
+        font-weight: 800;
+        font-family: 'DM Mono', monospace;
+        letter-spacing: -.02em;
+        line-height: 1;
         margin-bottom: .3rem;
     }
-    .kpi--orange .kpi-val { color: #c2410c; }
-    .kpi--green  .kpi-val { color: #047857; }
-    .kpi--blue   .kpi-val { color: #1d4ed8; }
+
+    .kpi--orange .kpi-val {
+        color: #c2410c;
+    }
+
+    .kpi--green .kpi-val {
+        color: #047857;
+    }
+
+    .kpi--blue .kpi-val {
+        color: #1d4ed8;
+    }
+
     .kpi-lbl {
-        font-size: .75rem; font-weight: 600; color: var(--text-muted);
-        text-transform: uppercase; letter-spacing: .06em;
+        font-size: .75rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: .06em;
     }
 
     /* CARDS */
     .card {
-        background: var(--bg-card); border: 1px solid var(--border);
-        border-radius: var(--radius); overflow: hidden; margin-bottom: 1.25rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        margin-bottom: 1.25rem;
     }
+
     .card-head {
-        display: flex; align-items: center; gap: .85rem;
-        padding: 1rem 1.4rem; border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: .85rem;
+        padding: 1rem 1.4rem;
+        border-bottom: 1px solid var(--border);
     }
+
     .card-icon {
-        width: 34px; height: 34px; border-radius: 9px;
-        background: var(--brand-dim); color: var(--brand);
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1rem; flex-shrink: 0;
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        background: var(--brand-dim);
+        color: var(--brand);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
     }
-    .card-title { font-size: .9rem; font-weight: 700; color: var(--text); }
-    .card-desc  { font-size: .75rem; color: var(--text-muted); margin-top: .1rem; }
-    .card-actions { margin-left: auto; display: flex; gap: .4rem; }
-    .card-body  { padding: 1.4rem; }
+
+    .card-title {
+        font-size: .9rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .card-desc {
+        font-size: .75rem;
+        color: var(--text-muted);
+        margin-top: .1rem;
+    }
+
+    .card-actions {
+        margin-left: auto;
+        display: flex;
+        gap: .4rem;
+    }
+
+    .card-body {
+        padding: 1.4rem;
+    }
 
     /* GRID */
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem; }
-    @@media (max-width: 860px) { .grid-2 { grid-template-columns: 1fr; } }
+    .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+
+    @@media (max-width: 860px) {
+        .grid-2 {
+            grid-template-columns: 1fr;
+        }
+    }
 
     /* FILTROS */
     .ftabs {
-        display: flex; gap: .35rem; flex-wrap: wrap;
-        padding: .6rem 1.4rem; border-bottom: 1px solid var(--border);
+        display: flex;
+        gap: .35rem;
+        flex-wrap: wrap;
+        padding: .6rem 1.4rem;
+        border-bottom: 1px solid var(--border);
         background: var(--bg-card-alt);
     }
+
     .ftab {
-        padding: .22rem .75rem; border-radius: 20px;
-        border: 1px solid var(--border-lit); background: transparent;
-        color: var(--text-muted); font-family: 'Inter', sans-serif;
-        font-size: .72rem; font-weight: 600; cursor: pointer; transition: all .15s;
+        padding: .22rem .75rem;
+        border-radius: 20px;
+        border: 1px solid var(--border-lit);
+        background: transparent;
+        color: var(--text-muted);
+        font-family: 'Inter', sans-serif;
+        font-size: .72rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .15s;
     }
-    .ftab.active, .ftab:hover { background: var(--brand); border-color: var(--brand); color: #fff; }
+
+        .ftab.active, .ftab:hover {
+            background: var(--brand);
+            border-color: var(--brand);
+            color: #fff;
+        }
 
     /* EXPORT */
     .xbtn {
-        display: flex; align-items: center; gap: .3rem;
-        padding: .28rem .6rem; border-radius: var(--radius-sm);
-        border: 1px solid var(--border-lit); background: transparent;
-        color: var(--text-muted); font-family: 'Inter', sans-serif;
-        font-size: .7rem; font-weight: 600; cursor: pointer; transition: all .15s;
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+        padding: .28rem .6rem;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-lit);
+        background: transparent;
+        color: var(--text-muted);
+        font-family: 'Inter', sans-serif;
+        font-size: .7rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .15s;
     }
-    .xbtn:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-dim); }
+
+        .xbtn:hover {
+            border-color: var(--brand);
+            color: var(--brand);
+            background: var(--brand-dim);
+        }
 
     /* CHART */
-    .chart-wrap { position: relative; width: 100%; }
+    .chart-wrap {
+        position: relative;
+        width: 100%;
+    }
 
     /* DONUT LAYOUT */
     .donut-layout {
-        display: flex; align-items: center; gap: 2rem;
-        padding: 1.4rem; min-height: 260px;
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        padding: 1.4rem;
+        min-height: 260px;
     }
-    .donut-canvas-wrap { flex-shrink: 0; width: 180px; height: 180px; position: relative; }
-    .donut-legend { display: flex; flex-direction: column; gap: .75rem; flex: 1; }
-    .dleg-item { display: flex; align-items: center; gap: .7rem; }
-    .dleg-dot  { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
-    .dleg-name { font-size: .82rem; color: var(--text); flex: 1; }
-    .dleg-val  {
-        font-family: 'DM Mono', monospace; font-size: .78rem;
-        color: var(--text-muted); text-align: right;
+
+    .donut-canvas-wrap {
+        flex-shrink: 0;
+        width: 180px;
+        height: 180px;
+        position: relative;
     }
-    .dleg-pct  {
-        font-family: 'DM Mono', monospace; font-size: .72rem;
-        color: var(--text-dim); margin-top: .1rem;
+
+    .donut-legend {
+        display: flex;
+        flex-direction: column;
+        gap: .75rem;
+        flex: 1;
     }
-    @@media (max-width: 500px) { .donut-layout { flex-direction: column; } }
+
+    .dleg-item {
+        display: flex;
+        align-items: center;
+        gap: .7rem;
+    }
+
+    .dleg-dot {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .dleg-name {
+        font-size: .82rem;
+        color: var(--text);
+        flex: 1;
+    }
+
+    .dleg-val {
+        font-family: 'DM Mono', monospace;
+        font-size: .78rem;
+        color: var(--text-muted);
+        text-align: right;
+    }
+
+    .dleg-pct {
+        font-family: 'DM Mono', monospace;
+        font-size: .72rem;
+        color: var(--text-dim);
+        margin-top: .1rem;
+    }
+
+    @@media (max-width: 500px) {
+        .donut-layout {
+            flex-direction: column;
+        }
+    }
 
     /* EMPTY STATE */
     .empty-state {
-        text-align: center; padding: 2.5rem 1rem;
-        color: var(--text-dim); font-size: .82rem;
+        text-align: center;
+        padding: 2.5rem 1rem;
+        color: var(--text-dim);
+        font-size: .82rem;
     }
 </style>
 
@@ -233,6 +436,7 @@
                     <div class="card-desc">Cantidad de participantes por penca</div>
                 </div>
                 <div class="card-actions">
+                    <button class="xbtn" onclick="exportarJugadoresExcel()">📥 Excel</button>
                     <button class="xbtn" onclick="exportarGraficoPDF('chartPencasJugadores','Pencas con más jugadores')">📄 PDF</button>
                 </div>
             </div>
@@ -250,6 +454,7 @@
                     <div class="card-desc">Participantes × monto de entrada</div>
                 </div>
                 <div class="card-actions">
+                    <button class="xbtn" onclick="exportarRecaudacionExcel()">📥 Excel</button>
                     <button class="xbtn" onclick="exportarGraficoPDF('chartPencasRecaudacion','Pencas que más recaudaron')">📄 PDF</button>
                 </div>
             </div>
@@ -271,10 +476,14 @@
                     <div class="card-title">Cuenta mobile</div>
                     <div class="card-desc">Usuarios con y sin cuenta mobile</div>
                 </div>
+                <div class="card-actions">
+                    <button class="xbtn" onclick="exportarMobileExcel()">📥 Excel</button>
+                    <button class="xbtn" onclick="exportarGraficoPDF('chartMobile','Cuenta mobile')">📄 PDF</button>
+                </div>
             </div>
             <div class="donut-layout">
                 <div class="donut-canvas-wrap">
-                    <canvas id="chartMobile"></canvas>
+                    <canvas id="chartMobile" width="180" height="180"></canvas>
                 </div>
                 <div class="donut-legend" id="mobileLegend"></div>
             </div>
@@ -289,6 +498,7 @@
                     <div class="card-desc">Total de predicciones realizadas por penca</div>
                 </div>
                 <div class="card-actions">
+                    <button class="xbtn" onclick="exportarPrediccionesExcel()">📥 Excel</button>
                     <button class="xbtn" onclick="exportarGraficoPDF('chartPredicciones','Predicciones por penca')">📄 PDF</button>
                 </div>
             </div>
@@ -304,17 +514,17 @@
 <!-- DATOS DEL SERVIDOR -->
 <script>
     const datosIngresos = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-        Model.IngresosMensuales.Select(i => new { anio = i.Anio, mes = i.Mes, monto = i.Monto })
-    ));
+                Model.IngresosMensuales.Select(i => new { anio = i.Anio, mes = i.Mes, monto = i.Monto })
+        ));
     const datosPencasJugadores = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-        Model.PencasPorJugadores.Select(p => new { nombre = p.NombrePenca, cantidad = p.CantidadJugadores })
-    ));
+                Model.PencasPorJugadores.Select(p => new { nombre = p.NombrePenca, cantidad = p.CantidadJugadores })
+        ));
     const datosPencasRecaudacion = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-        Model.PencasPorRecaudacion.Select(p => new { nombre = p.NombrePenca, monto = p.MontoRecaudado })
-    ));
+                Model.PencasPorRecaudacion.Select(p => new { nombre = p.NombrePenca, monto = p.MontoRecaudado })
+        ));
     const datosPredicciones = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-        Model.PencasPorPredicciones.Select(p => new { nombre = p.NombrePenca, cantidad = p.CantidadPredicciones })
-    ));
+                Model.PencasPorPredicciones.Select(p => new { nombre = p.NombrePenca, cantidad = p.CantidadPredicciones })
+        ));
     const usuariosMobile    = @Model.UsuariosConMobile;
     const usuariosSinMobile = @Model.UsuariosSinMobile;
 </script>
@@ -325,215 +535,247 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
 <script>
-/* ─ CONSTANTES ─────────────────────────────────────── */
-const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
-const PAL   = ["#e05c2a","#2563eb","#059669","#7c3aed","#d97706","#e02a6e","#1a56db","#10b981","#f59e0b","#8b5cf6"];
+    /* ─ CONSTANTES ─────────────────────────────────────── */
+    const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+    const PAL   = ["#e05c2a","#2563eb","#059669","#7c3aed","#d97706","#e02a6e","#1a56db","#10b981","#f59e0b","#8b5cf6"];
 
-Chart.defaults.color       = '#6b7280';
-Chart.defaults.borderColor = '#e5e7eb';
-Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
-Chart.defaults.font.size   = 11;
+    Chart.defaults.color       = '#6b7280';
+    Chart.defaults.borderColor = '#e5e7eb';
+    Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
+    Chart.defaults.font.size   = 11;
 
-/* ─ TIMESTAMP ───────────────────────────────────────── */
-(function(){
+    /* ─ TIMESTAMP ───────────────────────────────────────── */
+    (function(){
     const el = document.getElementById('tsNow');
     function tick(){ el.textContent = new Date().toLocaleString('es-UY',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
     tick(); setInterval(tick, 60000);
-})();
+    })();
 
-/* ─ EXPORTAR ────────────────────────────────────────── */
-function exportarGraficoExcel() {
+    /* ─ EXPORTAR ────────────────────────────────────────── */
+    function exportarGraficoExcel() {
     const filas = datosIngresos.map(d => ({ Año: d.anio, Mes: MESES[d.mes-1], Monto: d.monto }));
     const ws = XLSX.utils.json_to_sheet(filas);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Ingresos");
     XLSX.writeFile(wb, "ingresos_mensuales.xlsx");
-}
-function exportarGraficoPDF(canvasId, titulo) {
+    }
+    function exportarJugadoresExcel() {
+    const filas = datosPencasJugadores.map(d => ({ Penca: d.nombre, Jugadores: d.cantidad }));
+    const ws = XLSX.utils.json_to_sheet(filas);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Jugadores");
+    XLSX.writeFile(wb, "pencas_jugadores.xlsx");
+    }
+    function exportarRecaudacionExcel() {
+    const filas = datosPencasRecaudacion.map(d => ({ Penca: d.nombre, Recaudado: d.monto }));
+    const ws = XLSX.utils.json_to_sheet(filas);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Recaudación");
+    XLSX.writeFile(wb, "pencas_recaudacion.xlsx");
+    }
+    function exportarMobileExcel() {
+    const total = usuariosMobile + usuariosSinMobile;
+    const filas = [
+    { Categoria: 'Con cuenta mobile', Cantidad: usuariosMobile, Porcentaje: total > 0 ? (usuariosMobile/total*100).toFixed(1)+'%' : '0.0%' },
+    { Categoria: 'Sin cuenta mobile', Cantidad: usuariosSinMobile, Porcentaje: total > 0 ? (usuariosSinMobile/total*100).toFixed(1)+'%' : '0.0%' },
+    ];
+    const ws = XLSX.utils.json_to_sheet(filas);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Cuenta mobile");
+    XLSX.writeFile(wb, "cuenta_mobile.xlsx");
+    }
+    function exportarPrediccionesExcel() {
+    const filas = datosPredicciones.map(d => ({ Penca: d.nombre, Predicciones: d.cantidad }));
+    const ws = XLSX.utils.json_to_sheet(filas);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Predicciones");
+    XLSX.writeFile(wb, "pencas_predicciones.xlsx");
+    }
+    function exportarGraficoPDF(canvasId, titulo) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: "landscape" });
     const img = document.getElementById(canvasId).toDataURL("image/png");
     doc.setFontSize(13); doc.text(titulo, 14, 16);
     doc.addImage(img, "PNG", 14, 22, 265, 100);
     doc.save(`${canvasId}.pdf`);
-}
+    }
 
-/* ─ 1. INGRESOS MENSUALES ──────────────────────────── */
-(function(){
+    /* ─ 1. INGRESOS MENSUALES ──────────────────────────── */
+    (function(){
     const sorted = [...datosIngresos].sort((a,b)=> a.anio!==b.anio ? a.anio-b.anio : a.mes-b.mes);
     const allLbl = sorted.map(d=>`${MESES[d.mes-1]} ${d.anio}`);
     const allVal = sorted.map(d=>d.monto);
 
     const chart = new Chart(document.getElementById('chartIngresos'),{
-        type:'bar',
-        data:{
-            labels: allLbl,
-            datasets:[{
-                label:'Ingresos ($)',
-                data: allVal,
-                backgroundColor: PAL[0]+'bb',
-                borderColor: PAL[0],
-                borderWidth: 1.5,
-                borderRadius: 5,
-            }]
-        },
-        options:{
-            responsive:true, maintainAspectRatio:false,
-            plugins:{
-                legend:{display:false},
-                tooltip:{callbacks:{label:c=>` $${c.parsed.y.toLocaleString('es-UY',{minimumFractionDigits:2})}`}}
-            },
-            scales:{
-                x:{grid:{display:false}, ticks:{maxRotation:40}},
-                y:{grid:{color:'#f3f4f6'}, ticks:{callback:v=>`$${v.toLocaleString('es-UY')}`}}
-            }
-        }
+    type:'bar',
+    data:{
+    labels: allLbl,
+    datasets:[{
+    label:'Ingresos ($)',
+    data: allVal,
+    backgroundColor: PAL[0]+'bb',
+    borderColor: PAL[0],
+    borderWidth: 1.5,
+    borderRadius: 5,
+    }]
+    },
+    options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+    legend:{display:false},
+    tooltip:{callbacks:{label:c=>` $${c.parsed.y.toLocaleString('es-UY',{minimumFractionDigits:2})}`}}
+    },
+    scales:{
+    x:{grid:{display:false}, ticks:{maxRotation:40}},
+    y:{grid:{color:'#f3f4f6'}, ticks:{callback:v=>`$${v.toLocaleString('es-UY')}`}}
+    }
+    }
     });
 
     const cont = document.getElementById('filtrosIngresos');
     [['Todos','0'],['3 meses','3'],['6 meses','6'],['12 meses','12']].forEach(([lbl,val],idx)=>{
-        const b = document.createElement('button');
-        b.className = 'ftab'+(idx===0?' active':'');
-        b.textContent = lbl;
-        b.onclick = ()=>{
-            cont.querySelectorAll('.ftab').forEach(x=>x.classList.remove('active'));
-            b.classList.add('active');
-            const now=new Date(); const y=now.getFullYear(), m=now.getMonth()+1;
-            const fil = val==='0' ? sorted : sorted.filter(d=>{
-                const diff=(y-d.anio)*12+(m-d.mes);
-                return diff>=0 && diff<parseInt(val);
-            });
-            chart.data.labels=fil.map(d=>`${MESES[d.mes-1]} ${d.anio}`);
-            chart.data.datasets[0].data=fil.map(d=>d.monto);
-            chart.update();
-        };
-        cont.appendChild(b);
+    const b = document.createElement('button');
+    b.className = 'ftab'+(idx===0?' active':'');
+    b.textContent = lbl;
+    b.onclick = ()=>{
+    cont.querySelectorAll('.ftab').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    const now=new Date(); const y=now.getFullYear(), m=now.getMonth()+1;
+    const fil = val==='0' ? sorted : sorted.filter(d=>{
+    const diff=(y-d.anio)*12+(m-d.mes);
+    return diff>=0 && diff<parseInt(val);
     });
-})();
+    chart.data.labels=fil.map(d=>`${MESES[d.mes-1]} ${d.anio}`);
+    chart.data.datasets[0].data=fil.map(d=>d.monto);
+    chart.update();
+    };
+    cont.appendChild(b);
+    });
+    })();
 
-/* ─ 2. PENCAS CON MÁS JUGADORES ───────────────────── */
-(function(){
+    /* ─ 2. PENCAS CON MÁS JUGADORES ───────────────────── */
+    (function(){
     if(!datosPencasJugadores.length){ document.getElementById('chartPencasJugadores').closest('.card-body').innerHTML='<div class="empty-state">Sin datos disponibles</div>'; return; }
     new Chart(document.getElementById('chartPencasJugadores'),{
-        type:'bar',
-        data:{
-            labels: datosPencasJugadores.map(d=>d.nombre),
-            datasets:[{
-                label:'Jugadores',
-                data: datosPencasJugadores.map(d=>d.cantidad),
-                backgroundColor: datosPencasJugadores.map((_,i)=>PAL[i%PAL.length]+'bb'),
-                borderColor: datosPencasJugadores.map((_,i)=>PAL[i%PAL.length]),
-                borderWidth: 1.5, borderRadius: 5,
-            }]
-        },
-        options:{
-            indexAxis:'y', responsive:true, maintainAspectRatio:false,
-            plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>` ${c.parsed.x} jugadores`}}},
-            scales:{
-                x:{grid:{color:'#f3f4f6'}, ticks:{stepSize:1}},
-                y:{grid:{display:false}}
-            }
-        }
+    type:'bar',
+    data:{
+    labels: datosPencasJugadores.map(d=>d.nombre),
+    datasets:[{
+    label:'Jugadores',
+    data: datosPencasJugadores.map(d=>d.cantidad),
+    backgroundColor: datosPencasJugadores.map((_,i)=>PAL[i%PAL.length]+'bb'),
+    borderColor: datosPencasJugadores.map((_,i)=>PAL[i%PAL.length]),
+    borderWidth: 1.5, borderRadius: 5,
+    }]
+    },
+    options:{
+    indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>` ${c.parsed.x} jugadores`}}},
+    scales:{
+    x:{grid:{color:'#f3f4f6'}, ticks:{stepSize:1}},
+    y:{grid:{display:false}}
+    }
+    }
     });
-})();
+    })();
 
-/* ─ 3. PENCAS QUE MÁS RECAUDARON ──────────────────── */
-(function(){
+    /* ─ 3. PENCAS QUE MÁS RECAUDARON ──────────────────── */
+    (function(){
     if(!datosPencasRecaudacion.length){ document.getElementById('chartPencasRecaudacion').closest('.card-body').innerHTML='<div class="empty-state">Sin datos disponibles</div>'; return; }
     new Chart(document.getElementById('chartPencasRecaudacion'),{
-        type:'bar',
-        data:{
-            labels: datosPencasRecaudacion.map(d=>d.nombre),
-            datasets:[{
-                label:'Recaudado ($)',
-                data: datosPencasRecaudacion.map(d=>d.monto),
-                backgroundColor: datosPencasRecaudacion.map((_,i)=>PAL[i%PAL.length]+'bb'),
-                borderColor: datosPencasRecaudacion.map((_,i)=>PAL[i%PAL.length]),
-                borderWidth: 1.5, borderRadius: 5,
-            }]
-        },
-        options:{
-            indexAxis:'y', responsive:true, maintainAspectRatio:false,
-            plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>` $${c.parsed.x.toLocaleString('es-UY',{minimumFractionDigits:2})}`}}},
-            scales:{
-                x:{grid:{color:'#f3f4f6'}, ticks:{callback:v=>`$${v.toLocaleString('es-UY')}`}},
-                y:{grid:{display:false}}
-            }
-        }
+    type:'bar',
+    data:{
+    labels: datosPencasRecaudacion.map(d=>d.nombre),
+    datasets:[{
+    label:'Recaudado ($)',
+    data: datosPencasRecaudacion.map(d=>d.monto),
+    backgroundColor: datosPencasRecaudacion.map((_,i)=>PAL[i%PAL.length]+'bb'),
+    borderColor: datosPencasRecaudacion.map((_,i)=>PAL[i%PAL.length]),
+    borderWidth: 1.5, borderRadius: 5,
+    }]
+    },
+    options:{
+    indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>` $${c.parsed.x.toLocaleString('es-UY',{minimumFractionDigits:2})}`}}},
+    scales:{
+    x:{grid:{color:'#f3f4f6'}, ticks:{callback:v=>`$${v.toLocaleString('es-UY')}`}},
+    y:{grid:{display:false}}
+    }
+    }
     });
-})();
+    })();
 
-/* ─ 4. USUARIOS MOBILE VS SIN MOBILE ──────────────── */
-(function(){
+    /* ─ 4. USUARIOS MOBILE VS SIN MOBILE ──────────────── */
+    (function(){
     const total = usuariosMobile + usuariosSinMobile;
     const pctM  = total>0 ? (usuariosMobile/total*100).toFixed(1) : '0.0';
     const pctS  = total>0 ? (usuariosSinMobile/total*100).toFixed(1) : '0.0';
     const colors= ['#e05c2a','#2563eb'];
 
     new Chart(document.getElementById('chartMobile'),{
-        type:'doughnut',
-        data:{
-            labels:['Con cuenta mobile','Sin cuenta mobile'],
-            datasets:[{
-                data:[usuariosMobile, usuariosSinMobile],
-                backgroundColor:[colors[0]+'dd', colors[1]+'dd'],
-                borderColor:['#ffffff','#ffffff'],
-                borderWidth:3, hoverOffset:6,
-            }]
-        },
-        options:{
-            responsive:false,
-            cutout:'68%',
-            plugins:{
-                legend:{display:false},
-                tooltip:{callbacks:{label:c=>{
-                    const pct=(c.parsed/total*100).toFixed(1);
-                    return ` ${c.label}: ${c.parsed} (${pct}%)`;
-                }}}
-            }
-        }
+    type:'doughnut',
+    data:{
+    labels:['Con cuenta mobile','Sin cuenta mobile'],
+    datasets:[{
+    data:[usuariosMobile, usuariosSinMobile],
+    backgroundColor:[colors[0]+'dd', colors[1]+'dd'],
+    borderColor:['#ffffff','#ffffff'],
+    borderWidth:3, hoverOffset:6,
+    }]
+    },
+    options:{
+    responsive:false,
+    cutout:'68%',
+    plugins:{
+    legend:{display:false},
+    tooltip:{callbacks:{label:c=>{
+    const pct=(c.parsed/total*100).toFixed(1);
+    return ` ${c.label}: ${c.parsed} (${pct}%)`;
+    }}}
+    }
+    }
     });
 
     const leg = document.getElementById('mobileLegend');
     [
-        {lbl:'Con cuenta mobile', val:usuariosMobile,    pct:pctM, col:colors[0]},
-        {lbl:'Sin cuenta mobile', val:usuariosSinMobile, pct:pctS, col:colors[1]},
+    {lbl:'Con cuenta mobile', val:usuariosMobile,    pct:pctM, col:colors[0]},
+    {lbl:'Sin cuenta mobile', val:usuariosSinMobile, pct:pctS, col:colors[1]},
     ].forEach(d=>{
-        leg.innerHTML+=`
-            <div class="dleg-item">
-                <div class="dleg-dot" style="background:${d.col}"></div>
-                <div style="flex:1">
-                    <div class="dleg-name">${d.lbl}</div>
-                    <div class="dleg-pct">${d.pct}% del total</div>
-                </div>
-                <div class="dleg-val">${d.val.toLocaleString('es-UY')}</div>
-            </div>`;
+    leg.innerHTML+=`
+    <div class="dleg-item">
+    <div class="dleg-dot" style="background:${d.col}"></div>
+    <div style="flex:1">
+    <div class="dleg-name">${d.lbl}</div>
+    <div class="dleg-pct">${d.pct}% del total</div>
+    </div>
+    <div class="dleg-val">${d.val.toLocaleString('es-UY')}</div>
+    </div>`;
     });
-})();
+    })();
 
-/* ─ 5. PENCAS CON MÁS PREDICCIONES ────────────────── */
-(function(){
+    /* ─ 5. PENCAS CON MÁS PREDICCIONES ────────────────── */
+    (function(){
     if(!datosPredicciones.length){ document.getElementById('chartPredicciones').closest('.card-body').innerHTML='<div class="empty-state">Sin datos disponibles</div>'; return; }
     new Chart(document.getElementById('chartPredicciones'),{
-        type:'bar',
-        data:{
-            labels: datosPredicciones.map(d=>d.nombre),
-            datasets:[{
-                label:'Predicciones',
-                data: datosPredicciones.map(d=>d.cantidad),
-                backgroundColor: datosPredicciones.map((_,i)=>PAL[i%PAL.length]+'bb'),
-                borderColor: datosPredicciones.map((_,i)=>PAL[i%PAL.length]),
-                borderWidth: 1.5, borderRadius: 5,
-            }]
-        },
-        options:{
-            indexAxis:'y', responsive:true, maintainAspectRatio:false,
-            plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>` ${c.parsed.x} predicciones`}}},
-            scales:{
-                x:{grid:{color:'#f3f4f6'}, ticks:{stepSize:1}},
-                y:{grid:{display:false}}
-            }
-        }
+    type:'bar',
+    data:{
+    labels: datosPredicciones.map(d=>d.nombre),
+    datasets:[{
+    label:'Predicciones',
+    data: datosPredicciones.map(d=>d.cantidad),
+    backgroundColor: datosPredicciones.map((_,i)=>PAL[i%PAL.length]+'bb'),
+    borderColor: datosPredicciones.map((_,i)=>PAL[i%PAL.length]),
+    borderWidth: 1.5, borderRadius: 5,
+    }]
+    },
+    options:{
+    indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>` ${c.parsed.x} predicciones`}}},
+    scales:{
+    x:{grid:{color:'#f3f4f6'}, ticks:{stepSize:1}},
+    y:{grid:{display:false}}
+    }
+    }
     });
-})();
+    })();
 </script>
