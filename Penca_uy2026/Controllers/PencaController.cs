@@ -382,6 +382,68 @@ namespace Penca_uy2026.Controllers
 
             return RedirectToAction(nameof(Calendario), new { id = model.PencaId });
         }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EliminarPartido(int id)
+        {
+            var partido = await _context.Partidos
+                .Include(p => p.Penca)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (partido == null)
+            {
+                return NotFound();
+            }
+
+            var pencaId = partido.PencaId;
+
+            if (partido.Penca.Finalizada)
+            {
+                TempData["Error"] = "No se puede eliminar un partido de una penca finalizada.";
+                return RedirectToAction(nameof(Calendario), new { id = pencaId });
+            }
+
+            if (partido.Jugado)
+            {
+                TempData["Error"] = "No se puede eliminar un partido que ya fue jugado.";
+                return RedirectToAction(nameof(Calendario), new { id = pencaId });
+            }
+
+            var tienePredicciones = await _context.Predicciones
+                .IgnoreQueryFilters()
+                .AnyAsync(p => p.PartidoId == id);
+
+            if (tienePredicciones)
+            {
+                TempData["Error"] = "No se puede eliminar el partido porque ya tiene predicciones.";
+                return RedirectToAction(nameof(Calendario), new { id = pencaId });
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                var recordatorios = await _context.RecordatoriosPartidoSitio
+                    .IgnoreQueryFilters()
+                    .Where(r => r.PartidoId == id)
+                    .ToListAsync();
+
+                _context.RecordatoriosPartidoSitio.RemoveRange(recordatorios);
+                _context.Partidos.Remove(partido);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                TempData["Success"] = "Partido eliminado correctamente.";
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                TempData["Error"] = "No se pudo eliminar el partido.";
+            }
+
+            return RedirectToAction(nameof(Calendario), new { id = pencaId });
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
