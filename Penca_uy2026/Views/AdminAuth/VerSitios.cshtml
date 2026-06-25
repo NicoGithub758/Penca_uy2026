@@ -85,14 +85,7 @@
                                     <div class="d-inline-flex gap-2 align-items-center">
                                         <a asp-action="EditarSitio" asp-route-id="@sitio.Id" class="btn btn-outline-secondary btn-sm rounded-3 px-2.5 py-1.5 d-flex align-items-center gap-1" title="Modificar Sitio">
                                             <i class="bi bi-pencil-square"></i> <span class="d-none d-sm-inline">Modificar</span>
-                                        </a>
-                                        
-                                        <form asp-action="EliminarSitio" asp-route-id="@sitio.Id" method="post" class="m-0" onsubmit="return confirm('¿Estás seguro de que deseas eliminar el sitio &quot;@sitio.Nombre&quot;? Esta acción borrará el tenant y no se puede deshacer.');">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-outline-danger btn-sm rounded-3 px-2.5 py-1.5 d-flex align-items-center gap-1" title="Eliminar Sitio">
-                                                <i class="bi bi-trash3-fill"></i> <span class="d-none d-sm-inline">Eliminar</span>
-                                            </button>
-                                        </form>
+                                        </a>                                                                          
                                     </div>
                                 </td>
                             </tr>

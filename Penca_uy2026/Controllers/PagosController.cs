@@ -80,7 +80,7 @@ namespace Penca_uy2026.Controllers
             // 6. Crear orden en PayPal
             try
             {
-                var orderId = await _paypalService.CrearOrdenAsync(pencaInstancia.Costo);
+                var (orderId, approvalUrl) = await _paypalService.CrearOrdenAsync(pencaInstancia.Costo);
 
                 // Guardar el Order ID en el pago
                 pago.IdTransaccionExterna = orderId;
@@ -89,7 +89,8 @@ namespace Penca_uy2026.Controllers
                 return Ok(new CrearPagoResponse
                 {
                     OrderId = orderId,
-                    PagoId = pago.Id
+                    PagoId = pago.Id,
+                    ApprovalUrl = approvalUrl
                 });
             }
             catch (Exception ex)
