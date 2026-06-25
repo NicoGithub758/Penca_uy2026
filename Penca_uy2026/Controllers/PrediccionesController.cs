@@ -72,7 +72,7 @@ namespace Penca_uy2026.Controllers
             var sitioId = int.Parse(User.FindFirstValue("sitioId"));
 
             if (_context.Partidos.Where(p => p.Id == prediccionDTO.PartidoId)
-                .Select(p => p.Fecha).FirstOrDefault() <= DateTime.UtcNow)
+                .Select(p => p.Fecha).FirstOrDefault() <= DateTime.UtcNow.AddHours(-3))
             {
                 return BadRequest("Partido ya empezado");
             }

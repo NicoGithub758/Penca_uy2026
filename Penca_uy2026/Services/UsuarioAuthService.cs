@@ -220,9 +220,17 @@ namespace Penca_uy2026.Services
                 }
 
                 // El usuario es totalmente nuevo para este sitio. Verificamos las reglas del sitio.
-                if (sitio.TipoRegistro != TipoRegistro.Abierta)
+                if (sitio.TipoRegistro == TipoRegistro.AbiertaConAutorizacion)
                 {
-                    return (null, "Este sitio no admite registros directos mediante Google. Por favor, utiliza el método de registro que corresponda.");
+                    return (null, "No estás agregado al sitio. Debes registrarte mediante el flujo de registro para solicitar tu acceso.");
+                }
+                else if (sitio.TipoRegistro == TipoRegistro.SoloConInvitacion)
+                {
+                    return (null, "No estás agregado al sitio. Este sitio es solo por invitación.");
+                }
+                else if (sitio.TipoRegistro == TipoRegistro.Cerrada)
+                {
+                    return (null, "No estás en este sitio. El acceso a este sitio es cerrado o privado.");
                 }
 
                 // Es abierto, lo creamos directamente.
