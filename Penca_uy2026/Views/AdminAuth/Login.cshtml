@@ -5,56 +5,263 @@
     Layout = "_Layout";
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card shadow-lg border-0" style="border-radius: 15px;">
-                <div class="card-body p-5">
-                    <div class="text-center mb-4">
-                        <i class="bi bi-shield-lock-fill text-primary" style="font-size: 3rem;"></i>
-                        <h2 class="fw-bold mt-2">tupenca.uy</h2>
-                        <p class="text-muted">Panel de Administración</p>
-                    </div>
+<style>
+    *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
 
-                    @if (ViewBag.Error != null)
-                    {
-                        <div class="alert alert-danger py-2 text-center">
-                            <i class="bi bi-exclamation-triangle"></i> @ViewBag.Error
-                        </div>
-                    }
+    .login-root {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f9fafb;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        padding: 2rem 1rem;
+    }
 
-                    @* El asp-action debe ser "Login" para que coincida con el [HttpPost("Login")] *@
-                    <form asp-controller="AdminAuth" asp-action="Login" method="post">
-                        @Html.AntiForgeryToken() @* Esto genera el token que el controlador validará *@
+    .login-card {
+        width: 100%;
+        max-width: 420px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 24px #0000000a;
+    }
 
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Correo Electrónico</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                                <input type="email" name="Email" class="form-control"
-                                       placeholder="admin@tupenca.uy" required
-                                       value="@(Model?.Email ?? "")">
-                            </div>
-                        </div>
+    /* ── Cabecera naranja ── */
+    .login-header {
+        background: #e05c2a;
+        padding: 2.25rem 2rem 2rem;
+        position: relative;
+        overflow: hidden;
+    }
 
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Contraseña</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-key"></i></span>
-                                <input type="password" name="Password" class="form-control"
-                                       placeholder="Tu contraseña secreta" required>
-                            </div>
-                        </div>
+        /* Líneas de campo decorativas */
+        .login-header::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='160'%3E%3Ccircle cx='340' cy='80' r='70' stroke='%23ffffff12' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='340' cy='80' r='4' fill='%23ffffff18'/%3E%3Cline x1='0' y1='80' x2='420' y2='80' stroke='%23ffffff08' stroke-width='1'/%3E%3Crect x='0' y='20' width='80' height='120' stroke='%23ffffff10' stroke-width='1.5' fill='none'/%3E%3Crect x='0' y='45' width='35' height='70' stroke='%23ffffff08' stroke-width='1' fill='none'/%3E%3C/svg%3E");
+            background-size: cover;
+            pointer-events: none;
+        }
 
-                        <button type="submit" class="btn btn-primary btn-lg w-100 shadow-sm">
-                            <i class="bi bi-box-arrow-in-right"></i> Ingresar al Panel
-                        </button>
-                    </form>
-                </div>
-            </div>
-            <p class="text-center mt-4 text-muted small">
-                &copy; 2026 - Acceso restringido para administradores.
-            </p>
+    .header-tag {
+        font-size: .68rem;
+        font-weight: 700;
+        letter-spacing: .18em;
+        text-transform: uppercase;
+        color: #ffffff99;
+        margin-bottom: .6rem;
+        position: relative;
+    }
+
+    .header-logo {
+        font-size: 1.9rem;
+        font-weight: 900;
+        color: #fff;
+        letter-spacing: -.02em;
+        line-height: 1;
+        position: relative;
+    }
+
+        .header-logo span {
+            color: #fff5f0;
+            opacity: .85;
+        }
+
+    .header-sub {
+        font-size: .8rem;
+        color: #ffffff70;
+        margin-top: .35rem;
+        position: relative;
+    }
+
+    /* ── Cuerpo del formulario ── */
+    .login-body {
+        padding: 2rem;
+    }
+
+    .field-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .field-label {
+        display: block;
+        font-size: .71rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .09em;
+        color: #6b7280;
+        margin-bottom: .45rem;
+    }
+
+    .field-wrap {
+        display: flex;
+        align-items: center;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        transition: border-color .2s, box-shadow .2s;
+        overflow: hidden;
+    }
+
+        .field-wrap:focus-within {
+            border-color: #e05c2a88;
+            box-shadow: 0 0 0 3px #e05c2a18;
+            background: #fff;
+        }
+
+    .field-icon {
+        padding: 0 .85rem;
+        color: #9ca3af;
+        font-size: .95rem;
+        flex-shrink: 0;
+    }
+
+    .field-wrap:focus-within .field-icon {
+        color: #e05c2a;
+    }
+
+    .field-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        padding: .8rem .8rem .8rem 0;
+        color: #111827;
+        font-size: .9rem;
+        font-family: inherit;
+    }
+
+        .field-input::placeholder {
+            color: #d1d5db;
+        }
+
+    .alert-error {
+        background: #fff5f0;
+        border: 1px solid #e05c2a40;
+        border-radius: 10px;
+        padding: .7rem .9rem;
+        color: #c94a1a;
+        font-size: .82rem;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        margin-bottom: 1.4rem;
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: .9rem;
+        background: #e05c2a;
+        color: #fff;
+        font-size: .9rem;
+        font-weight: 700;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+        letter-spacing: .02em;
+        transition: background .2s, box-shadow .2s, transform .1s;
+        margin-top: .25rem;
+        font-family: inherit;
+    }
+
+        .btn-submit:hover {
+            background: #c94a1a;
+            box-shadow: 0 4px 16px #e05c2a35;
+        }
+
+        .btn-submit:active {
+            transform: translateY(1px);
+        }
+
+    .login-footer {
+        padding: 1rem 2rem;
+        border-top: 1px solid #e5e7eb;
+        font-size: .73rem;
+        color: #9ca3af;
+        text-align: center;
+        background: #fafafa;
+    }
+
+    @@media (max-width: 480px) {
+        .login-card {
+            border-radius: 12px;
+        }
+
+        .login-body {
+            padding: 1.5rem;
+        }
+
+        .login-header {
+            padding: 1.75rem 1.5rem 1.5rem;
+        }
+    }
+</style>
+
+<div class="login-root">
+    <div class="login-card">
+
+        <!-- Cabecera -->
+        <div class="login-header">
+            <div class="header-tag">Panel de administración</div>
+            <div class="header-logo">tu<span>penca</span>.uy</div>
+            <div class="header-sub">Plataforma de predicciones deportivas</div>
         </div>
+
+        <!-- Formulario -->
+        <div class="login-body">
+
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert-error">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    @ViewBag.Error
+                </div>
+            }
+
+            <form asp-controller="AdminAuth" asp-action="Login" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="field-group">
+                    <label class="field-label" for="loginEmail">Correo electrónico</label>
+                    <div class="field-wrap">
+                        <span class="field-icon"><i class="bi bi-envelope"></i></span>
+                        <input class="field-input" type="email" id="loginEmail" name="Email"
+                               placeholder="admin@tupenca.uy" required
+                               value="@(Model?.Email ?? "")" autocomplete="email">
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label" for="loginPassword">Contraseña</label>
+                    <div class="field-wrap">
+                        <span class="field-icon"><i class="bi bi-key"></i></span>
+                        <input class="field-input" type="password" id="loginPassword" name="Password"
+                               placeholder="••••••••" required autocomplete="current-password">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    Ingresar al panel
+                </button>
+            </form>
+        </div>
+
+        <!-- Footer -->
+        <div class="login-footer">
+            &copy; 2026 tupenca.uy &mdash; Acceso restringido para administradores
+        </div>
+
     </div>
 </div>
