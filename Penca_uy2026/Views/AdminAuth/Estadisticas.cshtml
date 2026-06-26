@@ -269,11 +269,6 @@
             <div class="kpi-lbl">⚽ Deporte popular</div>
             <div class="kpi-val" style="font-size:1.05rem">@Model.DeporteMasPopular</div>
         </div>
-        <div class="kpi">
-            <div class="kpi-lbl">⚡ Activos 48h</div>
-            <div class="kpi-val">@Model.UsuariosActivosUltimas48h.Count</div>
-            <div class="kpi-sub">usuarios con predicciones</div>
-        </div>
     </div>
 
     <!-- Fila: pencas populares + tabla por sitio -->
@@ -292,8 +287,9 @@
                     <button class="export-btn" onclick="exportarGraficoPDF('chartPencas', 'Pencas más populares')">📄 PDF</button>
                 </div>
             </div>
+            <div class="filters" id="filtrosPencas"></div>
             <div class="card-body">
-                <!-- Aquí iría tu gráfico -->
+                <div class="chart-wrap"><canvas id="chartPencas"></canvas></div>
             </div>
         </div>
 
@@ -381,61 +377,6 @@
         </div>
     </div>
 
-    <!-- Tabla: usuarios activos últimas 48h -->
-    <div class="card">
-        <div class="card-hdr">
-            <div class="icon">⚡</div>
-            <div>
-                <h5>Usuarios activos — últimas 48 h</h5>
-                <p>Predicciones en partidos jugados recientemente</p>
-            </div>
-            <div class="actions">
-                <button class="export-btn" onclick="exportarExcel('tablaActivos', 'usuarios_activos_48h')">📥 Excel</button>
-                <button class="export-btn" onclick="exportarPDF('tablaActivos', 'Usuarios activos últimas 48h')">📄 PDF</button>
-            </div>
-        </div>
-
-        <!-- Filtro por penca -->
-        <div class="filters" id="filtrosActivos"></div>
-
-        <div class="card-body" style="padding:0;">
-            @if (!Model.UsuariosActivosUltimas48h.Any())
-            {
-                <div style="padding:2rem;text-align:center;color:var(--text-muted);font-size:.875rem;">
-                    Sin actividad en las últimas 48 horas
-                </div>
-            }
-            else
-            {
-                <table class="data-table" id="tablaActivos">
-                    <thead>
-                        <tr>
-                            <th>Usuario</th>
-                            <th>Email</th>
-                            <th>Sitio</th>
-                            <th>Penca</th>
-                            <th>Predicciones</th>
-                            <th>Último partido</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbodyActivos">
-                        @foreach (var u in Model.UsuariosActivosUltimas48h)
-                        {
-                            <tr data-penca="@u.NombrePenca">
-                                <td><strong>@u.NombreUsuario</strong></td>
-                                <td style="color:var(--text-muted);">@u.Email</td>
-                                <td>@u.NombreSitio</td>
-                                <td><span class="badge badge-orange">@u.NombrePenca</span></td>
-                                <td><span class="badge badge-green">@u.CantidadPredicciones pred.</span></td>
-                                <td style="color:var(--text-muted);font-size:.78rem;">@u.UltimaPrediccion.ToString("dd/MM/yyyy HH:mm")</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-        </div>
-    </div>
-
     <!-- Gráfico: Recaudación Mensual -->
     <div class="card" id="cardRecaudacion">
         <div class="card-hdr">
@@ -492,33 +433,33 @@
 <!-- Datos del servidor -->
 <script>
     const datosRec = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-                Model.IngresosMensuales.Select(i => new
-                {
-                        sitio = i.NombreSitio,
-                        anio = i.Anio,
-                        mes = i.Mes,
-                        monto = i.Monto
-                })
-        ));
+                                Model.IngresosMensuales.Select(i => new
+                                {
+                                            sitio = i.NombreSitio,
+                                            anio = i.Anio,
+                                            mes = i.Mes,
+                                            monto = i.Monto
+                                })
+                ));
 
     const datosUsr = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-                Model.EvolucionUsuarios.Select(u => new
-                {
-                        sitio = u.NombreSitio,
-                        anio = u.Anio,
-                        mes = u.Mes,
-                        cantidad = u.CantidadUsuarios
-                })
-        ));
+                                Model.EvolucionUsuarios.Select(u => new
+                                {
+                                            sitio = u.NombreSitio,
+                                            anio = u.Anio,
+                                            mes = u.Mes,
+                                            cantidad = u.CantidadUsuarios
+                                })
+                ));
 
     const datosPencas = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-                Model.PencasMasPopulares.Select(p => new
-                {
-                        nombre = p.NombrePenca,
-                        deporte = p.Deporte,
-                        instancias = p.CantidadInstancias
-                })
-        ));
+                                Model.PencasMasPopulares.Select(p => new
+                                {
+                                            nombre = p.NombrePenca,
+                                            deporte = p.Deporte,
+                                            instancias = p.CantidadInstancias
+                                })
+                ));
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -805,35 +746,5 @@
     });
 
     renderChart();
-    })();
-
-
-    /* Filtro por penca — tabla activos 48h */
-    (function () {
-    const filas   = [...document.querySelectorAll("#tbodyActivos tr")];
-    if (!filas.length) return;
-
-    const pencas  = [...new Set(filas.map(f => f.dataset.penca))].sort();
-    const cont    = document.getElementById("filtrosActivos");
-    let activo    = "Todas";
-
-    function filtrar() {
-    filas.forEach(f => {
-    f.style.display = (activo === "Todas" || f.dataset.penca === activo) ? "" : "none";
-    });
-    }
-
-    ["Todas", ...pencas].forEach(p => {
-    const b = document.createElement("button");
-    b.className = "fbtn" + (p === "Todas" ? " active" : "");
-    b.textContent = p;
-    b.onclick = () => {
-    activo = p;
-    cont.querySelectorAll(".fbtn").forEach(x => x.classList.remove("active"));
-    b.classList.add("active");
-    filtrar();
-    };
-    cont.appendChild(b);
-    });
     })();
 </script>
